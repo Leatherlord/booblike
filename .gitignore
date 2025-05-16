@@ -3,7 +3,7 @@ node_modules/
 npm-debug.log
 
 # Build outputs
-dist/
+dist/*
 !dist/index.html
 
 # IDE specific files
