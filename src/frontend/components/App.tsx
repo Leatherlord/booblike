@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import GameField from './GameField';
-import { generateWorld } from '../../backend/world-generator';
-import { World } from '../../common/interfaces';
+import { useWorld } from '../../common/context/WorldContext';
 
 const App: React.FC = () => {
-  const [world, setWorld] = useState<World | null>(null);
-
-  useEffect(() => {
-    setWorld(generateWorld());
-  }, []);
+  const { world, updateWorld } = useWorld();
 
   useEffect(() => {
     if (!world) return;
@@ -51,12 +46,12 @@ const App: React.FC = () => {
       }
 
       newWorld.player = player;
-      setWorld(newWorld);
+      updateWorld(newWorld);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [world]);
+  }, [world, updateWorld]);
 
   return (
     <div className="game-container">
@@ -64,6 +59,11 @@ const App: React.FC = () => {
         <div className="hud-content">
           <span className="hud-item">Score: 0</span>
           <span className="hud-item">Level: 1</span>
+          {world && (
+            <span className="hud-item">
+              Player: ({world.player.x}, {world.player.y})
+            </span>
+          )}
         </div>
       </div>
 
