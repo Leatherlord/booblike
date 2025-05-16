@@ -1,6 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import GameField from './GameField';
+import { generateWorld } from '../../backend/world-generator';
+import { World } from '../../common/interfaces';
 
 const App: React.FC = () => {
+  const [world, setWorld] = useState<World | null>(null);
+
+  useEffect(() => {
+    setWorld(generateWorld());
+  }, []);
+
+  useEffect(() => {
+    if (!world) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!world) return;
+
+      const newWorld = { ...world };
+      const player = { ...world.player };
+
+      switch (e.key) {
+        case 'ArrowUp':
+          if (player.y > 0 && world.map[player.y - 1][player.x] !== 'wall') {
+            player.y = Math.max(0, player.y - 1);
+          }
+          break;
+        case 'ArrowDown':
+          if (
+            player.y < world.height - 1 &&
+            world.map[player.y + 1][player.x] !== 'wall'
+          ) {
+            player.y = player.y + 1;
+          }
+          break;
+        case 'ArrowLeft':
+          if (player.x > 0 && world.map[player.y][player.x - 1] !== 'wall') {
+            player.x = Math.max(0, player.x - 1);
+          }
+          break;
+        case 'ArrowRight':
+          if (
+            player.x < world.width - 1 &&
+            world.map[player.y][player.x + 1] !== 'wall'
+          ) {
+            player.x = player.x + 1;
+          }
+          break;
+        default:
+          return;
+      }
+
+      newWorld.player = player;
+      setWorld(newWorld);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [world]);
+
   return (
     <div className="game-container">
       <div className="hud top-hud">
@@ -15,7 +72,7 @@ const App: React.FC = () => {
           <div className="hud-content"></div>
         </div>
 
-        <div className="game-field"></div>
+        <GameField world={world} />
 
         <div className="hud right-hud">
           <div className="hud-content"></div>
@@ -23,7 +80,9 @@ const App: React.FC = () => {
       </div>
 
       <div className="hud bottom-hud">
-        <div className="hud-content"></div>
+        <div className="hud-content">
+          <div className="hud-item">Use arrow keys to move the player</div>
+        </div>
       </div>
     </div>
   );
