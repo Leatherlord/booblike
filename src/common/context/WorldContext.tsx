@@ -7,8 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import { World } from '../interfaces';
-import { generateWorld } from '../../backend/world-generator';
-
+import { WorldManager } from '../../backend/world-manager';
 interface WorldContextType {
   world: World | null;
   updateWorld: (newWorld: World) => void;
@@ -20,10 +19,12 @@ export const WorldProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [world, setWorld] = useState<World | null>(null);
+  const worldManagerRef = useRef<WorldManager | null>(null);
 
   useEffect(() => {
-    setWorld(generateWorld());
-  }, []);
+    worldManagerRef.current = new WorldManager(setWorld);
+    worldManagerRef.current.generateStubWorld();
+  }, [setWorld]);
 
   const updateWorld = (newWorld: World) => {
     setWorld(newWorld);
