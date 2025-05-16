@@ -116,7 +116,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
 
   return (
     <div className="game-field" ref={gamefieldRef}>
-      {world && (
+      {world ? (
         <>
           <canvas
             ref={canvasRef}
@@ -129,6 +129,8 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
             {tileSize}px | Renders: {renderCountRef.current}
           </div>
         </>
+      ) : (
+        <div className="loading">Loading world...</div>
       )}
     </div>
   );
