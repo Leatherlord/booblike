@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+npm-debug.log
+
+# Build outputs
+dist/
+!dist/index.html
+
+# IDE specific files
+.vscode/
+
+# Optional npm cache directory
+.npm
+
+# Prettier
+.prettier-cache

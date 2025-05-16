@@ -1,0 +1,36 @@
+{
+  "name": "booblike",
+  "version": "1.0.0",
+  "description": "Simple browser singleplayer roguelike game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "start": "webpack serve --open",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,html}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,html}\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "css-loader": "^7.1.2",
+    "prettier": "^3.5.3",
+    "sass": "^1.89.0",
+    "sass-loader": "^16.0.5",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.8",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}
