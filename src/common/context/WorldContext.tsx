@@ -8,9 +8,11 @@ import React, {
 } from 'react';
 import { World } from '../interfaces';
 import { WorldManager } from '../../backend/world-manager';
+import { Event } from '../events';
+
 interface WorldContextType {
   world: World | null;
-  updateWorld: (newWorld: World) => void;
+  handleEvent: (event: Event) => void;
 }
 
 const WorldContext = createContext<WorldContextType | undefined>(undefined);
@@ -26,12 +28,12 @@ export const WorldProvider: React.FC<{ children: ReactNode }> = ({
     worldManagerRef.current.generateStubWorld();
   }, [setWorld]);
 
-  const updateWorld = (newWorld: World) => {
-    setWorld(newWorld);
+  const handleEvent = (event: Event) => {
+    worldManagerRef.current?.handleEvent(event);
   };
 
   return (
-    <WorldContext.Provider value={{ world, updateWorld }}>
+    <WorldContext.Provider value={{ world, handleEvent }}>
       {children}
     </WorldContext.Provider>
   );

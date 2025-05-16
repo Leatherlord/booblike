@@ -1,4 +1,6 @@
 import { World } from '../common/interfaces';
+import { Event, PlayerMoveEvent } from '../common/events';
+import { movePlayer } from './player-controller';
 
 export class WorldManager {
   private world: World | null = null;
@@ -8,7 +10,7 @@ export class WorldManager {
     this.updateCallback = updateCallback;
   }
 
-  public updateWorld(world: World) {
+  private updateWorld(world: World) {
     this.world = world;
     this.updateCallback(world);
   }
@@ -51,5 +53,18 @@ export class WorldManager {
     };
 
     this.updateWorld(stubWorld);
+  }
+
+  public handleEvent(event: Event) {
+    if (!this.world) return;
+
+    switch (event.type) {
+      case 'player_move':
+        this.updateWorld(movePlayer(this.world, event.direction));
+        return;
+      case 'player_attack':
+        // TODO: implement
+        break;
+    }
   }
 }

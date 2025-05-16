@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import GameField from './GameField';
 import { useWorld } from '../../common/context/WorldContext';
-
+import { Event } from '../../common/events';
 const App: React.FC = () => {
-  const { world, updateWorld } = useWorld();
+  const { world, handleEvent } = useWorld();
 
   useEffect(() => {
     if (!world) return;
@@ -11,47 +11,43 @@ const App: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
 
-      const newWorld = { ...world };
-      const player = { ...world.player };
+      let event: Event;
 
       switch (e.key) {
         case 'ArrowUp':
-          if (player.y > 0 && world.map[player.y - 1][player.x] !== 'wall') {
-            player.y = Math.max(0, player.y - 1);
-          }
+          event = {
+            type: 'player_move',
+            direction: 'up',
+          };
           break;
         case 'ArrowDown':
-          if (
-            player.y < world.height - 1 &&
-            world.map[player.y + 1][player.x] !== 'wall'
-          ) {
-            player.y = player.y + 1;
-          }
+          event = {
+            type: 'player_move',
+            direction: 'down',
+          };
           break;
         case 'ArrowLeft':
-          if (player.x > 0 && world.map[player.y][player.x - 1] !== 'wall') {
-            player.x = Math.max(0, player.x - 1);
-          }
+          event = {
+            type: 'player_move',
+            direction: 'left',
+          };
           break;
         case 'ArrowRight':
-          if (
-            player.x < world.width - 1 &&
-            world.map[player.y][player.x + 1] !== 'wall'
-          ) {
-            player.x = player.x + 1;
-          }
+          event = {
+            type: 'player_move',
+            direction: 'right',
+          };
           break;
         default:
           return;
       }
 
-      newWorld.player = player;
-      updateWorld(newWorld);
+      handleEvent(event);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [world, updateWorld]);
+  }, [world, handleEvent]);
 
   return (
     <div className="game-container">
