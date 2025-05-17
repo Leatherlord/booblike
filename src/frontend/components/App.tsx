@@ -1,15 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import GameField from './GameField';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
+  const lastEventTimeRef = useRef<number>(0);
 
   useEffect(() => {
     if (!world) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
+
+      const now = Date.now();
+      if (now - lastEventTimeRef.current < 100) {
+        return;
+      }
 
       let event: Event;
 
@@ -42,6 +48,7 @@ const App: React.FC = () => {
           return;
       }
 
+      lastEventTimeRef.current = now;
       handleEvent(event);
     };
 
