@@ -57,13 +57,23 @@ export class WorldManager {
           if (rowIndex === 0 || rowIndex === 19) {
             return Array(20).fill('wall');
           }
+          if (rowIndex === 10) {
+            const r = Array(20).fill('floor');
+            for (let i = 5; i < 15; i++) {
+              r[i] = 'empty';
+            }
+            r[10] = 'door';
+            r[0] = 'wall';
+            r[19] = 'wall';
+            return r;
+          }
           return row;
         }),
       entities: [],
       player: {
         id: 'player',
-        x: 10,
-        y: 10,
+        x: 8,
+        y: 8,
         slots: this.createEmptyInventory(),
         activeSlot: 1,
       },

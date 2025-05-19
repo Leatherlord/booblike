@@ -50,7 +50,14 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           screenY > -tileSize &&
           screenY < canvas.height
         ) {
-          ctx.fillStyle = tile === 'wall' ? '#666' : '#eee';
+          ctx.fillStyle =
+            tile === 'wall'
+              ? '#666'
+              : tile === 'door'
+              ? '#ff0'
+              : tile === 'empty'
+              ? '#000'
+              : '#eee';
           ctx.fillRect(screenX, screenY, tileSize, tileSize);
           ctx.strokeStyle = '#999';
           ctx.strokeRect(screenX, screenY, tileSize, tileSize);
