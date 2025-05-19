@@ -1,5 +1,5 @@
-import { World } from '../common/interfaces';
-import { Event, PlayerMoveEvent } from '../common/events';
+import { World, InventorySlot } from '../common/interfaces';
+import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
 
 export class WorldManager {
@@ -22,6 +22,21 @@ export class WorldManager {
     // Update newWorld
 
     this.updateWorld(newWorld);
+  }
+
+  private createEmptyInventory(): InventorySlot[] {
+    return [
+      { id: 1 },
+      { id: 2 },
+      { id: 3 },
+      { id: 4 },
+      { id: 5 },
+      { id: 6 },
+      { id: 7 },
+      { id: 8 },
+      { id: 9 },
+      { id: 0, item: { id: 'test-item', name: 'Test Item' } }
+    ];
   }
 
   public generateStubWorld() {
@@ -49,6 +64,8 @@ export class WorldManager {
         id: 'player',
         x: 10,
         y: 10,
+        slots: this.createEmptyInventory(),
+        activeSlot: 1,
       },
     };
 
@@ -65,6 +82,23 @@ export class WorldManager {
       case 'player_attack':
         // TODO: implement
         break;
+      case 'inventory_select':
+        this.handleInventorySelect(event);
+        break;
     }
+  }
+
+  private handleInventorySelect(event: InventorySelectEvent) {
+    if (!this.world) return;
+    
+    const newWorld = { 
+      ...this.world,
+      player: {
+        ...this.world.player,
+        activeSlot: event.slotId,
+      }
+    };
+    
+    this.updateWorld(newWorld);
   }
 }

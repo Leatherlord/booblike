@@ -1,16 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import GameField from './GameField';
+import Inventory from './Inventory';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
+
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
+
+  const handleSelectSlot = (slotId: number) => {
+    if (!world) return;
+    
+    handleEvent({
+      type: 'inventory_select',
+      slotId,
+    });
+  };
 
   useEffect(() => {
     if (!world) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        const slotNumber = parseInt(e.key, 10);
+        handleEvent({
+          type: 'inventory_select',
+          slotId: slotNumber,
+        });
+        return;
+      }
 
       const now = Date.now();
       if (now - lastEventTimeRef.current < 100) {
@@ -72,7 +92,15 @@ const App: React.FC = () => {
 
       <div className="main-area">
         <div className="hud left-hud">
-          <div className="hud-content"></div>
+          <div className="hud-content">
+            {world && (
+              <Inventory 
+                activeSlot={world.player.activeSlot} 
+                slots={world.player.slots} 
+                onSelectSlot={handleSelectSlot} 
+              />
+            )}
+          </div>
         </div>
 
         <GameField world={world} />
@@ -85,6 +113,7 @@ const App: React.FC = () => {
       <div className="hud bottom-hud">
         <div className="hud-content">
           <div className="hud-item">Use arrow keys to move the player</div>
+          <div className="hud-item">Press 0-9 to select inventory slots</div>
         </div>
       </div>
     </div>
