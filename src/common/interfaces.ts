@@ -14,4 +14,19 @@ export type Entity = {
   y: number;
 };
 
-export type Inventory = {};
+export type InventoryItem = {
+  id: string;
+  name: string;
+  icon?: string;
+  description?: string;
+};
+
+export type InventorySlot = {
+  id: number;
+  item?: InventoryItem;
+};
+
+export type Inventory = {
+  slots: InventorySlot[];
+  activeSlot: number;
+};

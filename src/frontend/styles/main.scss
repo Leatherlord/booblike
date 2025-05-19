@@ -8,6 +8,8 @@ $hud-background: #1e1e1e;
 $hud-border: #333;
 $hud-text: #eee;
 $field-color: #0a0a0a;
+$inventory-active: #4a0866;
+$inventory-hover: #2b0438;
 
 
 * {
@@ -16,7 +18,8 @@ $field-color: #0a0a0a;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -45,13 +48,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
   .hud-content {
     width: 100%;
     height: 100%;
     padding: 10px;
   }
-  
+
   .hud-item {
     margin-bottom: 5px;
     font-weight: bold;
@@ -61,7 +64,7 @@ body {
 .top-hud {
   height: 5vh;
   width: 100%;
-  
+
   .hud-content {
     display: flex;
     justify-content: space-between;
@@ -76,8 +79,16 @@ body {
 }
 
 .left-hud {
-  width: 5vw;
+  width: 10vw;
   height: 100%;
+
+  .hud-content {
+    padding: 5px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .game-field {
@@ -86,13 +97,13 @@ body {
   border: 1px solid $hud-border;
   position: relative;
   overflow: hidden;
-  
+
   .game-canvas {
     display: block;
     width: 100%;
     height: 100%;
   }
-  
+
   .camera-info {
     position: absolute;
     top: 10px;
@@ -114,12 +125,12 @@ body {
 .bottom-hud {
   height: 20vh;
   width: 100%;
-  
+
   .hud-content {
     display: flex;
     flex-direction: column;
   }
-  
+
   .console-messages {
     flex: 1;
     background-color: rgba(0, 0, 0, 0.3);
@@ -128,7 +139,7 @@ body {
     overflow-y: auto;
     font-family: monospace;
   }
-  
+
   .action-buttons {
     display: flex;
     gap: 10px;
@@ -143,16 +154,74 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  
+
   &:hover {
     background-color: color.adjust($primary-color, $lightness: -10%);
   }
-  
+
   &.secondary {
     background-color: $secondary-color;
-    
+
     &:hover {
       background-color: color.adjust($secondary-color, $lightness: -10%);
     }
   }
-} 
+}
+
+// Inventory styles
+.inventory {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.inventory-slot {
+  --slot-size: min(70%, calc((75vh - 20px - 36px) / 10));
+  /* Take the minimum of 70% width or calculated height */
+  width: var(--slot-size);
+  height: var(--slot-size);
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid $hud-border;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: $inventory-hover;
+  }
+
+  &.active {
+    background-color: $inventory-active;
+    border-color: $secondary-color;
+    box-shadow: 0 0 8px rgba($secondary-color, 0.5);
+  }
+
+  .slot-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 10px;
+    opacity: 0.8;
+  }
+
+  .slot-item {
+    font-size: 16px;
+    font-weight: bold;
+    color: $secondary-color;
+  }
+
+  .slot-empty {
+    width: 50%;
+    height: 50%;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
