@@ -1,7 +1,7 @@
 import { World, InventorySlot, GameMap, Room } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
-import { generateDungeonMap } from './map-generator';
+import { generateRoom } from './map-generator';
 
 export class WorldManager {
   private world: World | null = null;
@@ -58,11 +58,38 @@ export class WorldManager {
 
   private generateStubMap(): GameMap {
     const stubRoom: Room = {
-      map: generateDungeonMap(Math.random()),
+      map: Array(20)
+      .fill(null)
+      .map(() =>
+        Array(20)
+          .fill(null)
+          .map((_, colIndex) => {
+            if (colIndex === 0 || colIndex === 19) return 'wall';
+            return 'floor';
+          })
+      )
+      .map((row, rowIndex) => {
+        if (rowIndex === 0 || rowIndex === 19) {
+          return Array(20).fill('wall');
+        }
+        if (rowIndex === 10) {
+          const r = Array(20).fill('floor');
+          for (let i = 5; i < 15; i++) {
+            r[i] = 'empty';
+          }
+          r[10] = 'door';
+          r[0] = 'wall';
+          r[19] = 'wall';
+          return r;
+        }
+        return row;
+      }),
       exits: new Map,
     }
+    const seed = Math.round(Math.random() * 100000000);
+    const generatedRoom = generateRoom(seed);
     const stubMap: GameMap = {
-      rooms: [stubRoom],
+      rooms: [generatedRoom],
       currentRoom: 0
     };
     return stubMap;
