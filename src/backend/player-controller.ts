@@ -6,6 +6,8 @@ export const movePlayer = (
 ) => {
   const newWorld = { ...world };
   const roomMap = newWorld.map.rooms[newWorld.map.currentRoom].map;
+  const width = roomMap.length;
+  const height = roomMap[0].length;
 
   switch (direction) {
     case 'up':
@@ -19,7 +21,7 @@ export const movePlayer = (
       break;
     case 'down':
       if (
-        newWorld.player.y < newWorld.height - 1 &&
+        newWorld.player.y < height - 1 &&
         (roomMap[newWorld.player.y + 1][newWorld.player.x] === 'floor' ||
           roomMap[newWorld.player.y + 1][newWorld.player.x] === 'door')
       ) {
@@ -37,7 +39,7 @@ export const movePlayer = (
       break;
     case 'right':
       if (
-        newWorld.player.x < newWorld.width - 1 &&
+        newWorld.player.x < width - 1 &&
         (roomMap[newWorld.player.y][newWorld.player.x + 1] === 'floor' ||
           roomMap[newWorld.player.y][newWorld.player.x + 1] === 'door')
       ) {

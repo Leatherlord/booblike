@@ -1,6 +1,4 @@
 export type World = {
-  width: number;
-  height: number;
   map: GameMap;
   entities: Entity[];
   player: Entity & Inventory;

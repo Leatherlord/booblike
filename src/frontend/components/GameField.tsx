@@ -7,7 +7,7 @@ interface GameFieldProps {
   world: World | null;
 }
 
-const MAX_HORIZONTAL_TILES = 20;
+const MAX_HORIZONTAL_TILES = 60;
 const DEFAULT_TILE_SIZE = 32;
 
 const GameField: React.FC<GameFieldProps> = ({ world }) => {
