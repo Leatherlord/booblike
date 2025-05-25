@@ -69,7 +69,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    world.map.forEach((row, y) => {
+    world.map.rooms[world.map.currentRoom].map.forEach((row, y) => {
       row.forEach((tile, x) => {
         const screenX = (x - offsetX) * tileSize;
         const screenY = (y - offsetY) * tileSize;

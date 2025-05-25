@@ -5,13 +5,14 @@ export const movePlayer = (
   direction: 'up' | 'down' | 'left' | 'right'
 ) => {
   const newWorld = { ...world };
+  const roomMap = newWorld.map.rooms[newWorld.map.currentRoom].map;
 
   switch (direction) {
     case 'up':
       if (
         newWorld.player.y > 0 &&
-        (newWorld.map[newWorld.player.y - 1][newWorld.player.x] === 'floor' ||
-          newWorld.map[newWorld.player.y - 1][newWorld.player.x] === 'door')
+        (roomMap[newWorld.player.y - 1][newWorld.player.x] === 'floor' ||
+          roomMap[newWorld.player.y - 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y - 1;
       }
@@ -19,8 +20,8 @@ export const movePlayer = (
     case 'down':
       if (
         newWorld.player.y < newWorld.height - 1 &&
-        (newWorld.map[newWorld.player.y + 1][newWorld.player.x] === 'floor' ||
-          newWorld.map[newWorld.player.y + 1][newWorld.player.x] === 'door')
+        (roomMap[newWorld.player.y + 1][newWorld.player.x] === 'floor' ||
+          roomMap[newWorld.player.y + 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y + 1;
       }
@@ -28,8 +29,8 @@ export const movePlayer = (
     case 'left':
       if (
         newWorld.player.x > 0 &&
-        (newWorld.map[newWorld.player.y][newWorld.player.x - 1] === 'floor' ||
-          newWorld.map[newWorld.player.y][newWorld.player.x - 1] === 'door')
+        (roomMap[newWorld.player.y][newWorld.player.x - 1] === 'floor' ||
+          roomMap[newWorld.player.y][newWorld.player.x - 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x - 1;
       }
@@ -37,8 +38,8 @@ export const movePlayer = (
     case 'right':
       if (
         newWorld.player.x < newWorld.width - 1 &&
-        (newWorld.map[newWorld.player.y][newWorld.player.x + 1] === 'floor' ||
-          newWorld.map[newWorld.player.y][newWorld.player.x + 1] === 'door')
+        (roomMap[newWorld.player.y][newWorld.player.x + 1] === 'floor' ||
+          roomMap[newWorld.player.y][newWorld.player.x + 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x + 1;
       }
