@@ -100,15 +100,15 @@ export class WorldManager {
 
   private handleInventorySelect(event: InventorySelectEvent) {
     if (!this.world) return;
-    
-    const newWorld = { 
+
+    const newWorld = {
       ...this.world,
       player: {
         ...this.world.player,
         activeSlot: event.slotId,
       }
     };
-    
+
     this.updateWorld(newWorld);
   }
 }
