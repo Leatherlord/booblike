@@ -5,6 +5,7 @@ npm-debug.log
 # Build outputs
 dist/*
 !dist/index.html
+!dist/resources
 
 # IDE specific files
 .vscode/
