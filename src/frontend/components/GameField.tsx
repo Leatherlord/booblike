@@ -7,7 +7,7 @@ interface GameFieldProps {
   world: World | null;
 }
 
-const MAX_HORIZONTAL_TILES = 60;
+const MAX_HORIZONTAL_TILES = 20;
 const DEFAULT_TILE_SIZE = 32;
 
 const GameField: React.FC<GameFieldProps> = ({ world }) => {
@@ -91,18 +91,34 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
               tileSize,
               tileSize
             );
-          } else {
-            // Fallback to solid color
+            
+            ctx.strokeStyle = '#121212';
+            ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+          } else if (tile && tile !== 'empty') {
             ctx.fillStyle = tile === 'wall' ? '#666' : '#eee';
             ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            
+            ctx.strokeStyle = '#121212';
+            ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+          } else {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(screenX, screenY, tileSize, tileSize);
           }
-          
-          ctx.strokeStyle = '#999';
-          ctx.strokeRect(screenX, screenY, tileSize, tileSize);
 
           if (x === cameraX && y === cameraY) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-            ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            const playerTexture = textureManagerRef.current?.getTexture('player');
+            if (playerTexture) {
+              ctx.drawImage(
+                playerTexture,
+                screenX,
+                screenY,
+                tileSize,
+                tileSize
+              );
+            } else {
+              ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+              ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            }
           }
         }
       });

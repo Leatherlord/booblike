@@ -90,7 +90,7 @@ export class WorldManager {
     const generatedRoom = generateRoom(seed);
     const stubMap: GameMap = {
       rooms: [getStartingRoom(), generatedRoom],
-      currentRoom: 0
+      currentRoom: 1
     };
     return stubMap;
   }
