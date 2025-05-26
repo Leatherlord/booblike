@@ -100,7 +100,9 @@ export class WorldManager {
 
     switch (event.type) {
       case 'player_move':
-        this.updateWorld(movePlayer(this.world, event.direction));
+        const playerMovedWorld = movePlayer(this.world, event.direction);
+        const transitionHandledWorld = {...playerMovedWorld};
+        this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
         // TODO: implement
