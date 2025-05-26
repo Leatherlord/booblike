@@ -1,7 +1,7 @@
 import { World, InventorySlot, GameMap, Room } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
-import { generateRoom } from './map-generator';
+import { generateRoom, getStartingRoom } from './map-generator';
 
 export class WorldManager {
   private world: World | null = null;
@@ -89,7 +89,7 @@ export class WorldManager {
     const seed = Math.round(Math.random() * 100000000);
     const generatedRoom = generateRoom(seed);
     const stubMap: GameMap = {
-      rooms: [generatedRoom],
+      rooms: [getStartingRoom(), generatedRoom],
       currentRoom: 0
     };
     return stubMap;

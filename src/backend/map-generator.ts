@@ -9,6 +9,7 @@ const MAX_DOOR_NUM = 5;
 const SMOOTHING_STEPS = 7;
 const WALL_INNITIAL_PROBABILITY = 0.48;
 const LEAST_WALL_ISLAND_SIZE = 16;
+const STARTING_ROOM_SIZE = 21;
 
 const OFFSETS_2D = [
     {x: 0, y: 1}, {x: 0, y: -1},
@@ -215,7 +216,7 @@ function generateDungeonMap(seed: number): Tile[][]{
     return basicBox;
 }
 
-export function generateRoom(seed: number): Room {
+export function generateRoom(seed: number, level: number = 0): Room {
     console.log("generating map with seed: ", seed);
     const rng = prngAlea(seed);
     let map = generateDungeonMap(seed);
@@ -242,4 +243,27 @@ export function generateRoom(seed: number): Room {
         exitMap.set(border[exitId], i);
     }
     return {map: map, exits: exitMap};
+}
+
+export function getStartingRoom(): Room {
+    let map: Tile[][] = Array(STARTING_ROOM_SIZE)
+      .fill(null)
+      .map(() =>
+        Array(STARTING_ROOM_SIZE)
+          .fill(null)
+          .map((_, colIndex) => {
+            if (colIndex === 0 || colIndex === STARTING_ROOM_SIZE - 1) return 'wall';
+            return 'floor';
+          })
+      )
+      .map((row, rowIndex) => {
+        if (rowIndex === 0 || rowIndex === STARTING_ROOM_SIZE - 1) {
+          return Array(STARTING_ROOM_SIZE).fill('wall');
+        }
+        return row;
+      });
+    map[0][Math.trunc(STARTING_ROOM_SIZE / 2)] = 'door';
+    let exits = new Map();
+    exits.set({x: 0, y: STARTING_ROOM_SIZE / 2}, 0);
+    return {map: map, exits: exits};
 }
