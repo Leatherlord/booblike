@@ -1,12 +1,20 @@
+import { Dictionary } from "typescript-collections";
+
 export type World = {
   map: GameMap;
   entities: Entity[];
   player: Entity & Inventory;
 };
 
+export type ExitMappingEntry = {
+  roomId: number;
+  exitId: number;
+}
+
 export type GameMap = {
-  rooms: Room[]
-  currentRoom: number
+  rooms: Room[];
+  currentRoom: number;
+  exitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry>;
 };
 
 export type Point2d = {
@@ -16,7 +24,8 @@ export type Point2d = {
 
 export type Room = {
   map: Tile[][];
-  exits: Map<Point2d, number | undefined>;
+  exits: Dictionary<Point2d, number | undefined>;
+  reverseExits: Dictionary<number, Point2d>;
 }
 
 export type Tile = 'empty' | 'wall' | 'floor' | 'door';

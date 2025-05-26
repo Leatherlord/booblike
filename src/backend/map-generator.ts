@@ -222,7 +222,8 @@ export function generateRoom(seed: number, level: number = 0): Room {
     let map = generateDungeonMap(seed);
     const border = getBorder(map);
     const doorNum = MIN_DOOR_NUM + Math.round(rng() * (MAX_DOOR_NUM - MIN_DOOR_NUM));
-    let exitMap = new Map<Point2d, number>();
+    let exitMap = new Collections.Dictionary<Point2d, number>(JSON.stringify);
+    let reverseExitMap = new Collections.Dictionary<number, Point2d>();
     let prevExitId = 0;
     function okForExit(id: number): boolean {
         const p = border[id];
@@ -240,9 +241,10 @@ export function generateRoom(seed: number, level: number = 0): Room {
         prevExitId = exitId;
         const p = border[exitId];
         map[p.x][p.y] = 'door';
-        exitMap.set(border[exitId], i);
+        exitMap.setValue(border[exitId], i);
+        reverseExitMap.setValue(i, border[exitId]);
     }
-    return {map: map, exits: exitMap};
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap};
 }
 
 export function getStartingRoom(): Room {
@@ -262,8 +264,14 @@ export function getStartingRoom(): Room {
         }
         return row;
       });
-    map[0][Math.trunc(STARTING_ROOM_SIZE / 2)] = 'door';
-    let exits = new Map();
-    exits.set({x: 0, y: STARTING_ROOM_SIZE / 2}, 0);
-    return {map: map, exits: exits};
+    const doorPos: Point2d = {
+        x: Math.trunc(STARTING_ROOM_SIZE / 2),
+        y: 0
+    };
+    map[doorPos.y][doorPos.x] = 'door';
+    let exits: Collections.Dictionary<Point2d, number> = new Collections.Dictionary(JSON.stringify);
+    exits.setValue(doorPos, 0);
+    let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
+    reverseExits.setValue(0, {x: 0, y: STARTING_ROOM_SIZE / 2});
+    return {map: map, exits: exits, reverseExits: reverseExits};
 }

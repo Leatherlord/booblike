@@ -1,7 +1,8 @@
-import { World, InventorySlot, GameMap, Room } from '../common/interfaces';
+import { World, InventorySlot, GameMap, Room, Point2d, ExitMappingEntry } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
+import { Dictionary } from 'typescript-collections';
 
 export class WorldManager {
   private world: World | null = null;
@@ -84,15 +85,50 @@ export class WorldManager {
         }
         return row;
       }),
-      exits: new Map,
+      exits: new Dictionary(JSON.stringify),
+      reverseExits: new Dictionary()
     }
     const seed = Math.round(Math.random() * 100000000);
     const generatedRoom = generateRoom(seed);
+    let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
+    defaultExitMapping.setValue({roomId: 0, exitId: 0}, {roomId: 1, exitId: 0});
+    defaultExitMapping.setValue({roomId: 1, exitId: 0}, {roomId: 0, exitId: 0})
     const stubMap: GameMap = {
       rooms: [getStartingRoom(), generatedRoom],
-      currentRoom: 1
+      currentRoom: 0,
+      exitMapping: defaultExitMapping
     };
     return stubMap;
+  }
+
+  public processTransition(pos: Point2d): World {
+    let gameMap = this.world!.map!;
+    const currentRoomId: number = gameMap!.currentRoom;
+    if (gameMap.rooms[currentRoomId].map[pos.y][pos.x] != 'door') {
+      return {...this.world!};
+    }
+    const exitId = gameMap.rooms[currentRoomId].exits.getValue(pos);
+    if (!exitId) {
+      console.log("failed to perform transition, no mapping for exit", pos);
+      console.log(gameMap.rooms[currentRoomId].exits);
+      return {...this.world!};
+    }
+    const currentEntry: ExitMappingEntry = {roomId: currentRoomId, exitId: exitId};
+    const nextRoomEntry = gameMap.exitMapping.getValue(currentEntry);
+    if (nextRoomEntry == undefined) {
+      // TODO: generate new room
+      return {...this.world!};
+    }
+    const newPosition = gameMap.rooms[nextRoomEntry.roomId].reverseExits.getValue(nextRoomEntry.exitId);
+    if (newPosition == undefined) {
+      console.log("failed to perform transition, no reverse mapping for exit", nextRoomEntry.exitId);
+      return {...this.world!};
+    }
+    return {
+      ...this.world!,
+      map: {...gameMap, currentRoom: nextRoomEntry.roomId},
+      player: {...this.world!.player, x: newPosition.x, y: newPosition.y}
+     };
   }
 
   public handleEvent(event: Event) {
@@ -101,7 +137,12 @@ export class WorldManager {
     switch (event.type) {
       case 'player_move':
         const playerMovedWorld = movePlayer(this.world, event.direction);
-        const transitionHandledWorld = {...playerMovedWorld};
+        const player = playerMovedWorld.player;
+        const playerPos: Point2d = {
+          x: player.x,
+          y: player.y
+        };
+        const transitionHandledWorld = this.processTransition(playerPos);
         this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
