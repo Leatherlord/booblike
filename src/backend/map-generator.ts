@@ -2,7 +2,7 @@ import { Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 
-const MAX_ROOM_SIZE = 50;
+const MAX_ROOM_SIZE = 150;
 const MIN_ROOM_SIZE = 20;
 const MIN_DOOR_NUM = 1;
 const MAX_DOOR_NUM = 5;
@@ -153,8 +153,8 @@ function generateDungeonMap(seed: number): Tile[][]{
     let smoothedBox = null;
     for (let k = 0; k < SMOOTHING_STEPS; ++k) {
         smoothedBox = basicBox.map(row => [...row]);
-        for (let i = 1; i < roomSize - 1; ++i) {
-            for (let j = 1; j < roomSize - 1; ++j) {
+        for (let i = 2; i < roomSize - 2; ++i) {
+            for (let j = 2; j < roomSize - 2; ++j) {
                 const wallNeighbours = countNeighbouring({x: i, y: j}, basicBox, 'wall');
                 if (basicBox[i][j] == "floor" && wallNeighbours >= 5) {
                     smoothedBox[i][j] = "wall";
