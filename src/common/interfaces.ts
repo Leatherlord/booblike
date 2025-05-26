@@ -1,10 +1,23 @@
 export type World = {
-  width: number;
-  height: number;
-  map: Tile[][];
+  map: GameMap;
   entities: Entity[];
   player: Entity & Inventory;
 };
+
+export type GameMap = {
+  rooms: Room[]
+  currentRoom: number
+};
+
+export type Point2d = {
+  x: number;
+  y: number;
+}
+
+export type Room = {
+  map: Tile[][];
+  exits: Map<Point2d, number | undefined>;
+}
 
 export type Tile = 'empty' | 'wall' | 'floor' | 'door';
 

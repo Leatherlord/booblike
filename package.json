@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "ts-seedrandom": "^1.0.1",
+    "typescript-collections": "^1.3.3"
   }
 }

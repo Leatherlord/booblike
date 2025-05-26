@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { World } from '../../common/interfaces';
+import { TextureManager } from '../utils/TextureManager';
+import { TEXTURE_CONFIG } from '../config/textures';
 
 interface GameFieldProps {
   world: World | null;
@@ -13,9 +15,37 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
   const gamefieldRef = useRef<HTMLDivElement>(null);
   const [tileSize, setTileSize] = useState(DEFAULT_TILE_SIZE);
   const renderCountRef = useRef(0);
+  const textureManagerRef = useRef<TextureManager | null>(null);
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  // Initialize and load textures
+  useEffect(() => {
+    const textureManager = new TextureManager(TEXTURE_CONFIG);
+    textureManagerRef.current = textureManager;
+    
+    // Start loading textures
+    textureManager.loadAllTextures().then(() => {
+      setTexturesLoaded(true);
+      setLoadingProgress(100);
+    });
+    
+    // Update loading progress periodically
+    const progressInterval = setInterval(() => {
+      if (textureManager.isFullyLoaded()) {
+        clearInterval(progressInterval);
+      } else {
+        setLoadingProgress(textureManager.getLoadingProgress());
+      }
+    }, 100);
+    
+    return () => {
+      clearInterval(progressInterval);
+    };
+  }, []);
 
   const renderCanvas = () => {
-    if (!world || !canvasRef.current) return;
+    if (!world || !canvasRef.current || !textureManagerRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -39,7 +69,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    world.map.forEach((row, y) => {
+    world.map.rooms[world.map.currentRoom].map.forEach((row, y) => {
       row.forEach((tile, x) => {
         const screenX = (x - offsetX) * tileSize;
         const screenY = (y - offsetY) * tileSize;
@@ -50,14 +80,45 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           screenY > -tileSize &&
           screenY < canvas.height
         ) {
-          ctx.fillStyle = tile === 'wall' ? '#666' : '#eee';
-          ctx.fillRect(screenX, screenY, tileSize, tileSize);
-          ctx.strokeStyle = '#999';
-          ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+          const texture = textureManagerRef.current?.getTexture(tile);
+          
+          if (texture) {
+            // Draw the texture if available
+            ctx.drawImage(
+              texture,
+              screenX,
+              screenY,
+              tileSize,
+              tileSize
+            );
+            
+            ctx.strokeStyle = '#121212';
+            ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+          } else if (tile && tile !== 'empty') {
+            ctx.fillStyle = tile === 'wall' ? '#666' : '#eee';
+            ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            
+            ctx.strokeStyle = '#121212';
+            ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+          } else {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(screenX, screenY, tileSize, tileSize);
+          }
 
           if (x === cameraX && y === cameraY) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-            ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            const playerTexture = textureManagerRef.current?.getTexture('player');
+            if (playerTexture) {
+              ctx.drawImage(
+                playerTexture,
+                screenX,
+                screenY,
+                tileSize,
+                tileSize
+              );
+            } else {
+              ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+              ctx.fillRect(screenX, screenY, tileSize, tileSize);
+            }
           }
         }
       });
@@ -100,7 +161,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
     if (world) {
       renderCanvas();
     }
-  }, [world, tileSize]);
+  }, [world, tileSize, texturesLoaded]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -127,6 +188,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           <div className="camera-info">
             Player position: ({world.player.x}, {world.player.y}) | Tile size:{' '}
             {tileSize}px | Renders: {renderCountRef.current}
+            {!texturesLoaded && (
+              <span> | Loading textures: {Math.round(loadingProgress)}%</span>
+            )}
           </div>
         </>
       ) : (

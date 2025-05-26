@@ -1,6 +1,7 @@
-import { World, InventorySlot } from '../common/interfaces';
+import { World, InventorySlot, GameMap, Room } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
+import { generateRoom, getStartingRoom } from './map-generator';
 
 export class WorldManager {
   private world: World | null = null;
@@ -41,29 +42,12 @@ export class WorldManager {
 
   public generateStubWorld() {
     const stubWorld: World = {
-      width: 20,
-      height: 20,
-      map: Array(20)
-        .fill(null)
-        .map(() =>
-          Array(20)
-            .fill(null)
-            .map((_, colIndex) => {
-              if (colIndex === 0 || colIndex === 19) return 'wall';
-              return 'floor';
-            })
-        )
-        .map((row, rowIndex) => {
-          if (rowIndex === 0 || rowIndex === 19) {
-            return Array(20).fill('wall');
-          }
-          return row;
-        }),
+      map: this.generateStubMap(),
       entities: [],
       player: {
         id: 'player',
-        x: 10,
-        y: 10,
+        x: 8,
+        y: 8,
         slots: this.createEmptyInventory(),
         activeSlot: 1,
       },
@@ -72,12 +56,53 @@ export class WorldManager {
     this.updateWorld(stubWorld);
   }
 
+  private generateStubMap(): GameMap {
+    const stubRoom: Room = {
+      map: Array(20)
+      .fill(null)
+      .map(() =>
+        Array(20)
+          .fill(null)
+          .map((_, colIndex) => {
+            if (colIndex === 0 || colIndex === 19) return 'wall';
+            return 'floor';
+          })
+      )
+      .map((row, rowIndex) => {
+        if (rowIndex === 0 || rowIndex === 19) {
+          return Array(20).fill('wall');
+        }
+        if (rowIndex === 10) {
+          const r = Array(20).fill('floor');
+          for (let i = 5; i < 15; i++) {
+            r[i] = 'empty';
+          }
+          r[10] = 'door';
+          r[0] = 'wall';
+          r[19] = 'wall';
+          return r;
+        }
+        return row;
+      }),
+      exits: new Map,
+    }
+    const seed = Math.round(Math.random() * 100000000);
+    const generatedRoom = generateRoom(seed);
+    const stubMap: GameMap = {
+      rooms: [getStartingRoom(), generatedRoom],
+      currentRoom: 1
+    };
+    return stubMap;
+  }
+
   public handleEvent(event: Event) {
     if (!this.world) return;
 
     switch (event.type) {
       case 'player_move':
-        this.updateWorld(movePlayer(this.world, event.direction));
+        const playerMovedWorld = movePlayer(this.world, event.direction);
+        const transitionHandledWorld = {...playerMovedWorld};
+        this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
         // TODO: implement
@@ -90,15 +115,15 @@ export class WorldManager {
 
   private handleInventorySelect(event: InventorySelectEvent) {
     if (!this.world) return;
-    
-    const newWorld = { 
+
+    const newWorld = {
       ...this.world,
       player: {
         ...this.world.player,
         activeSlot: event.slotId,
       }
     };
-    
+
     this.updateWorld(newWorld);
   }
 }
