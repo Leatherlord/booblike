@@ -3,6 +3,7 @@ import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
+import { prngAlea } from 'ts-seedrandom';
 
 export class WorldManager {
   private world: World | null = null;
@@ -42,8 +43,10 @@ export class WorldManager {
   }
 
   public generateStubWorld() {
+    const worldSeed = Math.trunc(Math.random() * 1000000); 
+    let worldRandom = prngAlea(worldSeed);
     const stubWorld: World = {
-      map: this.generateStubMap(),
+      map: this.generateStubMap(worldSeed),
       entities: [],
       player: {
         id: 'player',
@@ -51,13 +54,15 @@ export class WorldManager {
         y: 8,
         slots: this.createEmptyInventory(),
         activeSlot: 1,
+        level: 1
       },
+      random: worldRandom
     };
 
     this.updateWorld(stubWorld);
   }
 
-  private generateStubMap(): GameMap {
+  private generateStubMap(seed: number): GameMap {
     const stubRoom: Room = {
       map: Array(20)
       .fill(null)
@@ -88,46 +93,55 @@ export class WorldManager {
       exits: new Dictionary(JSON.stringify),
       reverseExits: new Dictionary()
     }
-    const seed = Math.round(Math.random() * 100000000);
-    const generatedRoom = generateRoom(seed);
     let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
-    defaultExitMapping.setValue({roomId: 0, exitId: 0}, {roomId: 1, exitId: 0});
-    defaultExitMapping.setValue({roomId: 1, exitId: 0}, {roomId: 0, exitId: 0})
     const stubMap: GameMap = {
-      rooms: [getStartingRoom(), generatedRoom],
+      rooms: [getStartingRoom()],
       currentRoom: 0,
       exitMapping: defaultExitMapping
     };
     return stubMap;
   }
 
-  public processTransition(pos: Point2d): World {
-    let gameMap = this.world!.map!;
+  private countUnlinkedExits(): number {
+    const totalExits = this.world?.map.rooms.map(r => r.exits.size()).reduce((sum, cur) => sum + cur, 0);
+    const linkedExits = this.world?.map.exitMapping.size()!;
+    return totalExits! - linkedExits;
+  }
+
+  public processTransition(curWorld: World): World {
+    const pos: Point2d = {x: curWorld.player.x, y: curWorld.player.y};
+    let gameMap = curWorld.map;
     const currentRoomId: number = gameMap!.currentRoom;
     if (gameMap.rooms[currentRoomId].map[pos.y][pos.x] != 'door') {
-      return {...this.world!};
+      return curWorld;
     }
     const exitId = gameMap.rooms[currentRoomId].exits.getValue(pos);
-    if (!exitId) {
+    if (!exitId && exitId != 0) {
       console.log("failed to perform transition, no mapping for exit", pos);
       console.log(gameMap.rooms[currentRoomId].exits);
-      return {...this.world!};
+      return curWorld;
     }
     const currentEntry: ExitMappingEntry = {roomId: currentRoomId, exitId: exitId};
-    const nextRoomEntry = gameMap.exitMapping.getValue(currentEntry);
-    if (nextRoomEntry == undefined) {
-      // TODO: generate new room
-      return {...this.world!};
+    let nextRoomEntry = gameMap.exitMapping.getValue(currentEntry);
+    if (!nextRoomEntry) {
+      const roomSeed = Math.round(1000000 * curWorld.random())
+      const unlinkedExits = this.countUnlinkedExits();
+      const newRoom = generateRoom(roomSeed, curWorld.player.level, unlinkedExits < 2);
+      const newRoomId = gameMap.rooms.length;
+      gameMap.rooms.push(newRoom);
+      nextRoomEntry = {roomId: newRoomId, exitId: 0};
+      gameMap.exitMapping.setValue(currentEntry, nextRoomEntry);
+      gameMap.exitMapping.setValue(nextRoomEntry, currentEntry);
     }
     const newPosition = gameMap.rooms[nextRoomEntry.roomId].reverseExits.getValue(nextRoomEntry.exitId);
-    if (newPosition == undefined) {
+    if (!newPosition) {
       console.log("failed to perform transition, no reverse mapping for exit", nextRoomEntry.exitId);
-      return {...this.world!};
+      return curWorld;
     }
     return {
       ...this.world!,
       map: {...gameMap, currentRoom: nextRoomEntry.roomId},
-      player: {...this.world!.player, x: newPosition.x, y: newPosition.y}
+      player: {...curWorld.player, x: newPosition.x, y: newPosition.y}
      };
   }
 
@@ -142,7 +156,7 @@ export class WorldManager {
           x: player.x,
           y: player.y
         };
-        const transitionHandledWorld = this.processTransition(playerPos);
+        const transitionHandledWorld = this.processTransition(playerMovedWorld);
         this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':

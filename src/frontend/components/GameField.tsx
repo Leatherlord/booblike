@@ -186,7 +186,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
             height={600}
           />
           <div className="camera-info">
-            Player position: ({world.player.x}, {world.player.y}) | Tile size:{' '}
+            Player position: ({world.player.x}, {world.player.y}) | Room id: {world.map.currentRoom} | Tile size:{' '}
             {tileSize}px | Renders: {renderCountRef.current}
             {!texturesLoaded && (
               <span> | Loading textures: {Math.round(loadingProgress)}%</span>

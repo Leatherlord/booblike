@@ -4,6 +4,7 @@ export type World = {
   map: GameMap;
   entities: Entity[];
   player: Entity & Inventory;
+  random: any;
 };
 
 export type ExitMappingEntry = {
@@ -34,6 +35,7 @@ export type Entity = {
   id?: string;
   x: number;
   y: number;
+  level: number;
 };
 
 export type InventoryItem = {
