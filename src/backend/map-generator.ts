@@ -2,10 +2,8 @@ import { Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 
-const MAX_ROOM_SIZE = 150;
+const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
-const MIN_DOOR_NUM = 1;
-const MAX_DOOR_NUM = 5;
 const SMOOTHING_STEPS = 7;
 const WALL_INNITIAL_PROBABILITY = 0.48;
 const LEAST_WALL_ISLAND_SIZE = 16;
@@ -28,7 +26,7 @@ function countNeighbouring(sample: Point2d, map: Tile[][], type: Tile): number {
     for (const o of OFFSETS_2D) {
         if (sample.x + o.x < 0 || sample.x + o.x >= map.length) {continue};
         if (sample.y + o.y < 0 || sample.y + o.y >= map[0].length) {continue};
-        if (map[sample.x + o.x][sample.y + o.y] == type) {
+        if (map[sample.y + o.y][sample.x + o.x] == type) {
             cnt += 1;
         }
     }
@@ -40,7 +38,7 @@ function countWalkableNeighbouring(sample: Point2d, map: Tile[][], type: Tile): 
     for (const o of WALKABLE_OFFSETS_2D) {
         if (sample.x + o.x < 0 || sample.x + o.x >= map.length) {continue};
         if (sample.y + o.y < 0 || sample.y + o.y >= map[0].length) {continue};
-        if (map[sample.x + o.x][sample.y + o.y] == type) {
+        if (map[sample.y + o.y][sample.x + o.x] == type) {
             cnt += 1;
         }
     }
@@ -53,22 +51,22 @@ function flood(start: Point2d, map: Tile[][], modifier: (t: Tile) => Tile = (t =
     let marks: mark[][] = map.map(r => r.map(() => 'empty'));
     let q: Collections.Queue<Point2d> = new Collections.Queue();
     q.add(start);
-    marks[start.x][start.y] = 'queued';
+    marks[start.y][start.x] = 'queued';
     while (!q.isEmpty()) {
         const p = q.dequeue();
-        if (p == undefined) {break;}
-        marks[p.x][p.y] = 'visited';
+        if (p === undefined) {break;}
+        marks[p.y][p.x] = 'visited';
         for (const o of WALKABLE_OFFSETS_2D) {
             const nx = p.x + o.x;
             const ny = p.y + o.y; 
             if (nx < 0 || nx >= map.length) {continue};
             if (ny < 0 || ny >= map[0].length) {continue};
-            if (marks[nx][ny] == 'empty' && map[p.x][p.y] == map[nx][ny]) {
+            if (marks[ny][nx] == 'empty' && map[p.y][p.x] == map[ny][nx]) {
                 q.add({x: nx, y: ny});
-                marks[nx][ny] = 'queued';
+                marks[ny][nx] = 'queued';
             }
         }
-        map[p.x][p.y] = modifier(map[p.x][p.y]);
+        map[p.y][p.x] = modifier(map[p.y][p.x]);
         cnt += 1;
     }
     return cnt;
@@ -81,7 +79,7 @@ function getBorder(map: Tile[][], byWalkable: boolean = true): Point2d[] {
     const maxNeighbours = byWalkable ? 4 : 8;
     for (let i = 0; i < roomSize - 1; ++i) {
         for (let j = 0; j < roomSize - 1; ++j) {
-            if (map[i][j] != 'wall') {continue;}
+            if (map[j][i] != 'wall') {continue;}
             const floorsNumber = neighboursFunction({x: i, y: j}, map, 'floor');
             if (floorsNumber < maxNeighbours && floorsNumber > 0) {
                 borderStart = {x: i, y: j};
@@ -96,25 +94,25 @@ function getBorder(map: Tile[][], byWalkable: boolean = true): Point2d[] {
     let marks: mark[][] = map.map(r => r.map(() => 'empty'));
     let q: Collections.Queue<Point2d> = new Collections.Queue();
     q.add(borderStart!);
-    marks[borderStart!.x][borderStart!.y] = 'queued';
+    marks[borderStart!.y][borderStart!.x] = 'queued';
     let border: Point2d[] = [];
     while(!q.isEmpty()) {
         const p = q.dequeue();
-        if (p == undefined) {break;}
-        marks[p.x][p.y] = 'visited';
+        if (p === undefined) {break;}
+        marks[p.y][p.x] = 'visited';
         border.push({x: p.x, y: p.y});
         for (const o of OFFSETS_2D) {
             const nx = p.x + o.x;
             const ny = p.y + o.y; 
             if (nx < 0 || nx >= map.length) {continue};
             if (ny < 0 || ny >= map[0].length) {continue};
-            const floorsNumber = neighboursFunction({x: nx, y: ny}, map, 'floor');
-            if (marks[nx][ny] == 'empty' &&
-                map[p.x][p.y] == map[nx][ny] && 
+        const floorsNumber = neighboursFunction({x: nx, y: ny}, map, 'floor');
+            if (marks[ny][nx] == 'empty' &&
+                map[p.y][p.x] == map[ny][nx] && 
                 floorsNumber > 0 &&
                 floorsNumber < maxNeighbours) {
                     q.add({x: nx, y: ny});
-                    marks[nx][ny] = 'queued';
+                    marks[ny][nx] = 'queued';
             }
         }
     }
@@ -157,11 +155,11 @@ function generateDungeonMap(seed: number): Tile[][]{
         for (let i = 2; i < roomSize - 2; ++i) {
             for (let j = 2; j < roomSize - 2; ++j) {
                 const wallNeighbours = countNeighbouring({x: i, y: j}, basicBox, 'wall');
-                if (basicBox[i][j] == "floor" && wallNeighbours >= 5) {
-                    smoothedBox[i][j] = "wall";
+                if (basicBox[j][i] == "floor" && wallNeighbours >= 5) {
+                    smoothedBox[j][i] = "wall";
                 }
-                if (basicBox[i][j] == "wall" && (wallNeighbours < 4 || wallNeighbours > 8)) {
-                    smoothedBox[i][j] = "floor";
+                if (basicBox[j][i] == "wall" && (wallNeighbours < 4 || wallNeighbours > 8)) {
+                    smoothedBox[j][i] = "floor";
                 }
             }
         }
@@ -174,7 +172,7 @@ function generateDungeonMap(seed: number): Tile[][]{
     let maxCntStart: Point2d | undefined = undefined;
     for (let i = 1; i < roomSize - 1; ++i) {
         for (let j = 1; j < roomSize - 1; ++j) {
-            if (smoothedBox![i][j] == 'floor') {
+            if (smoothedBox![j][i] == 'floor') {
                 const start = {x: i, y: j};
                 const cnt = flood(start, smoothedBox!, _ => 'wall');
                 starts.push(start);
@@ -196,15 +194,15 @@ function generateDungeonMap(seed: number): Tile[][]{
     const mapBorder = getBorder(basicBox, false);
     flood({x: 0, y: 0}, basicBox, _ => 'empty');
     for (const p of mapBorder) {
-        basicBox[p.x][p.y] = 'wall';
+        basicBox[p.y][p.x] = 'wall';
     }
     flood({x: 0, y: 0}, basicBox, _ => 'door');
     for (let i = 1; i < roomSize - 1; ++i) {
         for (let j = 1; j < roomSize - 1; ++j) {
-            if (basicBox[i][j] == 'empty') {
+            if (basicBox[j][i] == 'empty') {
                 flood({x: i, y:j}, basicBox, _ => 'wall');
             }
-            if (basicBox[i][j] == 'wall') {
+            if (basicBox[j][i] == 'wall') {
                 const size = flood({x: i, y:j}, basicBox);
                 if (size < LEAST_WALL_ISLAND_SIZE) {
                     flood({x: i, y:j}, basicBox, _ => 'floor');
@@ -216,21 +214,25 @@ function generateDungeonMap(seed: number): Tile[][]{
     return basicBox;
 }
 
-export function generateRoom(seed: number, level: number = 0): Room {
+export function generateRoom(seed: number, level: number = 0, twoDoorsRequired: boolean = false): Room {
     console.log("generating map with seed: ", seed);
     const rng = prngAlea(seed);
     let map = generateDungeonMap(seed);
+    const mapSize = map.length;
     const border = getBorder(map);
-    const doorNum = MIN_DOOR_NUM + Math.round(rng() * (MAX_DOOR_NUM - MIN_DOOR_NUM));
-    let exitMap = new Map<Point2d, number>();
+    const minDoorsNum = twoDoorsRequired ? 2 : 1;
+    const maxDoorsNum = Math.round(mapSize / 12);
+    const doorNum = minDoorsNum + Math.round(rng() * (maxDoorsNum - minDoorsNum));
+    let exitMap = new Collections.Dictionary<Point2d, number>(JSON.stringify);
+    let reverseExitMap = new Collections.Dictionary<number, Point2d>();
     let prevExitId = 0;
     function okForExit(id: number): boolean {
         const p = border[id];
         if ((p.x < 2 || p.x > map.length - 2) && (p.y < 2 || p.y > map.length - 2)) {
             return false;
         }
-        return (map[p.x - 1][p.y] == 'wall' && map[p.x + 1][p.y] == 'wall') ||
-               (map[p.x][p.y - 1] == 'wall' && map[p.x][p.y + 1] == 'wall');
+        return (map[p.y - 1][p.x] == 'wall' && map[p.y + 1][p.x] == 'wall') ||
+               (map[p.y][p.x - 1] == 'wall' && map[p.y][p.x + 1] == 'wall');
     }
     for (let i = 0; i < doorNum; ++i) {
         let exitId = (prevExitId + Math.round(rng() * border.length / doorNum)) % border.length;
@@ -239,10 +241,11 @@ export function generateRoom(seed: number, level: number = 0): Room {
         }
         prevExitId = exitId;
         const p = border[exitId];
-        map[p.x][p.y] = 'door';
-        exitMap.set(border[exitId], i);
+        map[p.y][p.x] = 'door';
+        exitMap.setValue(border[exitId], i);
+        reverseExitMap.setValue(i, border[exitId]);
     }
-    return {map: map, exits: exitMap};
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap};
 }
 
 export function getStartingRoom(): Room {
@@ -262,8 +265,14 @@ export function getStartingRoom(): Room {
         }
         return row;
       });
-    map[0][Math.trunc(STARTING_ROOM_SIZE / 2)] = 'door';
-    let exits = new Map();
-    exits.set({x: 0, y: STARTING_ROOM_SIZE / 2}, 0);
-    return {map: map, exits: exits};
+    const doorPos: Point2d = {
+        x: Math.trunc(STARTING_ROOM_SIZE / 2),
+        y: 0
+    };
+    map[doorPos.y][doorPos.x] = 'door';
+    let exits: Collections.Dictionary<Point2d, number> = new Collections.Dictionary(JSON.stringify);
+    exits.setValue(doorPos, 0);
+    let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
+    reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
+    return {map: map, exits: exits, reverseExits: reverseExits};
 }

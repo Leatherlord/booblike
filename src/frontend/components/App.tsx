@@ -81,7 +81,7 @@ const App: React.FC = () => {
       <div className="hud top-hud">
         <div className="hud-content">
           <span className="hud-item">Score: 0</span>
-          <span className="hud-item">Level: 1</span>
+          <span className="hud-item">Level: {world?.player.level}</span>
           {world && (
             <span className="hud-item">
               Player: ({world.player.x}, {world.player.y})
