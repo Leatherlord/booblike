@@ -9,5 +9,6 @@ export function createEmptySquareMask(dim: number): number[][] {
 }
 
 export function createEmptyMask(dimX: number, dimY: number): number[][] {
-  return Array<number[]>(dimY).fill(Array<number>(dimX).fill(0));
+  return Array.from({ length: dimY }, () => Array(dimX).fill(0));
 }
+

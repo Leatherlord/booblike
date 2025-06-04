@@ -31,7 +31,6 @@ export const WorldProvider: React.FC<{ children: ReactNode }> = ({
   const handleEvent = (event: Event) => {
     worldManagerRef.current?.handleEvent(event);
   };
-
   return (
     <WorldContext.Provider value={{ world, handleEvent }}>
       {children}

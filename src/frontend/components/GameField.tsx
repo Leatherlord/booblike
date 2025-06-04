@@ -1,42 +1,16 @@
-import React, { useRef, useEffect, useState, useLayoutEffect, ReactNode, isValidElement } from 'react';
-import { Entity, Point2d, World } from '../../common/interfaces';
+import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
+import { World } from '../../common/interfaces';
 import { TextureManager } from '../utils/TextureManager';
 import { TEXTURE_CONFIG } from '../config/textures';
-import { AttackTilesProps } from "./App";
 
 interface GameFieldProps {
-  world: World | null;
-  children: React.ReactNode | null;
+  world: World | null
 }
-
-interface CharacterProp {
-  world: World | null;
-  tile_size: number;
-  canvas_size: Point2d;
-  children: React.ReactNode;
-}
-
-const CharacterFC: React.FC<CharacterProp> = ({ world, tile_size, canvas_size, children }) => {
-
-  return (
-    <div className="character" style = {{
-    }}>
-      // по сути жта бобертка не нужна
-      {React.Children.map(children, child => {
-        if (isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, { tile_size, canvas_size });
-        }
-        return child;
-      })}
-    </div>
-  );
-};
-
 
 const MAX_HORIZONTAL_TILES = 20;
 const DEFAULT_TILE_SIZE = 32;
 
-const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
+const GameField: React.FC<GameFieldProps> = ({ world }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const gamefieldRef = useRef<HTMLDivElement>(null);
@@ -362,6 +336,7 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
           />
           <canvas
             ref={overlayCanvasRef}
+            className="overlay-canvas"
             style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}
           />
           <div style={{
@@ -373,12 +348,6 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-            {React.Children.map(children, child => {
-              if (isValidElement(child)) {
-                return React.cloneElement(child as React.ReactElement<any>, { tileSize });
-              }
-              return child;
-            })}
           </div>
           <div className="camera-info">
             Player position: ({world.player.x}, {world.player.y}) | Room id:{' '}
