@@ -301,43 +301,34 @@ export function generateRoom(
     while (!okForExit(exitId)) {
       exitId = (exitId + 1) % border.length;
     }
-    prevExitId = exitId;
-    const p = border[exitId];
-    map[p.y][p.x] = 'door';
-    exitMap.setValue(border[exitId], i);
-    reverseExitMap.setValue(i, border[exitId]);
-  }
-  return { map: map, exits: exitMap, reverseExits: reverseExitMap };
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: {}};
 }
 
 export function getStartingRoom(): Room {
-  let map: Tile[][] = Array(STARTING_ROOM_SIZE)
-    .fill(null)
-    .map(() =>
-      Array(STARTING_ROOM_SIZE)
-        .fill(null)
-        .map((_, colIndex) => {
-          if (colIndex === 0 || colIndex === STARTING_ROOM_SIZE - 1)
-            return 'wall';
-          return 'floor';
-        })
-    )
-    .map((row, rowIndex) => {
-      if (rowIndex === 0 || rowIndex === STARTING_ROOM_SIZE - 1) {
-        return Array(STARTING_ROOM_SIZE).fill('wall');
-      }
-      return row;
-    });
-  const doorPos: Point2d = {
-    x: Math.trunc(STARTING_ROOM_SIZE / 2),
-    y: 0,
-  };
-  map[doorPos.y][doorPos.x] = 'door';
-  let exits: Collections.Dictionary<Point2d, number> =
-    new Collections.Dictionary(JSON.stringify);
-  exits.setValue(doorPos, 0);
-  let reverseExits: Collections.Dictionary<number, Point2d> =
-    new Collections.Dictionary();
-  reverseExits.setValue(0, { x: doorPos.x, y: doorPos.y });
-  return { map: map, exits: exits, reverseExits: reverseExits };
+    let map: Tile[][] = Array(STARTING_ROOM_SIZE)
+      .fill(null)
+      .map(() =>
+        Array(STARTING_ROOM_SIZE)
+          .fill(null)
+          .map((_, colIndex) => {
+            if (colIndex === 0 || colIndex === STARTING_ROOM_SIZE - 1) return 'wall';
+            return 'floor';
+          })
+      )
+      .map((row, rowIndex) => {
+        if (rowIndex === 0 || rowIndex === STARTING_ROOM_SIZE - 1) {
+          return Array(STARTING_ROOM_SIZE).fill('wall');
+        }
+        return row;
+      });
+    const doorPos: Point2d = {
+        x: Math.trunc(STARTING_ROOM_SIZE / 2),
+        y: 0
+    };
+    map[doorPos.y][doorPos.x] = 'door';
+    let exits: Collections.Dictionary<Point2d, number> = new Collections.Dictionary(JSON.stringify);
+    exits.setValue(doorPos, 0);
+    let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
+    reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
+    return {map: map, exits: exits, reverseExits: reverseExits, entities: {}};
 }

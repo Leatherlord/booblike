@@ -7,7 +7,7 @@ export type PlayerMoveEvent = {
 
 export type PlayerAttackEvent = {
   type: 'player_attack';
-  direction: 'up' | 'down' | 'left' | 'right';
+  timeStarted: number;
 };
 
 export type InventorySelectEvent = {
