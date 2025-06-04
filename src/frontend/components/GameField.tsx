@@ -38,12 +38,15 @@ const DEFAULT_TILE_SIZE = 32;
 
 const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const gamefieldRef = useRef<HTMLDivElement>(null);
   const [tileSize, setTileSize] = useState(DEFAULT_TILE_SIZE);
   const renderCountRef = useRef(0);
   const textureManagerRef = useRef<TextureManager | null>(null);
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+
+  const fadingTilesRef = useRef<{ x: number; y: number; alpha: number }[]>([]);
 
   // Initialize and load textures
   useEffect(() => {
@@ -74,30 +77,62 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
     if (!world) return;
     let entity = world?.player;
     if (!entity.lastAttackArray) return;
-    const canvas = canvasRef.current;
+    //for each entity
+    entity.lastAttackArray.map((tile, i) => {
+      fadingTilesRef.current.push({
+        x: tile.x,
+        y: tile.y,
+        alpha: 0.5,
+      });
+    })
+    entity.lastAttackArray = [];
+  };
+
+  const animateAttack = () => {
+    if (!world) return;
+    let entity = world?.player;
+    if (!entity.lastAttackArray) return;
+    const canvas = overlayCanvasRef.current;
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.globalAlpha = 0.5;
-    console.log("entity.lastAttackArray")
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if(fadingTilesRef.current.length == 0) return;
+
     const viewportWidth = Math.floor(canvas.width / tileSize);
     const viewportHeight = Math.floor(canvas.height / tileSize);
-
     const cameraX = world.player.x;
     const cameraY = world.player.y;
-    
     const offsetX = cameraX - Math.floor(viewportWidth / 2);
     const offsetY = cameraY - Math.floor(viewportHeight / 2);
-    entity.lastAttackArray.map((tile, i) => {
+
+    fadingTilesRef.current = fadingTilesRef.current
+    .map((tile) => ({
+      ...tile,
+      alpha: tile.alpha - 0.05,
+    })).filter((tile) => tile.alpha > 0);
+    
+    fadingTilesRef.current.map((tile, i) => {
+      ctx.globalAlpha = tile.alpha;
       const x =  tile.x;
       const y = tile.y;
       const screenX = (x - offsetX) * tileSize;
       const screenY = (y - offsetY) * tileSize;
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+      ctx.fillStyle = 'rgba(255, 0, 0)';
       ctx.fillRect(screenX, screenY, tileSize, tileSize);
     })
     ctx.globalAlpha = 1.0;
-  };
+    renderCountRef.current += 1;
+    requestAnimationFrame(animateAttack);
+  }
+
+  useEffect(() => {
+    let animationFrameId = requestAnimationFrame(animateAttack);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [world]);
 
   const renderCanvas = () => {
     if (!world || !canvasRef.current || !textureManagerRef.current) return;
@@ -173,9 +208,8 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
         }
       });
     });
-
-    renderCountRef.current += 1;
     renderAttack();
+    renderCountRef.current += 1;
   };
 
   // const renderEnemies = (entity: Entity) => {
@@ -256,6 +290,11 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
 
           requestAnimationFrame(renderCanvas);
         }
+
+        if (overlayCanvasRef.current) {
+          overlayCanvasRef.current.width = gameFieldWidth;
+          overlayCanvasRef.current.height = gamefieldRef.current.clientHeight;
+        }
       }
     };
 
@@ -297,8 +336,19 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [world]);
-  
 
+  useEffect(() => {
+    if (!overlayCanvasRef.current) return;
+
+    const canvas = overlayCanvasRef.current;
+    const observer = new ResizeObserver(() => {
+      renderCanvas();
+    });
+
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [world]);
+  
   return (
     <div className="game-field" ref={gamefieldRef}>
       {world ? (
@@ -309,8 +359,11 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
             id="gameCanvas"
             width={800}
             height={600}
-          >
-          </canvas>
+          />
+          <canvas
+            ref={overlayCanvasRef}
+            style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}
+          />
           <div style={{
             position: 'absolute',
             left: world.player.x * tileSize,
