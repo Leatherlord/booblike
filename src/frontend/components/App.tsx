@@ -3,50 +3,6 @@ import GameField from './GameField';
 import Inventory from './Inventory';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
-import { Entity, Point2d, World } from '../../common/interfaces';
-
-export interface AttackTilesProps {
-  player?: Entity,
-  entity?: Entity,
-  tileSize?: number,
-  canvas_size?: Point2d
-}
-
-const AttackTiles: React.FC<AttackTilesProps> = 
-({ player, entity, tileSize = 32, canvas_size = { x: 800, y: 600 } }) => {
-  if (!player || !entity || !entity.lastAttackArray) return null;
-
-  return (
-    <div 
-      className="damage-effect"
-    >
-      {entity.lastAttackArray.map((tile, i) => {
-        const dx =  tile.x;
-        const dy = tile.y;
-
-        const screenX = (dx)*tileSize;
-        const screenY = (dy)*tileSize;
-
-        return (
-          <div 
-            key={'attackTile' + i}
-            className="attack-tile"
-            style={{
-              position: 'absolute',
-              left: screenX,
-              top: screenY,
-              width: tileSize,
-              height: tileSize,
-              backgroundColor: 'rgba(255, 0, 0, 0.5)',
-              pointerEvents: 'none',
-            }}>
-            <p style={{ textAlign: 'center', margin: 0 }}>{dx}, {dy}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
@@ -110,7 +66,7 @@ const App: React.FC = () => {
         case ' ':
           event = {
             type: 'player_attack',
-            timeStarted: Date.now()
+            weaponChosen: world.player.activeSlot
           };
           setDamageEffectKey(prev => prev == 1 ? prev + 1 : prev - 1);
           break;
@@ -154,10 +110,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <GameField world={world}>
-            <div key = {damageEffectKey}
-            />
-        </GameField>
+        <GameField world={world}/>
 
         <div className="hud right-hud">
           <div className="hud-content"></div>

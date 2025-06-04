@@ -33,7 +33,7 @@ export class PlayerCharacter implements Character {
         this.healthBar = healthBar;
         this.charClass = new PlayerClass();
         this.activeBuffs = []
-        this.attacks = [attack.CircleAttack, attack.StraightAttack]
+        this.attacks = [attack.CircleAttack, attack.StraightAttack, attack.UnevenAttack, attack.SuperUnevenAttack]
         this.characterSize = {x:1, y:1}
     }
     state: State;

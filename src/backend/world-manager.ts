@@ -5,7 +5,6 @@ import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
 import { PlayerCharacter } from './behaviour/character';
-import { createEmptyMask, pointToKey } from '../frontend/utils/utils';
 
 export class WorldManager {
   private world: World | null = null;
@@ -165,8 +164,7 @@ export class WorldManager {
         this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
-        const playerReadyToAttack = this.world.player;
-        const mask = attackFromPlayer(this.world, 0); // handle all attacks
+        const mask = attackFromPlayer(this.world, event.weaponChosen);
         this.handleAttack();
         return mask;
       case 'inventory_select':
@@ -189,8 +187,7 @@ export class WorldManager {
     this.updateWorld(newWorld);
   }
 
-  private handleAttack = (
-  ) => {
+  private handleAttack = () => {
     if (!this.world) return;
 
       // deleting entities which have 0 health
