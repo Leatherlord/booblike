@@ -245,7 +245,7 @@ export function generateRoom(seed: number, level: number = 0, twoDoorsRequired: 
         exitMap.setValue(border[exitId], i);
         reverseExitMap.setValue(i, border[exitId]);
     }
-    return {map: map, exits: exitMap, reverseExits: reverseExitMap};
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: {}};
 }
 
 export function getStartingRoom(): Room {
@@ -274,5 +274,5 @@ export function getStartingRoom(): Room {
     exits.setValue(doorPos, 0);
     let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
-    return {map: map, exits: exits, reverseExits: reverseExits};
+    return {map: map, exits: exits, reverseExits: reverseExits, entities: {}};
 }
