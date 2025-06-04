@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, ReactNode } from 'react';
 import GameField from './GameField';
 import Inventory from './Inventory';
 import TexturePackSelector from './TexturePackSelector';
@@ -6,6 +6,50 @@ import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
 import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
+import { Entity, Point2d, World } from '../../common/interfaces';
+
+export interface AttackTilesProps {
+  player?: Entity,
+  entity?: Entity,
+  tile_size?: number,
+  canvas_size?: Point2d
+}
+
+const AttackTiles: React.FC<AttackTilesProps> = 
+({ player, entity, tile_size = 32, canvas_size = { x: 800, y: 600 } }) => {
+  if (!player || !entity || !entity.lastAttackArray) return null;
+
+  return (
+    <div 
+      className="damage-effect"
+    >
+      {entity.lastAttackArray.map((tile, i) => {
+        const dx =  tile.x;
+        const dy = tile.y;
+
+        const screenX = (dx)*tile_size;
+        const screenY = (dy)*tile_size;
+
+        return (
+          <div 
+            key={'attackTile' + i}
+            className="attack-tile"
+            style={{
+              position: 'absolute',
+              left: screenX,
+              top: screenY,
+              width: tile_size,
+              height: tile_size,
+              backgroundColor: 'rgba(255, 0, 0, 0.5)',
+              pointerEvents: 'none',
+            }}>
+            <p style={{ textAlign: 'center', margin: 0 }}>{dx}, {dy}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
@@ -14,6 +58,7 @@ const App: React.FC = () => {
     useState<TexturePack | null>(null);
   const [showTexturePackSelector, setShowTexturePackSelector] = useState(true);
   const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
+  const [damageEffectKey, setDamageEffectKey] = useState(0);
 
   useEffect(() => {
     const loadDefaultPack = async () => {
@@ -56,10 +101,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!world) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
-
       if (e.key >= '0' && e.key <= '9') {
         const slotNumber = parseInt(e.key, 10);
         handleEvent({
@@ -73,7 +116,7 @@ const App: React.FC = () => {
       if (now - lastEventTimeRef.current < 100) {
         return;
       }
-
+      
       let event: Event;
 
       switch (e.key) {
@@ -100,6 +143,13 @@ const App: React.FC = () => {
             type: 'player_move',
             direction: 'right',
           };
+          break;
+        case ' ':
+          event = {
+            type: 'player_attack',
+            timeStarted: Date.now()
+          };
+          setDamageEffectKey(prev => prev == 1 ? prev + 1 : prev - 1);
           break;
         default:
           return;
@@ -145,6 +195,7 @@ const App: React.FC = () => {
 
   return (
     <div className="game-container">
+
       <div className="hud top-hud">
         <div className="hud-content">
           <span className="hud-item">Score: 0</span>
@@ -173,7 +224,12 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <GameField world={world} selectedTexturePack={selectedTexturePack} />
+        <GameField world={world} selectedTexturePack={selectedTexturePack}>
+            <AttackTiles key = {damageEffectKey}
+              player={world?.player}
+              entity={world?.player} 
+            />
+        </GameField>
 
         <div className="hud right-hud">
           <div className="hud-content"></div>
@@ -184,6 +240,7 @@ const App: React.FC = () => {
         <div className="hud-content">
           <div className="hud-item">Use arrow keys to move the player</div>
           <div className="hud-item">Press 0-9 to select inventory slots</div>
+          <div className="hud-item">Press SPACE to attack</div>
         </div>
       </div>
     </div>

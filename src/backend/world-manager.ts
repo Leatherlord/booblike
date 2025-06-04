@@ -1,16 +1,11 @@
-import {
-  World,
-  InventorySlot,
-  GameMap,
-  Room,
-  Point2d,
-  ExitMappingEntry,
-} from '../common/interfaces';
+import { World, InventorySlot, GameMap, Room, Point2d, ExitMappingEntry, LookDirection } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
-import { movePlayer } from './player-controller';
+import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
+import { PlayerCharacter } from './behaviour/character';
+import { createEmptyMask, pointToKey } from '../frontend/utils/utils';
 
 export class WorldManager {
   private world: World | null = null;
@@ -59,9 +54,11 @@ export class WorldManager {
         id: 'player',
         x: 8,
         y: 8,
+        character: new PlayerCharacter(10),
+        lookDir: LookDirection.Right,
+        level: 1,
         slots: this.createEmptyInventory(),
         activeSlot: 1,
-        level: 1,
       },
       random: worldRandom,
     };
@@ -99,9 +96,9 @@ export class WorldManager {
         }),
       exits: new Dictionary(JSON.stringify),
       reverseExits: new Dictionary(),
-    };
-    let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> =
-      new Dictionary(JSON.stringify);
+      entities: {}
+    }
+    let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
     const stubMap: GameMap = {
       rooms: [getStartingRoom()],
       currentRoom: 0,
@@ -182,8 +179,10 @@ export class WorldManager {
         this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
-        // TODO: implement
-        break;
+        const playerReadyToAttack = this.world.player;
+        const mask = attackFromPlayer(this.world, 0); // handle all attacks
+        this.handleAttack();
+        return mask;
       case 'inventory_select':
         this.handleInventorySelect(event);
         break;
@@ -199,6 +198,21 @@ export class WorldManager {
         ...this.world.player,
         activeSlot: event.slotId,
       },
+    };
+
+    this.updateWorld(newWorld);
+  }
+
+  private handleAttack = (
+  ) => {
+    if (!this.world) return;
+
+      // deleting entities which have 0 health
+    const newWorld = {
+      ...this.world,
+      player: {
+        ...this.world.player
+      }
     };
 
     this.updateWorld(newWorld);

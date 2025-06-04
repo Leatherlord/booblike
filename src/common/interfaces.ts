@@ -1,4 +1,5 @@
-import { Dictionary } from 'typescript-collections';
+import { Dictionary } from "typescript-collections";
+import { Character } from "../backend/behaviour/character";
 
 export type World = {
   map: GameMap;
@@ -23,18 +24,36 @@ export type Point2d = {
   y: number;
 };
 
+export function keyToPoint(key: string): Point2d {
+  const [x, y] = key.split(',').map(Number);
+  return { x, y };
+}
+
 export type Room = {
   map: Tile[][];
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
-};
+  entities: Record<string, Entity>;
+}
 
 export type Tile = 'empty' | 'wall' | 'floor' | 'door';
+
+export enum LookDirection {
+  Up = "UP",
+  Down = "DOWN",
+  Left = "LEFT",
+  Right = "RIGHT"
+}
 
 export type Entity = {
   id?: string;
   x: number;
   y: number;
+  lookDir: LookDirection;
+  character: Character;
+  lastAttackArray?: Point2d[];
+
+  texture?: String; 
   level: number;
 };
 
