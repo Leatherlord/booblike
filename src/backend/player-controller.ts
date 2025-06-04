@@ -1,5 +1,5 @@
 import { LookDirection, Point2d, World } from '../common/interfaces';
-import { getAttackGridSize } from './behaviour/attacks';
+import { getAttackGridSize, getOffsets } from './behaviour/attacks';
 import { createEmptyMask, pointToKey } from '../frontend/utils/utils';
 
 export const movePlayer = (
@@ -57,77 +57,63 @@ export const movePlayer = (
   return newWorld;
 };
 
-
-function updateAnimationAttack(world: World, ans: Point2d[]) {
-  // if (!world) return;
-  // let mask = world.player.lastAttackMask;
-  // let center = world.player.attackCenter;
-  // if(!mask||!center) return;
-  // const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-  // const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-  // for() {
-    
-  // }
-  // const square = document.getElementById('attackGrid') as HTMLElement;
-  // square.style.setProperty('--center-x', `${(world.player.x + center.x) * 32}px`);
-  // square.style.setProperty('--center-y', `${(world.player.x + center.y) * 32}px`);
-  // square.style.setProperty('--height', `${mask.length * 32}px`);
-  // square.style.setProperty('--width', `${mask[0].length * 32}px`);
-  // console.log((world.player.x + center.x) * 32, (world.player.x + center.y) * 32)
-  // console.log(square.style.getPropertyValue('--center-x'), square.style.getPropertyValue('--center-y'))
-  // console.log(square.style.getPropertyValue('--height'), square.style.getPropertyValue('--width'))
-}
-
 export const attackFromPlayer = (world: World, attackNumber: number) => {
   const player = world.player;
-  const center = { x: world.player.x, y: world.player.y };
-  if (!player.character.attacks[attackNumber]) 
+  const center = { x: player.x, y: player.y };
+
+  if (!player.character.attacks[attackNumber]) attackNumber = 1;
+  if (!player.character.attacks[1]) {
     return {
-      mask: createEmptyMask(player.character.characterSize.x, player.character.characterSize.y), 
-      center: {x: 0, y: 0}
+      mask: createEmptyMask(player.character.characterSize.x, player.character.characterSize.y),
+      center: { x: 0, y: 0 }
     };
+  }
 
   const attack = player.character.attacks[attackNumber];
-  const width = getAttackGridSize(attack.areaSize).x;
-  const height = getAttackGridSize(attack.areaSize).y;
-  const yOffset = attack.areaSize.areaUp;
-  const xOffset = attack.areaSize.areaRight;
-  const mask = attack.area[player.lookDir];
+  const direction = player.lookDir;
+  const { x: width, y: height } = getAttackGridSize(attack.areaSize, direction);
+  const { x: xOffset, y: yOffset } = getOffsets(player, attack);
+  const mask = attack.area[direction];
 
   const map = world.map.rooms[world.map.currentRoom].map;
   const entities = world.map.rooms[world.map.currentRoom].entities;
-  let newMask = createEmptyMask(height, width);
-  let attackedTiles = [];  
+  const newMask = createEmptyMask(width, height);
+  const attackedTiles: Point2d[] = [];
+  const killedEntities: Point2d[] = [];
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (mask[y][x] !== 1) continue;
+
       const targetX = center.x + x - xOffset;
       const targetY = center.y + y - yOffset;
 
       if (
-        targetY >= 0 &&
-        targetY < map.length &&
-        targetX >= 0 &&
-        targetX < map[0].length
+        targetY >= 0 && targetY < map.length &&
+        targetX >= 0 && targetX < map[0].length
       ) {
         const tile = map[targetY][targetX];
         const pos: Point2d = { x: targetX, y: targetY };
 
         if (entities[pointToKey(pos)]) {
-          console.log("Spotted an entity.");
-          entities[pointToKey(pos)].character;
+          console.log("Spotted an entity:", entities[pointToKey(pos)]);
         }
 
-        if (tile == 'floor') {
+        if (tile === 'floor') {
           newMask[y][x] = 1;
-          attackedTiles.push({x: targetX, y: targetY});
+          attackedTiles.push(pos);
         }
-
       }
     }
   }
+
   player.lastAttackArray = attackedTiles;
-  //player.attackCenter = {x: width - xOffset, y: height - yOffset};
-  //updateAnimationAttack(world);
-  return {mask: newMask, center: {x: width - xOffset, y: height - yOffset}};
-}
+
+  return {
+    mask: newMask,
+    center,
+    originOffset: { x: xOffset, y: yOffset },
+    tiles: attackedTiles,
+  };
+};
+

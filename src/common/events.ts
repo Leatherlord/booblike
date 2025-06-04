@@ -7,7 +7,7 @@ export type PlayerMoveEvent = {
 
 export type PlayerAttackEvent = {
   type: 'player_attack';
-  timeStarted: number;
+  weaponChosen: number;
 };
 
 export type InventorySelectEvent = {

@@ -4,6 +4,7 @@ import Inventory from './Inventory';
 import TexturePackSelector from './TexturePackSelector';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
+<<<<<<< HEAD
 import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
 import { Entity, Point2d, World } from '../../common/interfaces';
@@ -50,6 +51,8 @@ const AttackTiles: React.FC<AttackTilesProps> =
     </div>
   );
 };
+=======
+>>>>>>> 18dc278 (fixed weapon system for player)
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
@@ -147,7 +150,7 @@ const App: React.FC = () => {
         case ' ':
           event = {
             type: 'player_attack',
-            timeStarted: Date.now()
+            weaponChosen: world.player.activeSlot
           };
           setDamageEffectKey(prev => prev == 1 ? prev + 1 : prev - 1);
           break;
@@ -224,9 +227,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <GameField world={world} selectedTexturePack={selectedTexturePack}>
-            <div key = {damageEffectKey}/>
-        </GameField>
+        <GameField world={world} selectedTexturePack={selectedTexturePack}/>
 
         <div className="hud right-hud">
           <div className="hud-content"></div>
