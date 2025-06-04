@@ -21,6 +21,7 @@ const CharacterFC: React.FC<CharacterProp> = ({ world, tile_size, canvas_size, c
   return (
     <div className="character" style = {{
     }}>
+      // по сути жта бобертка не нужна
       {React.Children.map(children, child => {
         if (isValidElement(child)) {
           return React.cloneElement(child as React.ReactElement<any>, { tile_size, canvas_size });
@@ -68,6 +69,35 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
       clearInterval(progressInterval);
     };
   }, []);
+
+  const renderAttack = () => {
+    if (!world) return;
+    let entity = world?.player;
+    if (!entity.lastAttackArray) return;
+    const canvas = canvasRef.current;
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.globalAlpha = 0.5;
+    console.log("entity.lastAttackArray")
+    const viewportWidth = Math.floor(canvas.width / tileSize);
+    const viewportHeight = Math.floor(canvas.height / tileSize);
+
+    const cameraX = world.player.x;
+    const cameraY = world.player.y;
+    
+    const offsetX = cameraX - Math.floor(viewportWidth / 2);
+    const offsetY = cameraY - Math.floor(viewportHeight / 2);
+    entity.lastAttackArray.map((tile, i) => {
+      const x =  tile.x;
+      const y = tile.y;
+      const screenX = (x - offsetX) * tileSize;
+      const screenY = (y - offsetY) * tileSize;
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+      ctx.fillRect(screenX, screenY, tileSize, tileSize);
+    })
+    ctx.globalAlpha = 1.0;
+  };
 
   const renderCanvas = () => {
     if (!world || !canvasRef.current || !textureManagerRef.current) return;
@@ -145,6 +175,7 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
     });
 
     renderCountRef.current += 1;
+    renderAttack();
   };
 
   // const renderEnemies = (entity: Entity) => {
@@ -266,6 +297,7 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [world]);
+  
 
   return (
     <div className="game-field" ref={gamefieldRef}>
@@ -277,17 +309,23 @@ const GameField: React.FC<GameFieldProps> = ({ world, children }) => {
             id="gameCanvas"
             width={800}
             height={600}
-          />
+          >
+          </canvas>
           <div style={{
             position: 'absolute',
-            left: Math.floor((canvasRef.current?.width || 800) / 2) - world.player.x * tileSize,
-            top: Math.floor((canvasRef.current?.height || 600) / 2) - world.player.y * tileSize,
+            left: world.player.x * tileSize,
+            top: Math.floor((canvasRef.current?.height || 600)/2) - world.player.y * tileSize,
             pointerEvents: 'none',
-              alignItems: 'right'
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}>
-            <CharacterFC world={world} tile_size={tileSize} canvas_size={{x: canvasRef.current?.width || 800, y: canvasRef.current?.height || 600}}>
-              {children}
-            </CharacterFC>
+            {React.Children.map(children, child => {
+              if (isValidElement(child)) {
+                return React.cloneElement(child as React.ReactElement<any>, { tileSize });
+              }
+              return child;
+            })}
           </div>
           <div className="camera-info">
             Player position: ({world.player.x}, {world.player.y}) | Room id:{' '}

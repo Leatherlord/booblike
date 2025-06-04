@@ -8,12 +8,12 @@ import { Entity, Point2d, World } from '../../common/interfaces';
 export interface AttackTilesProps {
   player?: Entity,
   entity?: Entity,
-  tile_size?: number,
+  tileSize?: number,
   canvas_size?: Point2d
 }
 
 const AttackTiles: React.FC<AttackTilesProps> = 
-({ player, entity, tile_size = 32, canvas_size = { x: 800, y: 600 } }) => {
+({ player, entity, tileSize = 32, canvas_size = { x: 800, y: 600 } }) => {
   if (!player || !entity || !entity.lastAttackArray) return null;
 
   return (
@@ -24,8 +24,8 @@ const AttackTiles: React.FC<AttackTilesProps> =
         const dx =  tile.x;
         const dy = tile.y;
 
-        const screenX = (dx)*tile_size;
-        const screenY = (dy)*tile_size;
+        const screenX = (dx)*tileSize;
+        const screenY = (dy)*tileSize;
 
         return (
           <div 
@@ -35,8 +35,8 @@ const AttackTiles: React.FC<AttackTilesProps> =
               position: 'absolute',
               left: screenX,
               top: screenY,
-              width: tile_size,
-              height: tile_size,
+              width: tileSize,
+              height: tileSize,
               backgroundColor: 'rgba(255, 0, 0, 0.5)',
               pointerEvents: 'none',
             }}>
@@ -155,9 +155,7 @@ const App: React.FC = () => {
         </div>
 
         <GameField world={world}>
-            <AttackTiles key = {damageEffectKey}
-              player={world?.player}
-              entity={world?.player} 
+            <div key = {damageEffectKey}
             />
         </GameField>
 
