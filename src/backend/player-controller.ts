@@ -11,8 +11,11 @@ export const movePlayer = (
   const width = roomMap.length;
   const height = roomMap[0].length;
 
+  const entities = newWorld.map.rooms[newWorld.map.currentRoom].entities;
+
   switch (direction) {
     case 'up':
+      if(entities[pointToKey({x: newWorld.player.x, y: newWorld.player.y - 1})]) break;
       if (
         newWorld.player.y > 0 &&
         (roomMap[newWorld.player.y - 1][newWorld.player.x] === 'floor' ||
@@ -23,6 +26,7 @@ export const movePlayer = (
       }
       break;
     case 'down':
+      if(entities[pointToKey({x: newWorld.player.x, y: newWorld.player.y + 1})]) break;
       if (
         newWorld.player.y < height - 1 &&
         (roomMap[newWorld.player.y + 1][newWorld.player.x] === 'floor' ||
@@ -33,6 +37,7 @@ export const movePlayer = (
       }
       break;
     case 'left':
+      if(entities[pointToKey({x: newWorld.player.x - 1, y: newWorld.player.y})]) break;
       if (
         newWorld.player.x > 0 &&
         (roomMap[newWorld.player.y][newWorld.player.x - 1] === 'floor' ||
@@ -43,6 +48,7 @@ export const movePlayer = (
       }
       break;
     case 'right':
+      if(entities[pointToKey({x: newWorld.player.x  + 1, y: newWorld.player.y})]) break;
       if (
         newWorld.player.x < width - 1 &&
         (roomMap[newWorld.player.y][newWorld.player.x + 1] === 'floor' ||
@@ -64,7 +70,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
   if (!player.character.attacks[attackNumber]) attackNumber = 1;
   if (!player.character.attacks[1]) {
     return {
-      mask: createEmptyMask(player.character.characterSize.x, player.character.characterSize.y),
+      mask: createEmptyMask(player.character.characterSize.width, player.character.characterSize.height),
       center: { x: 0, y: 0 }
     };
   }
@@ -79,7 +85,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
   const entities = world.map.rooms[world.map.currentRoom].entities;
   const newMask = createEmptyMask(width, height);
   const attackedTiles: Point2d[] = [];
-  const killedEntities: Point2d[] = [];
+  const killedEntities: string[] = [];
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -94,9 +100,17 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
       ) {
         const tile = map[targetY][targetX];
         const pos: Point2d = { x: targetX, y: targetY };
-
         if (entities[pointToKey(pos)]) {
           console.log("Spotted an entity:", entities[pointToKey(pos)]);
+          let attackResult = player.character.attack(entities[pointToKey(pos)], attack);
+          if(
+            attackResult.status == 'normal'
+            &&
+            attackResult.finalTarget.character.healthBar <= 0 
+          ) 
+            console.log("dead");
+            killedEntities.push(pointToKey(pos)); 
+          // for now only enemy - when we need to add character getting hit
         }
 
         if (tile === 'floor') {
@@ -114,6 +128,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
     center,
     originOffset: { x: xOffset, y: yOffset },
     tiles: attackedTiles,
+    killedEntities: killedEntities
   };
 };
 

@@ -1,6 +1,10 @@
-import { Point2d, Room, Tile } from '../common/interfaces';
+import { Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
+import { pointToKey } from "../frontend/utils/utils";
+import { DummyCharacter } from "./behaviour/character";
+import { Aggresive } from "./behaviour/state";
+import { WeaklingClass } from "./behaviour/classes";
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -330,5 +334,16 @@ export function getStartingRoom(): Room {
     exits.setValue(doorPos, 0);
     let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
-    return {map: map, exits: exits, reverseExits: reverseExits, entities: {}};
+    
+    let entities: Record<string, Entity> = {};
+    entities[pointToKey({x : 3, y : 3})] = {
+        id: "Daniil",
+        x: 3,
+        y: 3,
+        lookDir: LookDirection.Left,
+        character: new DummyCharacter(new Aggresive, WeaklingClass, 1),
+        level: 1,
+    };
+    
+    return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};
 }

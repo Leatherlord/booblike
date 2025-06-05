@@ -4,7 +4,10 @@ import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
-import { PlayerCharacter } from './behaviour/character';
+import { DummyCharacter, PlayerCharacter } from './behaviour/character';
+import { pointToKey } from '../frontend/utils/utils';
+import { WeaklingClass } from './behaviour/classes';
+import { Aggresive } from './behaviour/state';
 
 export class WorldManager {
   private world: World | null = null;
@@ -97,6 +100,7 @@ export class WorldManager {
       reverseExits: new Dictionary(),
       entities: {}
     }
+
     let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
     const stubMap: GameMap = {
       rooms: [getStartingRoom()],
@@ -179,7 +183,11 @@ export class WorldManager {
         return;
       case 'player_attack':
         const mask = attackFromPlayer(this.world, event.weaponChosen);
-        this.handleAttack();
+        if(mask.killedEntities) {
+          this.handleAttack(mask.killedEntities);
+        } else {
+          this.handleAttack([]);
+        }
         return mask;
       case 'inventory_select':
         this.handleInventorySelect(event);
@@ -201,9 +209,12 @@ export class WorldManager {
     this.updateWorld(newWorld);
   }
 
-  private handleAttack = () => {
+  private handleAttack = (killedEntities: string[]) => {
     if (!this.world) return;
-
+    const entities = this.world.map.rooms[this.world.map.currentRoom].entities;
+    for(const pos of killedEntities){
+      delete entities[pos];
+    }
       // deleting entities which have 0 health
     const newWorld = {
       ...this.world,

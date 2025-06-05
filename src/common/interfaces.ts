@@ -24,9 +24,9 @@ export type Point2d = {
   y: number;
 };
 
-export function keyToPoint(key: string): Point2d {
-  const [x, y] = key.split(',').map(Number);
-  return { x, y };
+export type Size = {
+  width: number;
+  height: number;
 }
 
 export type Room = {
@@ -53,7 +53,7 @@ export type Entity = {
   character: Character;
   lastAttackArray?: Point2d[];
 
-  texture?: String; 
+  texture?: string; 
   level: number;
 };
 

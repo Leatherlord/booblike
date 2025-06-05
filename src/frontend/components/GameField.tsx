@@ -188,68 +188,56 @@ const GameField: React.FC<GameFieldProps> = ({
       });
     });
     renderAttack();
+    renderEnemies();
     renderCountRef.current += 1;
   };
 
-  // const renderEnemies = (entity: Entity) => {
-  //   if (!world || !canvasRef.current || !textureManagerRef.current) return;
-  //   if(!entity.lastAttackArray) return;
+  const renderEnemies = () => {
+    if (!world || !canvasRef.current || !textureManagerRef.current) return;
 
-  //   const canvas = canvasRef.current;
-  //   const ctx = canvas.getContext('2d');
-  //   if (!ctx) return;
-    
-  //   if (canvas.width === 0 || canvas.height === 0) {
-  //     canvas.width =
-  //       canvas.clientWidth || gamefieldRef.current?.clientWidth || 800;
-  //     canvas.height =
-  //       canvas.clientHeight || gamefieldRef.current?.clientHeight || 600;
-  //   }
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-  //   const viewportWidth = Math.floor(canvas.width / tileSize);
-  //   const viewportHeight = Math.floor(canvas.height / tileSize);
+    const viewportWidth = Math.floor(canvas.width / tileSize);
+    const viewportHeight = Math.floor(canvas.height / tileSize);
 
-  //   const cameraX = world.player.x;
-  //   const cameraY = world.player.y;
+    const cameraX = world.player.x;
+    const cameraY = world.player.y;
 
-  //   const offsetX = cameraX - Math.floor(viewportWidth / 2);
-  //   const offsetY = cameraY - Math.floor(viewportHeight / 2);
+    const offsetX = cameraX - Math.floor(viewportWidth / 2);
+    const offsetY = cameraY - Math.floor(viewportHeight / 2);
+    const room = world.map.rooms[world.map.currentRoom];
+    Object.values(room.entities).forEach((entity) => {
+      const screenX = (entity.x - offsetX) * tileSize;
+      const screenY = (entity.y - offsetY) * tileSize;
 
-  //   entity.lastAttackArray.forEach((tile) => {
-  //     const screenX = (tile.x - offsetX) * tileSize;
-  //     const screenY = (tile.y - offsetY) * tileSize;
+      if (
+        screenX > -tileSize &&
+        screenX < canvas.width &&
+        screenY > -tileSize &&
+        screenY < canvas.height
+      ) {
+        let texture;
+        if (entity.texture) // cache textures perhaps
+          texture = textureManagerRef.current?.getTexture(entity.texture);
+        if(texture) {
+          ctx.drawImage(
+              texture,
+              screenX,
+              screenY,
+              tileSize,
+              tileSize
+          );
+        } else {
+          ctx.fillStyle = '#0a0a0a';
+          ctx.fillRect(screenX, screenY, tileSize, tileSize);
+        }
+      }
+    });
 
-  //     if (
-  //       screenX > -tileSize &&
-  //       screenX < canvas.width &&
-  //       screenY > -tileSize &&
-  //       screenY < canvas.height
-  //     ) {
-  //       const texture = textureManagerRef.current?.getTexture(tile);
-        
-  //       ctx.fillStyle = '#0a0a0a';
-  //       ctx.fillRect(screenX, screenY, tileSize, tileSize);
-
-  //       if (x === cameraX && y === cameraY) {
-  //         const playerTexture = textureManagerRef.current?.getTexture('player');
-  //         if (playerTexture) {
-  //           ctx.drawImage(
-  //             playerTexture,
-  //             screenX,
-  //             screenY,
-  //             tileSize,
-  //             tileSize
-  //           );
-  //         } else {
-  //           ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-  //           ctx.fillRect(screenX, screenY, tileSize, tileSize);
-  //         }
-  //       }
-  //     }
-  //   });
-
-  //   renderCountRef.current += 1;
-  // };
+    renderCountRef.current += 1;
+  };
 
   useLayoutEffect(() => {
     const updateTileSize = () => {
