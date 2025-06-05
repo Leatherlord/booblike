@@ -1,13 +1,26 @@
-import { Attack } from "./attacks";
+import * as Attacks from "./attacks";
 
 export interface CharClass {
     name: string;
-    availableAttacks?: Attack[];
+    availableAttacks: Attacks.Attack[];
+    numberOfAttacks: number;
 }
 
 export class PlayerClass implements CharClass {
     constructor() {
         this.name = "PLAYER";
     }
+    availableAttacks: Attacks.Attack[] = [];
+    numberOfAttacks!: number;
     name: string;
+}
+
+export let WeaklingClass : CharClass = {
+    name: "Weakling",
+    availableAttacks: 
+    [
+        Attacks.StraightAttack,
+        Attacks.CircleAttack
+    ],
+    numberOfAttacks: 1
 }
