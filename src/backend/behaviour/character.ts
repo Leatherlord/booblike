@@ -1,8 +1,9 @@
-import { Entity, Point2d, Size } from "../../common/interfaces";
+import { Entity, Point2d, Size, World } from "../../common/interfaces";
 import {Attack} from "./attacks";
 import * as attack from "./attacks";
 import { Buff } from "./buffs";
 import { CharClass, PlayerClass } from "./classes";
+import { MovementResult } from "./movement";
 import { PlayerState, State } from "./state";
 
 export interface AttackResult {
@@ -24,6 +25,17 @@ function cloneCharacter(char: Character) {
     return copy;
 }
 
+function attackCharacter(char: Character, enemy: Entity, attack: Attack) {
+    let damage = Math.random() * (attack.maxDamage - attack.minDamage) + attack.minDamage;
+    enemy.character.healthBar -= damage;
+    return {
+        finalTarget: enemy,
+        finalAttack: attack,
+        finalDamage: damage,
+        status: "normal"
+    };
+}
+
 export interface Character {
     state: State;
     healthBar: number;
@@ -35,7 +47,7 @@ export interface Character {
     characterSize: Size;
 
     clone: () => Character;
-    move: () => Point2d;
+    move: (from: Point2d, world: World) => MovementResult;
     attack: (enemy : Entity, attack: Attack) => AttackResult;
     update: () => void; // runs in loop
 }
@@ -61,11 +73,11 @@ export class PlayerCharacter implements Character {
     public clone(): Character {
         return cloneCharacter(this);
     }
-    public move(): Point2d {
-        return this.state.move();
+    public move(from: Point2d, world: World): MovementResult {
+        return this.state.move(from, world);
     }
     public attack(enemy : Entity, attack: Attack): AttackResult {
-        console.log('Only normal supported for now');
+        //'Only normal supported for now'
         let damage = Math.random() * (attack.maxDamage - attack.minDamage) + attack.minDamage;
         enemy.character.healthBar -= damage;
         return {
@@ -88,12 +100,13 @@ export class DummyCharacter implements Character {
         this.charClass = charClass;
         this.activeBuffs = [];
 
-        const availableAttacks = [...charClass.availableAttacks];
-        for (let i = availableAttacks.length - 1; i > 0; i--) {
+        const availableAttacks = charClass.availableAttacks;
+        const indexOfAttacks: number[] = Array.from(Array(charClass.numberOfAttacks).keys());
+        for (let i = indexOfAttacks.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [availableAttacks[i], availableAttacks[j]] = [availableAttacks[j], availableAttacks[i]];
+            [indexOfAttacks[i], indexOfAttacks[j]] = [indexOfAttacks[j], indexOfAttacks[i]];
         }
-        this.attacks = availableAttacks.slice(0, charClass.numberOfAttacks);
+        this.attacks = indexOfAttacks.map(index => availableAttacks[index]);
 
         this.characterSize = {width:1, height:1}
     }
@@ -108,11 +121,18 @@ export class DummyCharacter implements Character {
     public clone(): Character {
         return cloneCharacter(this);
     }
-    public move(): Point2d {
-        return this.state.move();
+    public move(from: Point2d, world: World): MovementResult {
+        return this.state.move(from, world);
     }
     public attack(enemy : Entity, attack: Attack): AttackResult {
-        throw "Cannot attack yet";
+        let damage = Math.random() * (attack.maxDamage - attack.minDamage) + attack.minDamage;
+        enemy.character.healthBar -= damage;
+        return {
+            finalTarget: enemy,
+            finalAttack: attack,
+            finalDamage: damage,
+            status: "normal"
+        };
     }
     public update(): void {
         throw "Cannot update yet";

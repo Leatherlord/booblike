@@ -1,33 +1,33 @@
-import { Point2d } from "../../common/interfaces";
+import { Point2d, World } from "../../common/interfaces";
+import { MovementResult, neutralMovement } from "./movement";
 
 export interface State {
-    move: () => Point2d;
+    move: (from: Point2d, world: World) => MovementResult;
 }
 
 export class PlayerState implements State {
-    public move(): Point2d {
+    public move(from: Point2d, world: World): MovementResult {
         console.log("set to playerState")
-        return { x: 0, y: 0 };
+        return {to: { x: 0, y: 0 }};
     }
 }
 
 export class Aggresive implements State {
-    public move(): Point2d {
+    public move(from: Point2d, world: World): MovementResult {
         console.log("set to aggresive")
-        return { x: 0, y: 0 };
+        return {to: { x: 0, y: 0 }};
     }
 }
 
 export class Neutral implements State {
-    public move(): Point2d {
-        console.log("set to neutral")
-        return { x: 0, y: 0 };
+    public move(from: Point2d, world: World): MovementResult {
+        return neutralMovement(from, world);
     }
 }
 
 export class Coward implements State {
-    public move(): Point2d {
+    public move(from: Point2d, world: World): MovementResult {
         console.log("set to coward")
-        return { x: 0, y: 0 };
+        return {to: { x: 0, y: 0 }};
     }
 }

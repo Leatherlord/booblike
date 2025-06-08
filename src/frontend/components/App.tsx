@@ -4,55 +4,10 @@ import Inventory from './Inventory';
 import TexturePackSelector from './TexturePackSelector';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
-<<<<<<< HEAD
 import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
 import { Entity, Point2d, World } from '../../common/interfaces';
-
-export interface AttackTilesProps {
-  player?: Entity,
-  entity?: Entity,
-  tileSize?: number,
-  canvas_size?: Point2d
-}
-
-const AttackTiles: React.FC<AttackTilesProps> = 
-({ player, entity, tileSize = 32, canvas_size = { x: 800, y: 600 } }) => {
-  if (!player || !entity || !entity.lastAttackArray) return null;
-
-  return (
-    <div 
-      className="damage-effect"
-    >
-      {entity.lastAttackArray.map((tile, i) => {
-        const dx =  tile.x;
-        const dy = tile.y;
-
-        const screenX = (dx)*tileSize;
-        const screenY = (dy)*tileSize;
-
-        return (
-          <div 
-            key={'attackTile' + i}
-            className="attack-tile"
-            style={{
-              position: 'absolute',
-              left: screenX,
-              top: screenY,
-              width: tileSize,
-              height: tileSize,
-              backgroundColor: 'rgba(255, 0, 0, 0.5)',
-              pointerEvents: 'none',
-            }}>
-            <p style={{ textAlign: 'center', margin: 0 }}>{dx}, {dy}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-=======
->>>>>>> 18dc278 (fixed weapon system for player)
+import { pointToKey } from '../utils/utils';
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
@@ -162,9 +117,28 @@ const App: React.FC = () => {
       handleEvent(event);
     };
 
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [world, handleEvent]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if(!world) return;
+      const room = world?.map.rooms[world.map.currentRoom];
+      for(const entity of Object.values(room.entities)) {
+        const {x, y} = entity.character.move({ x: entity.x, y: entity.y }, world).to;
+        delete room.entities[pointToKey({x: entity.x, y: entity.y})];
+        entity.x = x;
+        entity.y = y;
+        room.entities[pointToKey({x: entity.x, y: entity.y})] = entity;
+      }
+
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [world]);
+
 
   if (isLoadingTexturePacks) {
     return (
@@ -195,6 +169,7 @@ const App: React.FC = () => {
       />
     );
   }
+  
 
   return (
     <div className="game-container">

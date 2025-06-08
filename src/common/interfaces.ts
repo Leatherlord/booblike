@@ -33,7 +33,14 @@ export type Room = {
   map: Tile[][];
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
-  entities: Record<string, Entity>;
+  entities: Record<string, Entity[]>; // rewrite everything to support numtiple entitied in one
+}
+
+export type EntityDict = {
+  map: Tile[][];
+  exits: Dictionary<Point2d, number | undefined>;
+  reverseExits: Dictionary<number, Point2d>;
+  entities: Record<string, Entity[]>; // rewrite everything to support numtiple entitied in one 
 }
 
 export type Tile = 'empty' | 'wall' | 'floor' | 'door';
