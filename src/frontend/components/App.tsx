@@ -3,6 +3,7 @@ import GameField from './GameField';
 import Inventory from './Inventory';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
+import { pointToKey } from '../utils/utils';
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
@@ -78,9 +79,28 @@ const App: React.FC = () => {
       handleEvent(event);
     };
 
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [world, handleEvent]);
+
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if(!world) return;
+      const room = world?.map.rooms[world.map.currentRoom];
+      for(const entity of Object.values(room.entities)) {
+        const {x, y} = entity.character.move({ x: entity.x, y: entity.y }, world).to;
+        delete room.entities[pointToKey({x: entity.x, y: entity.y})];
+        entity.x = x;
+        entity.y = y;
+        room.entities[pointToKey({x: entity.x, y: entity.y})] = entity;
+      }
+
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [world]);
 
   return (
     <div className="game-container">

@@ -3,7 +3,7 @@ import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { pointToKey } from "../frontend/utils/utils";
 import { DummyCharacter } from "./behaviour/character";
-import { Aggresive } from "./behaviour/state";
+import { Aggresive, Neutral } from "./behaviour/state";
 import { WeaklingClass } from "./behaviour/classes";
 
 const MAX_ROOM_SIZE = 50;
@@ -336,14 +336,16 @@ export function getStartingRoom(): Room {
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
     
     let entities: Record<string, Entity> = {};
-    entities[pointToKey({x : 3, y : 3})] = {
+    let dummyEntity = {
         id: "Daniil",
         x: 3,
         y: 3,
         lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Aggresive, WeaklingClass, 1),
+        character: new DummyCharacter(new Neutral, WeaklingClass, 1),
         level: 1,
+        texture: 'enemy'
     };
+    entities[pointToKey({x : 3, y : 3})] = [dummyEntity, dummyEntity, dummyEntity]
     
     return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};
 }

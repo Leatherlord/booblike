@@ -12,10 +12,13 @@ const DEFAULT_TILE_SIZE = 32;
 
 const GameField: React.FC<GameFieldProps> = ({ world }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const enemyCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const gamefieldRef = useRef<HTMLDivElement>(null);
   const [tileSize, setTileSize] = useState(DEFAULT_TILE_SIZE);
   const renderCountRef = useRef(0);
+  const renderOverlayCountRef = useRef(0);
+  const renderEnemyCountRef = useRef(0);
   const textureManagerRef = useRef<TextureManager | null>(null);
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -50,7 +53,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
   const renderAttack = () => {
     if (!world) return;
     let entity = world?.player;
-    if (!entity.lastAttackArray) return;
+    if (!entity.lastAttackArray || entity.lastAttackArray.length == 0) return;
     //for each entity
     entity.lastAttackArray.map((tile, i) => {
       fadingTilesRef.current.push({
@@ -96,7 +99,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
       ctx.fillRect(screenX, screenY, tileSize, tileSize);
     })
     ctx.globalAlpha = 1.0;
-    renderCountRef.current += 1;
+    renderOverlayCountRef.current += 1;
     requestAnimationFrame(animateAttack);
   }
 
@@ -183,17 +186,19 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
       });
     });
     renderAttack();
-    renderEnemies();
     renderCountRef.current += 1;
   };
 
   const renderEnemies = () => {
-    if (!world || !canvasRef.current || !textureManagerRef.current) return;
+    if (!world || !enemyCanvasRef.current || !textureManagerRef.current) return;
 
-    const canvas = canvasRef.current;
+    const room = world.map.rooms[world.map.currentRoom];
+    if(Object.keys(room.entities).length === 0) return;
+
+    const canvas = enemyCanvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     const viewportWidth = Math.floor(canvas.width / tileSize);
     const viewportHeight = Math.floor(canvas.height / tileSize);
 
@@ -202,7 +207,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
 
     const offsetX = cameraX - Math.floor(viewportWidth / 2);
     const offsetY = cameraY - Math.floor(viewportHeight / 2);
-    const room = world.map.rooms[world.map.currentRoom];
+    
     Object.values(room.entities).forEach((entity) => {
       const screenX = (entity.x - offsetX) * tileSize;
       const screenY = (entity.y - offsetY) * tileSize;
@@ -214,8 +219,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
         screenY < canvas.height
       ) {
         let texture;
-        if (entity.texture) // cache textures perhaps
+        if (entity.texture) {
           texture = textureManagerRef.current?.getTexture(entity.texture);
+        } 
         if(texture) {
           ctx.drawImage(
               texture,
@@ -225,14 +231,28 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
               tileSize
           );
         } else {
-          ctx.fillStyle = '#0a0a0a';
+          ctx.fillStyle = '#0afa0a';
           ctx.fillRect(screenX, screenY, tileSize, tileSize);
         }
       }
     });
-
-    renderCountRef.current += 1;
+    renderEnemyCountRef.current += 1;
   };
+
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const loop = () => {
+      renderEnemies();
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    animationFrameId = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [world]);
 
   useLayoutEffect(() => {
     const updateTileSize = () => {
@@ -251,6 +271,11 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           canvasRef.current.height = gamefieldRef.current.clientHeight;
 
           requestAnimationFrame(renderCanvas);
+        }
+
+        if (enemyCanvasRef.current) {
+          enemyCanvasRef.current.width = gameFieldWidth;
+          enemyCanvasRef.current.height = gamefieldRef.current.clientHeight;
         }
 
         if (overlayCanvasRef.current) {
@@ -288,9 +313,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
   }, [world]);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!enemyCanvasRef.current) return;
 
-    const canvas = canvasRef.current;
+    const canvas = enemyCanvasRef.current;
     const observer = new ResizeObserver(() => {
       renderCanvas();
     });
@@ -323,9 +348,12 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
             height={600}
           />
           <canvas
+            ref={enemyCanvasRef}
+            className="overlay-canvas"
+          />
+          <canvas
             ref={overlayCanvasRef}
             className="overlay-canvas"
-            style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}
           />
           <div style={{
             position: 'absolute',
@@ -338,9 +366,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           }}>
           </div>
           <div className="camera-info">
-            Player position: ({world.player.x}, {world.player.y}) | Room id:{' '}
-            {world.map.currentRoom} | Tile size: {tileSize}px | Renders:{' '}
-            {renderCountRef.current}
+            Player position: ({world.player.x}, {world.player.y}) | Room id: {world.map.currentRoom} | Tile size:{' '}
+            {tileSize}px | Renders: {renderCountRef.current} | Overlay renders: {renderOverlayCountRef.current}
+            | Overlay enemy renders: {renderEnemyCountRef.current}
             {!texturesLoaded && (
               <span> | Loading textures: {Math.round(loadingProgress)}%</span>
             )}

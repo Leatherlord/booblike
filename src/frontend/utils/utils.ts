@@ -12,3 +12,7 @@ export function createEmptyMask(dimX: number, dimY: number): number[][] {
   return Array.from({ length: dimY }, () => Array(dimX).fill(0));
 }
 
+//intorducing data structure for storing entities for room
+
+
+
