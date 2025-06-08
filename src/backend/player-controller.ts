@@ -1,5 +1,4 @@
 import { LookDirection, World } from '../common/interfaces';
-import { createEmptyMask } from '../frontend/utils/utils';
 import { PlayerState } from './behaviour/state';
 
 export const movePlayer = (
@@ -62,6 +61,10 @@ export const movePlayer = (
 
   return newWorld;
 };
+
+export function createEmptyMask(dimX: number, dimY: number): number[][] {
+  return Array.from({ length: dimY }, () => Array(dimX).fill(0));
+}
 
 export const attackFromPlayer = (world: World, attackNumber: number) => {
   const character = world.player.character;

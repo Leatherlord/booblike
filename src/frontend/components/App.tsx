@@ -3,7 +3,6 @@ import GameField from './GameField';
 import Inventory from './Inventory';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
-import { pointToKey } from '../utils/utils';
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
