@@ -348,6 +348,16 @@ export function getStartingRoom(): Room {
             texture: 'enemy'
         });
     }
+
+    entities.add({ x: 6, y: 6 }, {
+        id: ""+3,
+        x: 6,
+        y: 6,
+        lookDir: LookDirection.Left,
+        character: new DummyCharacter(new Aggresive(), WeaklingClass, 1),
+        level: 1,
+        texture: 'enemy'
+    });
     
     return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};
 }

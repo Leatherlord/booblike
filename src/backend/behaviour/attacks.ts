@@ -1,4 +1,4 @@
-import { Entity, LookDirection } from "../../common/interfaces";
+import { Entity, LookDirection, Point2d } from "../../common/interfaces";
 import { Buff } from "./buffs";
 
 export type AttackGrid = {
@@ -17,6 +17,37 @@ export function getAttackGridSize(grid: AttackGrid, direction: LookDirection) {
     y: isVertical 
       ? grid.areaUp + grid.areaDown + 1 
       : grid.areaLeft + grid.areaRight + 1,
+  };
+}
+
+export function getOffsetsByPos(
+  lookDir: LookDirection,
+  attack: Attack,
+) {
+  let xOffset = 0;
+  let yOffset = 0;
+
+  switch (lookDir) {
+    case LookDirection.Up:
+      xOffset = attack.areaSize.areaRight;
+      yOffset = attack.areaSize.areaDown;
+      break;
+    case LookDirection.Down:
+      xOffset = attack.areaSize.areaLeft;
+      yOffset = attack.areaSize.areaUp;
+      break;
+    case LookDirection.Left:
+      xOffset = attack.areaSize.areaDown;
+      yOffset = attack.areaSize.areaLeft;
+      break;
+    case LookDirection.Right:
+      xOffset = attack.areaSize.areaUp;
+      yOffset = attack.areaSize.areaRight;
+      break;
+  }
+  return {
+    x: xOffset,
+    y: yOffset,
   };
 }
 

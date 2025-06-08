@@ -1,4 +1,4 @@
-export type Event = PlayerMoveEvent | PlayerAttackEvent | InventorySelectEvent;
+export type Event = PlayerMoveEvent | PlayerAttackEvent | InventorySelectEvent | NPCMoveEvent;
 
 export type PlayerMoveEvent = {
   type: 'player_move';
@@ -13,4 +13,8 @@ export type PlayerAttackEvent = {
 export type InventorySelectEvent = {
   type: 'inventory_select';
   slotId: number;
+};
+
+export type NPCMoveEvent = {
+  type: 'npc_move';
 };
