@@ -1,11 +1,10 @@
-import { World, InventorySlot, GameMap, Room, Point2d, ExitMappingEntry, LookDirection } from '../common/interfaces';
+import { World, InventorySlot, GameMap, Room, Entity, Point2d, ExitMappingEntry, LookDirection, EntitiesMap } from '../common/interfaces';
 import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
 import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
 import { DummyCharacter, PlayerCharacter } from './behaviour/character';
-import { pointToKey } from '../frontend/utils/utils';
 import { WeaklingClass } from './behaviour/classes';
 import { Aggresive } from './behaviour/state';
 
@@ -98,7 +97,7 @@ export class WorldManager {
         }),
       exits: new Dictionary(JSON.stringify),
       reverseExits: new Dictionary(),
-      entities: {}
+      entities: new EntitiesMap()
     }
 
     let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
@@ -183,11 +182,7 @@ export class WorldManager {
         return;
       case 'player_attack':
         const mask = attackFromPlayer(this.world, event.weaponChosen);
-        if(mask.killedEntities) {
-          this.handleAttack(mask.killedEntities);
-        } else {
-          this.handleAttack([]);
-        }
+        this.handleAttack();
         return mask;
       case 'inventory_select':
         this.handleInventorySelect(event);
@@ -209,18 +204,12 @@ export class WorldManager {
     this.updateWorld(newWorld);
   }
 
-  private handleAttack = (killedEntities: string[]) => {
+  private handleAttack = () => {
     if (!this.world) return;
-    const entities = this.world.map.rooms[this.world.map.currentRoom].entities;
-    for(const pos of killedEntities){
-      delete entities[pos];
-    }
-      // deleting entities which have 0 health
+    console.log(this.world.map.rooms[this.world.map.currentRoom].entities );
+    console.log(Object.keys(this.world.map.rooms[this.world.map.currentRoom].entities))
     const newWorld = {
-      ...this.world,
-      player: {
-        ...this.world.player
-      }
+      ...this.world
     };
 
     this.updateWorld(newWorld);

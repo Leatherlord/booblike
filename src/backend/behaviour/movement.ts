@@ -1,7 +1,4 @@
 import { Point2d, Room, World } from "../../common/interfaces";
-import { pointToKey } from "../../frontend/utils/utils";
-import { movePlayer } from "../player-controller";
-
 
 export interface MovementResult{
     to: Point2d
@@ -13,7 +10,7 @@ function checkIfValidMove(room: Room, newX: number, newY: number) {
         newY < room.map.length && 
         newX >= 0 && newX < room.map[0].length && 
         room.map[newY][newX] === 'floor' &&
-        !room.entities[pointToKey({x: newX, y: newY})]
+        !room.entities.get({x: newX, y: newY})
     );
 }
 
@@ -32,14 +29,7 @@ export function neutralMovement(from: Point2d, world: World): MovementResult {
     const newX = from.x + movementShift.x;
     const newY = from.y + movementShift.y;
 
-    const isValid =
-        newY >= 0 &&
-        newY < room.map.length &&
-        newX >= 0 &&
-        newX < room.map[0].length &&
-        room.map[newY][newX] === 'floor';
-
-    if (isValid) {
+    if (checkIfValidMove(room, newX, newY)) {
         return { to: { x: newX, y: newY } };
     }
 

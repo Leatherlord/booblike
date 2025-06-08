@@ -1,4 +1,4 @@
-import { Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
+import { EntitiesMap, Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { pointToKey } from "../frontend/utils/utils";
@@ -305,7 +305,7 @@ export function generateRoom(
     while (!okForExit(exitId)) {
       exitId = (exitId + 1) % border.length;
     }
-    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: {}};
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: new EntitiesMap()};
 }
 
 export function getStartingRoom(): Room {
@@ -335,17 +335,19 @@ export function getStartingRoom(): Room {
     let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
     
-    let entities: Record<string, Entity> = {};
-    let dummyEntity = {
-        id: "Daniil",
-        x: 3,
-        y: 3,
-        lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Neutral, WeaklingClass, 1),
-        level: 1,
-        texture: 'enemy'
-    };
-    entities[pointToKey({x : 3, y : 3})] = [dummyEntity, dummyEntity, dummyEntity]
+    let entities =  new EntitiesMap();
+    for (let i = 0; i < 3; i++) {
+        const key = { x: 3, y: 3 };
+        entities.add(key, {
+            id: ""+i,
+            x: 3,
+            y: 3,
+            lookDir: LookDirection.Left,
+            character: new DummyCharacter(new Neutral(), WeaklingClass, 1),
+            level: 1,
+            texture: 'enemy'
+        });
+    }
     
     return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};
 }

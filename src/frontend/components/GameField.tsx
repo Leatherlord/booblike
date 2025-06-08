@@ -193,7 +193,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
     if (!world || !enemyCanvasRef.current || !textureManagerRef.current) return;
 
     const room = world.map.rooms[world.map.currentRoom];
-    if(Object.keys(room.entities).length === 0) return;
+    if(room.entities.size === 0) return;
 
     const canvas = enemyCanvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -208,10 +208,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
     const offsetX = cameraX - Math.floor(viewportWidth / 2);
     const offsetY = cameraY - Math.floor(viewportHeight / 2);
     
-    Object.values(room.entities).forEach((entity) => {
+    room.entities.forEach((entity) => {
       const screenX = (entity.x - offsetX) * tileSize;
       const screenY = (entity.y - offsetY) * tileSize;
-
       if (
         screenX > -tileSize &&
         screenX < canvas.width &&

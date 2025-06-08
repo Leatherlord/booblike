@@ -1,5 +1,5 @@
-import { LookDirection, Point2d, World } from '../common/interfaces';
-import { getAttackGridSize, getOffsets } from './behaviour/attacks';
+import { Entity, LookDirection, Point2d, Room, World } from '../common/interfaces';
+import { Attack, getAttackGridSize, getOffsets } from './behaviour/attacks';
 import { createEmptyMask, pointToKey } from '../frontend/utils/utils';
 
 export const movePlayer = (
@@ -15,53 +15,68 @@ export const movePlayer = (
 
   switch (direction) {
     case 'up':
-      if(entities[pointToKey({x: newWorld.player.x, y: newWorld.player.y - 1})]) break;
+      newWorld.player.lookDir = LookDirection.Up;
+      if(entities.get({x: newWorld.player.x, y: newWorld.player.y - 1})) break;
       if (
         newWorld.player.y > 0 &&
         (roomMap[newWorld.player.y - 1][newWorld.player.x] === 'floor' ||
           roomMap[newWorld.player.y - 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y - 1;
-        newWorld.player.lookDir = LookDirection.Up;
       }
       break;
     case 'down':
-      if(entities[pointToKey({x: newWorld.player.x, y: newWorld.player.y + 1})]) break;
+      newWorld.player.lookDir = LookDirection.Down;
+      if(entities.get({x: newWorld.player.x, y: newWorld.player.y + 1})) break;
       if (
         newWorld.player.y < height - 1 &&
         (roomMap[newWorld.player.y + 1][newWorld.player.x] === 'floor' ||
           roomMap[newWorld.player.y + 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y + 1;
-        newWorld.player.lookDir = LookDirection.Down;
       }
       break;
     case 'left':
-      if(entities[pointToKey({x: newWorld.player.x - 1, y: newWorld.player.y})]) break;
+      newWorld.player.lookDir = LookDirection.Left;
+      if(entities.get({x: newWorld.player.x - 1, y: newWorld.player.y})) break;
       if (
         newWorld.player.x > 0 &&
         (roomMap[newWorld.player.y][newWorld.player.x - 1] === 'floor' ||
           roomMap[newWorld.player.y][newWorld.player.x - 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x - 1;
-        newWorld.player.lookDir = LookDirection.Left;
       }
       break;
     case 'right':
-      if(entities[pointToKey({x: newWorld.player.x  + 1, y: newWorld.player.y})]) break;
+      newWorld.player.lookDir = LookDirection.Right;
+      if(entities.get({x: newWorld.player.x  + 1, y: newWorld.player.y})) break;
       if (
         newWorld.player.x < width - 1 &&
         (roomMap[newWorld.player.y][newWorld.player.x + 1] === 'floor' ||
           roomMap[newWorld.player.y][newWorld.player.x + 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x + 1;
-        newWorld.player.lookDir = LookDirection.Right;
       }
       break;
   }
 
   return newWorld;
 };
+
+function processAttack(room: Room, from: Entity, attack: Attack, pos: Point2d) {
+  const entities = room.entities;
+  entities.get(pos).forEach(function(entity){
+    console.log("Spotted an entity:", entity);
+    let attackResult = from.character.attack(entity, attack);
+    if(
+      attackResult.status == 'normal'
+      &&
+      attackResult.finalTarget.character.healthBar <= 0 
+    ) 
+      console.log("dead");
+      entities.delete(pos, entity);
+  });
+}
 
 export const attackFromPlayer = (world: World, attackNumber: number) => {
   const player = world.player;
@@ -81,11 +96,10 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
   const { x: xOffset, y: yOffset } = getOffsets(player, attack);
   const mask = attack.area[direction];
 
-  const map = world.map.rooms[world.map.currentRoom].map;
-  const entities = world.map.rooms[world.map.currentRoom].entities;
+  const room = world.map.rooms[world.map.currentRoom];
+  const map = room.map;
   const newMask = createEmptyMask(width, height);
   const attackedTiles: Point2d[] = [];
-  const killedEntities: string[] = [];
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -100,17 +114,9 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
       ) {
         const tile = map[targetY][targetX];
         const pos: Point2d = { x: targetX, y: targetY };
-        if (entities[pointToKey(pos)]) {
-          console.log("Spotted an entity:", entities[pointToKey(pos)]);
-          let attackResult = player.character.attack(entities[pointToKey(pos)], attack);
-          if(
-            attackResult.status == 'normal'
-            &&
-            attackResult.finalTarget.character.healthBar <= 0 
-          ) 
-            console.log("dead");
-            killedEntities.push(pointToKey(pos)); 
-          // for now only enemy - when we need to add character getting hit
+
+        if (room.entities.get(pos)) {
+          processAttack(room, player, attack, pos);
         }
 
         if (tile === 'floor') {
@@ -127,8 +133,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
     mask: newMask,
     center,
     originOffset: { x: xOffset, y: yOffset },
-    tiles: attackedTiles,
-    killedEntities: killedEntities
+    tiles: attackedTiles
   };
 };
 
