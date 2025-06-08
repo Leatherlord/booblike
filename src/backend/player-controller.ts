@@ -1,6 +1,6 @@
-import { Entity, LookDirection, Point2d, Room, World } from '../common/interfaces';
-import { Attack, getAttackGridSize, getOffsets } from './behaviour/attacks';
-import { createEmptyMask, pointToKey } from '../frontend/utils/utils';
+import { LookDirection, World } from '../common/interfaces';
+import { createEmptyMask } from '../frontend/utils/utils';
+import { PlayerState } from './behaviour/state';
 
 export const movePlayer = (
   world: World,
@@ -63,77 +63,22 @@ export const movePlayer = (
   return newWorld;
 };
 
-function processAttack(room: Room, from: Entity, attack: Attack, pos: Point2d) {
-  const entities = room.entities;
-  entities.get(pos).forEach(function(entity){
-    console.log("Spotted an entity:", entity);
-    let attackResult = from.character.attack(entity, attack);
-    if(
-      attackResult.status == 'normal'
-      &&
-      attackResult.finalTarget.character.healthBar <= 0 
-    ) 
-      console.log("dead");
-      entities.delete(pos, entity);
-  });
-}
-
 export const attackFromPlayer = (world: World, attackNumber: number) => {
-  const player = world.player;
-  const center = { x: player.x, y: player.y };
+  const character = world.player.character;
+  if(!(character.state instanceof PlayerState)) return;
 
-  if (!player.character.attacks[attackNumber]) attackNumber = 1;
-  if (!player.character.attacks[1]) {
+  if (!character.attacks[attackNumber]) attackNumber = 1;
+  if (!character.attacks[1]) {
     return {
-      mask: createEmptyMask(player.character.characterSize.width, player.character.characterSize.height),
+      mask: createEmptyMask(character.characterSize.width, character.characterSize.height),
       center: { x: 0, y: 0 }
     };
   }
-
-  const attack = player.character.attacks[attackNumber];
-  const direction = player.lookDir;
-  const { x: width, y: height } = getAttackGridSize(attack.areaSize, direction);
-  const { x: xOffset, y: yOffset } = getOffsets(player, attack);
-  const mask = attack.area[direction];
-
-  const room = world.map.rooms[world.map.currentRoom];
-  const map = room.map;
-  const newMask = createEmptyMask(width, height);
-  const attackedTiles: Point2d[] = [];
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (mask[y][x] !== 1) continue;
-
-      const targetX = center.x + x - xOffset;
-      const targetY = center.y + y - yOffset;
-
-      if (
-        targetY >= 0 && targetY < map.length &&
-        targetX >= 0 && targetX < map[0].length
-      ) {
-        const tile = map[targetY][targetX];
-        const pos: Point2d = { x: targetX, y: targetY };
-
-        if (room.entities.get(pos)) {
-          processAttack(room, player, attack, pos);
-        }
-
-        if (tile === 'floor') {
-          newMask[y][x] = 1;
-          attackedTiles.push(pos);
-        }
-      }
-    }
-  }
-
-  player.lastAttackArray = attackedTiles;
-
-  return {
-    mask: newMask,
-    center,
-    originOffset: { x: xOffset, y: yOffset },
-    tiles: attackedTiles
-  };
+  const playerAttack = world.player.character.state.attack({
+    from: { x: world.player.x, y: world.player.y },
+    lookDir: world.player.lookDir,
+    character: character,
+    world: world
+  }, character.attacks[attackNumber]);
+  world.player.lastAttackArray = playerAttack.attackedTiles;
 };
-

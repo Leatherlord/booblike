@@ -120,22 +120,13 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [world, handleEvent]);
 
-  function moveEntities() {
-    if(!world) return;
-    const room = world?.map.rooms[world.map.currentRoom];
-    room.entities.forEach((entity)  => {
-      const {x, y} = entity.character.move({ x: entity.x, y: entity.y }, world).to;
-      room.entities.delete({x: entity.x, y: entity.y}, entity);
-      entity.x = x;
-      entity.y = y;
-      room.entities.add({x: entity.x, y: entity.y}, entity);
-    });
-  }
-  
   useEffect(() => {
     const interval = setInterval(() => {
-      moveEntities()
-    }, 300);
+      const event: Event = {
+        type: 'npc_move'
+      };
+      handleEvent(event)
+    }, 200);
 
     return () => clearInterval(interval);
   }, [world]);

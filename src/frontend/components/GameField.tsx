@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
-import { World } from '../../common/interfaces';
+import { Point2d, World } from '../../common/interfaces';
 import { TextureManager } from '../utils/TextureManager';
 import { TexturePack } from '../types/texturePack';
 
@@ -28,6 +28,7 @@ const GameField: React.FC<GameFieldProps> = ({
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   const fadingTilesRef = useRef<{ x: number; y: number; alpha: number }[]>([]);
+  const [attackTrigger, setAttackTrigger] = useState(0);
 
   useEffect(() => {
     if (!selectedTexturePack) return;
@@ -55,11 +56,10 @@ const GameField: React.FC<GameFieldProps> = ({
     };
   }, [selectedTexturePack]);
 
-  const renderAttack = () => {
+  const playerRenderAttack = () => {
     if (!world) return;
     let entity = world?.player;
     if (!entity.lastAttackArray || entity.lastAttackArray.length == 0) return;
-    //for each entity
     entity.lastAttackArray.map((tile, i) => {
       fadingTilesRef.current.push({
         x: tile.x,
@@ -67,13 +67,12 @@ const GameField: React.FC<GameFieldProps> = ({
         alpha: 0.5,
       });
     })
+    setAttackTrigger(prev => prev == 0 ? prev + 1 : prev - 1);
     entity.lastAttackArray = [];
   };
 
   const animateAttack = () => {
     if (!world) return;
-    let entity = world?.player;
-    if (!entity.lastAttackArray) return;
     const canvas = overlayCanvasRef.current;
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -105,16 +104,7 @@ const GameField: React.FC<GameFieldProps> = ({
     })
     ctx.globalAlpha = 1.0;
     renderOverlayCountRef.current += 1;
-    requestAnimationFrame(animateAttack);
   }
-
-  useEffect(() => {
-    let animationFrameId = requestAnimationFrame(animateAttack);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [world]);
 
   const renderCanvas = () => {
     if (!world || !canvasRef.current || !textureManagerRef.current) return;
@@ -190,15 +180,32 @@ const GameField: React.FC<GameFieldProps> = ({
         }
       });
     });
-    renderAttack();
+    playerRenderAttack();
     renderCountRef.current += 1;
+  };
+
+  const enemiesRenderAttack = () => {
+    if (!world) return;
+    const room = world.map.rooms[world.map.currentRoom];
+    room.entities.forEach((entity) => {
+      if (!entity.lastAttackArray || entity.lastAttackArray.length == 0) return;
+      entity.lastAttackArray.map((tile, i) => {
+        fadingTilesRef.current.push({
+          x: tile.x,
+          y: tile.y,
+          alpha: 0.5,
+        });
+      })
+      entity.lastAttackArray = [];
+      setAttackTrigger(prev => prev == 0 ? prev + 1 : prev - 1);
+    });
   };
 
   const renderEnemies = () => {
     if (!world || !enemyCanvasRef.current || !textureManagerRef.current) return;
 
     const room = world.map.rooms[world.map.currentRoom];
-    if(room.entities.size === 0) return;
+    if(room.entities.empty()) return;
 
     const canvas = enemyCanvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -241,12 +248,13 @@ const GameField: React.FC<GameFieldProps> = ({
       }
     });
     renderEnemyCountRef.current += 1;
+    enemiesRenderAttack();
   };
 
   useEffect(() => {
     let animationFrameId: number;
 
-    const loop = () => {
+    const loop = (timestamp: number) => {
       renderEnemies();
       animationFrameId = requestAnimationFrame(loop);
     };
@@ -256,7 +264,23 @@ const GameField: React.FC<GameFieldProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [world]);
+  }, [world, attackTrigger]);
+
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const loop = (timestamp: number) => {
+      animateAttack();
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    animationFrameId = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [attackTrigger]);
+
 
   useLayoutEffect(() => {
     const updateTileSize = () => {
@@ -280,11 +304,15 @@ const GameField: React.FC<GameFieldProps> = ({
         if (enemyCanvasRef.current) {
           enemyCanvasRef.current.width = gameFieldWidth;
           enemyCanvasRef.current.height = gamefieldRef.current.clientHeight;
+
+          requestAnimationFrame(renderEnemies);
         }
 
         if (overlayCanvasRef.current) {
           overlayCanvasRef.current.width = gameFieldWidth;
           overlayCanvasRef.current.height = gamefieldRef.current.clientHeight;
+
+          requestAnimationFrame(animateAttack);
         }
       }
     };
@@ -321,7 +349,7 @@ const GameField: React.FC<GameFieldProps> = ({
 
     const canvas = enemyCanvasRef.current;
     const observer = new ResizeObserver(() => {
-      renderCanvas();
+      renderEnemies();
     });
 
     observer.observe(canvas);
@@ -333,7 +361,7 @@ const GameField: React.FC<GameFieldProps> = ({
 
     const canvas = overlayCanvasRef.current;
     const observer = new ResizeObserver(() => {
-      renderCanvas();
+      animateAttack();
     });
 
     observer.observe(canvas);
@@ -380,8 +408,7 @@ const GameField: React.FC<GameFieldProps> = ({
           </div>
           <div className="camera-info">
             Player position: ({world.player.x}, {world.player.y}) | Room id: {world.map.currentRoom} | Tile size:{' '}
-            {tileSize}px | Renders: {renderCountRef.current} | Overlay renders: {renderOverlayCountRef.current}
-            | Overlay enemy renders: {renderEnemyCountRef.current}
+            {tileSize}px | Renders: {renderCountRef.current} | Overlay renders: {renderOverlayCountRef.current} | Overlay enemy renders: {renderEnemyCountRef.current}
             {!texturesLoaded && (
               <span> | Loading textures: {Math.round(loadingProgress)}%</span>
             )}

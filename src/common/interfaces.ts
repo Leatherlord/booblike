@@ -40,7 +40,6 @@ export type Room = {
 export class EntitiesMap {
   constructor() {
     this.entities = {};
-    this.size = 0;
   }
   
   add(pos: Point2d, entity: Entity) {
@@ -49,14 +48,12 @@ export class EntitiesMap {
       this.entities[posStr] = new Set();
     }
     this.entities[posStr].add(entity);
-    this.size += 1;
   }
 
   delete(pos: Point2d, entity: Entity) {
     const posStr: string = pointToKey(pos);
     if(!this.entities[posStr]) return;
     this.entities[posStr].delete(entity);
-    this.size -= 1;
     if(this.entities[posStr].size == 0) {
       delete this.entities[posStr];
     }
@@ -72,8 +69,11 @@ export class EntitiesMap {
     }
   }
 
+  empty() {
+    return Object.values(this.entities).length == 0;
+  }
+
   entities: Record<string, Set<Entity>>;
-  size: number
 }
 
 

@@ -7,6 +7,7 @@ import { prngAlea } from 'ts-seedrandom';
 import { DummyCharacter, PlayerCharacter } from './behaviour/character';
 import { WeaklingClass } from './behaviour/classes';
 import { Aggresive } from './behaviour/state';
+import { read } from 'fs';
 
 export class WorldManager {
   private world: World | null = null;
@@ -187,6 +188,9 @@ export class WorldManager {
       case 'inventory_select':
         this.handleInventorySelect(event);
         break;
+      case 'npc_move':
+        this.handleNPCMovement();
+        break;
     }
   }
 
@@ -213,5 +217,25 @@ export class WorldManager {
     };
 
     this.updateWorld(newWorld);
+  }
+
+  public handleNPCMovement () {
+    if (!this.world) return;
+
+    const room = this.world.map?.rooms[this.world.map.currentRoom];
+    if(!room) return;
+    room.entities.forEach((entity)  => {
+      if (!this.world) return;
+      const {to, lookDir, attackResult} = entity.character.move({ x: entity.x, y: entity.y }, entity.lookDir, this.world);
+      if(lookDir) entity.lookDir = lookDir;
+      if(attackResult) entity.lastAttackArray = attackResult.attackedTiles;
+      const {x, y} = to;
+      room.entities.delete({x: entity.x, y: entity.y}, entity);
+      entity.x = x;
+      entity.y = y;
+      room.entities.add({x: entity.x, y: entity.y}, entity);
+    });
+
+    this.updateWorld(this.world);
   }
 }
