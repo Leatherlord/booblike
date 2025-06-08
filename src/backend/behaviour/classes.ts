@@ -19,7 +19,7 @@ export let WeaklingClass : CharClass = {
     name: "Weakling",
     availableAttacks: 
     [
-        Attacks.CircleAttack
+        Attacks.StraightAttack
     ],
     numberOfAttacks: 1
 }

@@ -1,8 +1,7 @@
-import { Entity, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
+import { Entity, getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
 import { Attack } from "./attacks";
-import { aggressiveMovement, neutralMovement } from "./movement";
+import { aggressiveMovement, cowardMovement, neutralMovement } from "./movement";
 import * as attackPack from "./attacks";
-import { createEmptyMask } from "../../frontend/utils/utils";
 import { Character } from "./character";
 
 function processAttack(room: Room, from: Character, attack: Attack, pos: Point2d) {
@@ -20,9 +19,8 @@ function processAttack(room: Room, from: Character, attack: Attack, pos: Point2d
     });
 }
 
-function attackInBounds(
+function inBounds(
     mask: number[][], 
-    lookDir: LookDirection, 
     pos: Point2d, 
     enemy: Point2d,
     offset: Point2d
@@ -47,10 +45,10 @@ function attackOneEntity(
 ) : AttackResult {
     if(!enemy) return { success: false, attackedTiles: [] };
 
-    const { x: width, y: height } = attackPack.getAttackGridSize(attack.areaSize, lookDir);
-    const offset = attackPack.getOffsetsByPos(lookDir, attack);
+    const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
+    const offset = getOffsetsByPos(lookDir, attack);
     const mask = attack.area[lookDir];
-    if(!attackInBounds(mask, lookDir, pos, {x: enemy.x, y: enemy.y}, offset)) {
+    if(!inBounds(mask, pos, {x: enemy.x, y: enemy.y}, offset)) {
         console.log("!attackInBounds")
         return { success: false, attackedTiles: [] };
     }
@@ -99,8 +97,8 @@ function attackAll(
     pos: Point2d, 
     world: World
 ) : AttackResult {
-const { x: width, y: height } = attackPack.getAttackGridSize(attack.areaSize, lookDir);
-    const { x: xOffset, y: yOffset } = attackPack.getOffsetsByPos(lookDir, attack);
+const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
+    const { x: xOffset, y: yOffset } = getOffsetsByPos(lookDir, attack);
     const mask = attack.area[lookDir];
 
     const room = world.map.rooms[world.map.currentRoom];
@@ -185,7 +183,7 @@ export class Aggresive implements State {
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
-        let pos = aggressiveMovement(from, world);
+        let pos = aggressiveMovement(context);
         if(!pos.lookDir) pos.lookDir = lookDir;
         let attackResult;
         for(const attack of character.attacks) {
@@ -222,7 +220,7 @@ export class Coward implements State {
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
-        let pos = neutralMovement(from, world);
+        let pos = cowardMovement(context);
         return {...pos};
     }
 }

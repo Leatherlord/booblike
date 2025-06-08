@@ -1,9 +1,8 @@
 import { EntitiesMap, Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
-import { pointToKey } from "../frontend/utils/utils";
 import { DummyCharacter } from "./behaviour/character";
-import { Aggresive, Neutral } from "./behaviour/state";
+import { Aggresive, Coward, Neutral } from "./behaviour/state";
 import { WeaklingClass } from "./behaviour/classes";
 
 const MAX_ROOM_SIZE = 50;
@@ -336,18 +335,18 @@ export function getStartingRoom(): Room {
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
     
     let entities =  new EntitiesMap();
-    for (let i = 0; i < 3; i++) {
-        const key = { x: 3, y: 3 };
-        entities.add(key, {
-            id: ""+i,
-            x: 3,
-            y: 3,
-            lookDir: LookDirection.Left,
-            character: new DummyCharacter(new Neutral(), WeaklingClass, 1),
-            level: 1,
-            texture: 'enemy'
-        });
-    }
+    // for (let i = 0; i < 3; i++) {
+    //     const key = { x: 3, y: 3 };
+    //     entities.add(key, {
+    //         id: ""+i,
+    //         x: 3,
+    //         y: 3,
+    //         lookDir: LookDirection.Left,
+    //         character: new DummyCharacter(new Neutral(), WeaklingClass, 1),
+    //         level: 1,
+    //         texture: 'enemy'
+    //     });
+    // }
 
     entities.add({ x: 6, y: 6 }, {
         id: ""+3,
@@ -355,6 +354,16 @@ export function getStartingRoom(): Room {
         y: 6,
         lookDir: LookDirection.Left,
         character: new DummyCharacter(new Aggresive(), WeaklingClass, 1),
+        level: 1,
+        texture: 'enemy'
+    });
+
+    entities.add({ x: 6, y: 6 }, {
+        id: ""+4,
+        x: 6,
+        y: 6,
+        lookDir: LookDirection.Left,
+        character: new DummyCharacter(new Coward(), WeaklingClass, 1),
         level: 1,
         texture: 'enemy'
     });

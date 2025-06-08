@@ -1,9 +1,9 @@
-import { Entity, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
+import { Entity, generateGrid, Grid, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
 import { Attack } from "./attacks";
 import * as attackPack from "./attacks";
 import { Buff } from "./buffs";
 import { CharClass, PlayerClass } from "./classes";
-import { Aggresive, MovementResult } from "./state";
+import { MovementResult } from "./state";
 import { PlayerState, State } from "./state";
 
 interface AttackResult {
@@ -34,6 +34,8 @@ export interface Character {
     charClass: CharClass;
     attacks: Attack[];
     characterSize: Size;
+    areaSize: Grid;
+    area: Record<LookDirection, number[][]>
 
     clone: () => Character;
     move: (from: Point2d, lookDir: LookDirection, world: World) => MovementResult;
@@ -47,9 +49,23 @@ export class PlayerCharacter implements Character {
         this.healthBar = maxHealthBar;
         this.maxHealthBar = maxHealthBar;
         this.charClass = new PlayerClass();
-        this.activeBuffs = []
-        this.attacks = [attackPack.CircleAttack, attackPack.StraightAttack, attackPack.UnevenAttack, attackPack.SuperUnevenAttack]
-        this.characterSize = { width: 1, height: 1 }
+        this.activeBuffs = [];
+        this.attacks = [attackPack.CircleAttack, attackPack.StraightAttack, attackPack.UnevenAttack, attackPack.SuperUnevenAttack];
+        this.characterSize = { width: 1, height: 1 };
+
+        this.areaSize = {
+            areaUp: 0,
+            areaDown: 2,
+            areaRight: 1,
+            areaLeft: 1
+        },
+        this.area = generateGrid(
+            [
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ]
+        );
     }
     state: State;
     healthBar: number;
@@ -58,6 +74,8 @@ export class PlayerCharacter implements Character {
     charClass: CharClass;
     attacks: Attack[];
     characterSize: Size;
+    areaSize: Grid;
+    area: Record<LookDirection, number[][]>
 
     public clone(): Character {
         return cloneCharacter(this);
@@ -100,6 +118,20 @@ export class DummyCharacter implements Character {
         this.attacks = indexOfAttacks.map(index => availableAttacks[index]);
 
         this.characterSize = { width: 1, height: 1 }
+
+                this.areaSize = {
+            areaUp: 0,
+            areaDown: 2,
+            areaRight: 1,
+            areaLeft: 1
+        },
+        this.area = generateGrid(
+            [
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ]
+        );
     }
     state: State;
     healthBar: number;
@@ -108,6 +140,8 @@ export class DummyCharacter implements Character {
     charClass: CharClass;
     attacks: Attack[];
     characterSize: Size;
+    areaSize: Grid;
+    area: Record<LookDirection, number[][]>
 
     public clone(): Character {
         return cloneCharacter(this);
