@@ -214,8 +214,6 @@ export class WorldManager {
 
   private handleAttack = () => {
     if (!this.world) return;
-    console.log(this.world.map.rooms[this.world.map.currentRoom].entities );
-    console.log(Object.keys(this.world.map.rooms[this.world.map.currentRoom].entities))
     const newWorld = {
       ...this.world
     };
