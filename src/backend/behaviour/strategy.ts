@@ -7,8 +7,6 @@ import { getSpeed } from "./classes";
 function processAttack(room: Room, from: Character, attack: Attack, pos: Point2d) {
     const entities = room.entities;
     entities.get(pos).forEach(function (entity) {
-        console.log("Spotted an entity:", entity);
-
         let attackResult = from.damage(entity, attack,);
         if (
             attackResult.status == 'normal'
@@ -49,7 +47,6 @@ function attackOneEntity(
     const offset = getOffsetsByPos(lookDir, attack);
     const mask = attack.area[lookDir];
     if(!inBounds(mask, pos, {x: enemy.x, y: enemy.y}, offset)) {
-        console.log("!attackInBounds")
         return { success: false, attackedTiles: [] };
     }
 
@@ -86,7 +83,6 @@ function attackOneEntity(
             }
         }
     }
-    console.log("attacked " + enemy.character.healthBar)
     return { success: true, attackedTiles: attackedTiles };
 }
 
