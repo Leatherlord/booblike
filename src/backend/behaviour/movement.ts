@@ -120,7 +120,7 @@ export function neutralMovement(from: Point2d, world: World) : { to: Point2d, lo
     const newX = from.x + movementShift[0];
     const newY = from.y + movementShift[1];
 
-    if (checkIfValidMove(room, newX, newY)) {
+    if (checkIfValidMove(room, newX, newY) || (newX === world.player.x && newY === world.player.y)) {
         return { to: { x: newX, y: newY }, lookDir: lookDirect };
     }
 
