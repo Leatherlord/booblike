@@ -1,7 +1,6 @@
 import { Entity, getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
 import { Attack } from "./attacks";
 import { aggressiveMovement, cowardMovement, neutralMovement } from "./movement";
-import * as attackPack from "./attacks";
 import { Character } from "./character";
 import { getSpeed } from "./classes";
 
@@ -172,9 +171,7 @@ export class PlayerState implements State {
     ): AttackResult {
         const {from, lookDir, character, world} = context;
         let {lastAttacked} = context;
-        console.log("Date.now() ", Date.now() - lastAttacked, character.getAttackSpeed(attack))
         if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
-            console.log("Date.now() - lastAttacked < character.getAttackSpeed(attack)")
             return {
                 success: false,
                 attackedTiles: [],

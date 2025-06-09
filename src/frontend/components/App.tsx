@@ -7,7 +7,6 @@ import { Event } from '../../common/events';
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
-  const [damageEffectKey, setDamageEffectKey] = useState(0);
 
   const handleSelectSlot = (slotId: number) => {
     if (!world) return;
@@ -68,7 +67,6 @@ const App: React.FC = () => {
             type: 'player_attack',
             weaponChosen: world.player.activeSlot
           };
-          setDamageEffectKey(prev => prev == 1 ? prev + 1 : prev - 1);
           break;
         default:
           return;
