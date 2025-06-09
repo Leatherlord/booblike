@@ -14,7 +14,6 @@ const App: React.FC = () => {
     useState<TexturePack | null>(null);
   const [showTexturePackSelector, setShowTexturePackSelector] = useState(true);
   const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
-  const [damageEffectKey, setDamageEffectKey] = useState(0);
 
   useEffect(() => {
     const loadDefaultPack = async () => {
@@ -105,7 +104,6 @@ const App: React.FC = () => {
             type: 'player_attack',
             weaponChosen: world.player.activeSlot
           };
-          setDamageEffectKey(prev => prev == 1 ? prev + 1 : prev - 1);
           break;
         default:
           return;
