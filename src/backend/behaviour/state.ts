@@ -3,6 +3,7 @@ import { Attack } from "./attacks";
 import { aggressiveMovement, cowardMovement, neutralMovement } from "./movement";
 import * as attackPack from "./attacks";
 import { Character } from "./character";
+import { getSpeed } from "./classes";
 
 function processAttack(room: Room, from: Character, attack: Attack, pos: Point2d) {
     const entities = room.entities;
@@ -42,7 +43,7 @@ function attackOneEntity(
     pos: Point2d, 
     world: World, 
     enemy?: Entity,
-) : AttackResult {
+) : { success: boolean, attackedTiles: Point2d[] } {
     if(!enemy) return { success: false, attackedTiles: [] };
 
     const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
@@ -96,7 +97,7 @@ function attackAll(
     lookDir: LookDirection, 
     pos: Point2d, 
     world: World
-) : AttackResult {
+) : { success: boolean, attackedTiles: Point2d[] } {
 const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
     const { x: xOffset, y: yOffset } = getOffsetsByPos(lookDir, attack);
     const mask = attack.area[lookDir];
@@ -139,19 +140,24 @@ const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
 interface AttackResult {
     success: boolean;
     attackedTiles: Point2d[];
+    lastAttacked: number;
 }
 
 export type MovementResult = {
     to: Point2d
     lookDir?: LookDirection
     attackResult?: AttackResult
+    lastAttacked: number
+    lastMoved: number
 }
 
 export type Context = {
     from: Point2d,
     lookDir: LookDirection,
     character: Character,
-    world: World
+    world: World,
+    lastAttacked: number,
+    lastMoved: number
 }
 
 export interface State {
@@ -165,12 +171,22 @@ export class PlayerState implements State {
         context: Context, attack: Attack
     ): AttackResult {
         const {from, lookDir, character, world} = context;
-        return attackAll(character, attack, lookDir, from, world);
+        let {lastAttacked} = context;
+        console.log("Date.now() ", Date.now() - lastAttacked, character.getAttackSpeed(attack))
+        if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
+            console.log("Date.now() - lastAttacked < character.getAttackSpeed(attack)")
+            return {
+                success: false,
+                attackedTiles: [],
+                lastAttacked: lastAttacked
+            };
+        }
+        return {...attackAll(character, attack, lookDir, from, world), lastAttacked: Date.now()};
     }
     public move(context: Context): MovementResult {
-        const {from, lookDir, character, world} = context;
+        const {from, lookDir, character, world, lastAttacked, lastMoved} = context;
         let pos = neutralMovement(from, world);
-        return {...pos};
+        return {...pos, lastAttacked: lastAttacked, lastMoved: lastMoved};
     }
 }
 
@@ -178,22 +194,35 @@ export class Aggresive implements State {
     public attack(
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
-        const {from, lookDir, character, world} = context;
-        return attackOneEntity(character, attack, lookDir, from, world, enemy);
+        const {from, lookDir, character, world, lastAttacked} = context;
+        if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
+            return {
+                success: false,
+                attackedTiles: [], 
+                lastAttacked: lastAttacked
+            };
+        }
+        return { ...attackOneEntity(character, attack, lookDir, from, world, enemy), lastAttacked: Date.now()}
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
+        let {lastAttacked, lastMoved} = context;
         let pos = aggressiveMovement(context);
         if(!pos.lookDir) pos.lookDir = lookDir;
-        let attackResult;
+
+        if(Date.now() - lastMoved < getSpeed(character.charClass.speed)) { 
+            pos.to = from 
+        } else {
+            lastMoved = Date.now();
+        }
+
         for(const attack of character.attacks) {
             let attackResult = this.attack(context, attack, world.player)
             if(attackResult.success) {
-                console.log("ATTACKED")
-                return {...pos, attackResult};
+                return {...pos, attackResult: attackResult, lastAttacked: attackResult.lastAttacked, lastMoved: lastMoved};
             }
         }
-        return {...pos};
+        return {...pos, lastAttacked: lastAttacked, lastMoved: lastMoved};
     }
 }
 
@@ -201,13 +230,19 @@ export class Neutral implements State {
     public attack(
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
-        const {from, lookDir, character, world} = context;
-        return { success: false, attackedTiles: [] };
+        const {from, lookDir, character, world, lastAttacked} = context;
+        return { success: false, attackedTiles: [], lastAttacked: lastAttacked };
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
+        let {lastAttacked, lastMoved} = context;
         let pos = neutralMovement(from, world);
-        return {...pos};
+        if(Date.now() - lastMoved < getSpeed(character.charClass.speed)) { 
+            pos.to = from 
+        } else {
+            lastMoved = Date.now();
+        }
+        return {...pos, lastAttacked: lastAttacked, lastMoved: lastMoved};
     }
 }
 
@@ -216,12 +251,19 @@ export class Coward implements State {
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
         const {from, lookDir, character, world} = context;
-        return { success: false, attackedTiles: [] };
+        let {lastAttacked, lastMoved} = context;
+        return { success: false, attackedTiles: [], lastAttacked: lastAttacked };
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
+        let {lastAttacked, lastMoved} = context;
         let pos = cowardMovement(context);
-        return {...pos};
+        if(Date.now() - lastMoved < character.getSpeed()) { 
+            pos.to = from 
+        } else {
+            lastMoved = Date.now();
+        }
+        return {...pos, lastAttacked: lastAttacked, lastMoved: lastMoved};
     }
 }
 
@@ -230,14 +272,30 @@ export class Fury implements State {
         context: Context, attack: Attack
     ): AttackResult {
         const {from, lookDir, character, world} = context;
-        return attackAll(character, attack, lookDir, from, world);
+        let {lastAttacked, lastMoved} = context;
+        if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
+            return {
+                success: false,
+                attackedTiles: [], 
+                lastAttacked: lastAttacked
+            };
+        }
+        return {...attackAll(character, attack, lookDir, from, world), lastAttacked: Date.now()};
     }
     public move(context: Context): MovementResult {
         const {from, lookDir, character, world} = context;
+        let {lastAttacked, lastMoved} = context;
         let pos = neutralMovement(from, world);
         if(!pos.lookDir) pos.lookDir = lookDir;
+        if(Date.now() - lastMoved < character.getSpeed()) { 
+            pos.to = from 
+        } else {
+            lastMoved = Date.now();
+        }
+        
         const attackChosen = Math.floor(Math.random() * character.attacks.length);
-        let attackResult = this.attack(context, character.attacks[attackChosen]);
-        return {...pos, attackResult};
+        const attack =  character.attacks[attackChosen]; 
+        let attackResult = this.attack(context, attack);
+        return {...pos, lastAttacked: attackResult.lastAttacked, lastMoved: lastMoved, attackResult: attackResult};
     }
 }

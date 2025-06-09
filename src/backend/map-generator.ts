@@ -3,7 +3,7 @@ import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { DummyCharacter } from "./behaviour/character";
 import { Aggresive, Coward, Neutral } from "./behaviour/state";
-import { WeaklingClass } from "./behaviour/classes";
+import { WeaklingClass, WeaklingFastClass, WeaklingSlowClass } from "./behaviour/classes";
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -335,18 +335,36 @@ export function getStartingRoom(): Room {
     reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
     
     let entities =  new EntitiesMap();
-    // for (let i = 0; i < 3; i++) {
-    //     const key = { x: 3, y: 3 };
-    //     entities.add(key, {
-    //         id: ""+i,
-    //         x: 3,
-    //         y: 3,
-    //         lookDir: LookDirection.Left,
-    //         character: new DummyCharacter(new Neutral(), WeaklingClass, 1),
-    //         level: 1,
-    //         texture: 'enemy'
-    //     });
-    // }
+
+    entities.add({ x: 3, y: 3 }, {
+        id: ""+1,
+        x: 3,
+        y: 3,
+        lookDir: LookDirection.Left,
+        character: new DummyCharacter(new Neutral(), WeaklingFastClass, 1),
+        level: 1,
+        texture: 'enemy',
+
+        animation: {
+            lastAttacked: 0,
+            lastMoved: 0
+        }
+    });
+
+    entities.add({ x: 3, y: 3 }, {
+        id: ""+2,
+        x: 3,
+        y: 3,
+        lookDir: LookDirection.Left,
+        character: new DummyCharacter(new Neutral(), WeaklingSlowClass, 1),
+        level: 1,
+        texture: 'enemy',
+
+        animation: {
+            lastAttacked: 0,
+            lastMoved: 0
+        }
+    });
 
     entities.add({ x: 6, y: 6 }, {
         id: ""+3,
@@ -355,7 +373,12 @@ export function getStartingRoom(): Room {
         lookDir: LookDirection.Left,
         character: new DummyCharacter(new Aggresive(), WeaklingClass, 1),
         level: 1,
-        texture: 'enemy'
+        texture: 'enemy',
+
+        animation: {
+            lastAttacked: 0,
+            lastMoved: 0
+        }
     });
 
     entities.add({ x: 6, y: 6 }, {
@@ -365,7 +388,12 @@ export function getStartingRoom(): Room {
         lookDir: LookDirection.Left,
         character: new DummyCharacter(new Coward(), WeaklingClass, 1),
         level: 1,
-        texture: 'enemy'
+        texture: 'enemy',
+
+        animation: {
+            lastAttacked: 0,
+            lastMoved: 0
+        }
     });
     
     return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};

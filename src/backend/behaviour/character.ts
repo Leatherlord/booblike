@@ -1,8 +1,8 @@
-import { Entity, generateGrid, Grid, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
+import { Entity, generateGrid, Grid, LookDirection, Point2d, Room, Size, Speed, World } from "../../common/interfaces";
 import { Attack } from "./attacks";
 import * as attackPack from "./attacks";
 import { Buff } from "./buffs";
-import { CharClass, PlayerClass } from "./classes";
+import { CharClass, getSpeed, PlayerClass } from "./classes";
 import { MovementResult } from "./state";
 import { PlayerState, State } from "./state";
 
@@ -22,6 +22,8 @@ function cloneCharacter(char: Character) {
     copy.activeBuffs = char.activeBuffs;
     copy.attacks = char.attacks;
     copy.characterSize = char.characterSize;
+    copy.areaSize = char.areaSize;
+    copy.area = char.area;
     return copy;
 }
 
@@ -38,9 +40,14 @@ export interface Character {
     area: Record<LookDirection, number[][]>
 
     clone: () => Character;
-    move: (from: Point2d, lookDir: LookDirection, world: World) => MovementResult;
+    move: (from: Point2d, lookDir: LookDirection, animation: {
+        lastAttacked: number;
+        lastMoved: number;
+    }, world: World) => MovementResult;
     damage: (enemy: Entity, attack: Attack) => AttackResult;
     update: () => void; // runs in loop
+    getSpeed: () => Speed;
+    getAttackSpeed: (attack: Attack) => Speed;
 }
 
 export class PlayerCharacter implements Character {
@@ -59,13 +66,13 @@ export class PlayerCharacter implements Character {
             areaRight: 1,
             areaLeft: 1
         },
-        this.area = generateGrid(
-            [
-                [1, 1, 1],
-                [1, 1, 1],
-                [1, 1, 1]
-            ]
-        );
+            this.area = generateGrid(
+                [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ]
+            );
     }
     state: State;
     healthBar: number;
@@ -80,9 +87,12 @@ export class PlayerCharacter implements Character {
     public clone(): Character {
         return cloneCharacter(this);
     }
-    public move(from: Point2d, lookDir: LookDirection, world: World): MovementResult {
+    public move(from: Point2d, lookDir: LookDirection, animation: {
+        lastAttacked: number;
+        lastMoved: number;
+    }, world: World): MovementResult {
         const result: MovementResult = this.state.move({
-            from: from, lookDir: lookDir, character: this, world: world
+            from: from, lookDir: lookDir, character: this, world: world, lastAttacked: animation.lastAttacked, lastMoved: animation.lastMoved
         });
         return result;
     }
@@ -98,6 +108,14 @@ export class PlayerCharacter implements Character {
     }
     public update(): void {
         throw "Cannot update yet";
+    }
+
+    public getSpeed(): Speed {
+        return this.charClass.speed;
+    }
+
+    public getAttackSpeed(attack: Attack): Speed {
+        return attack.speed * 10;
     }
 }
 
@@ -119,19 +137,19 @@ export class DummyCharacter implements Character {
 
         this.characterSize = { width: 1, height: 1 }
 
-                this.areaSize = {
+        this.areaSize = {
             areaUp: 0,
             areaDown: 2,
             areaRight: 1,
             areaLeft: 1
         },
-        this.area = generateGrid(
-            [
-                [1, 1, 1],
-                [1, 1, 1],
-                [1, 1, 1]
-            ]
-        );
+            this.area = generateGrid(
+                [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ]
+            );
     }
     state: State;
     healthBar: number;
@@ -146,9 +164,12 @@ export class DummyCharacter implements Character {
     public clone(): Character {
         return cloneCharacter(this);
     }
-    public move(from: Point2d, lookDir: LookDirection, world: World): MovementResult {
+    public move(from: Point2d, lookDir: LookDirection, animation: {
+        lastAttacked: number;
+        lastMoved: number;
+    }, world: World): MovementResult {
         const result: MovementResult = this.state.move({
-            from: from, lookDir: lookDir, character: this, world: world
+            from: from, lookDir: lookDir, character: this, lastAttacked: animation.lastAttacked, lastMoved: animation.lastMoved, world: world
         });
         return result;
     }
@@ -164,5 +185,13 @@ export class DummyCharacter implements Character {
     }
     public update(): void {
         throw "Cannot update yet";
+    }
+
+    public getSpeed(): Speed {
+        return this.charClass.speed;
+    }
+
+    public getAttackSpeed(attack: Attack): Speed {
+        return attack.speed * 10;
     }
 }

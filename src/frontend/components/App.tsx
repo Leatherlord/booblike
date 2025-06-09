@@ -126,7 +126,7 @@ const App: React.FC = () => {
         type: 'npc_move'
       };
       handleEvent(event)
-    }, 200);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [world]);
