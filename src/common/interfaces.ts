@@ -170,9 +170,20 @@ export type Entity = {
 
   texture?: string; 
   level: number;
+
+  animation: {
+    lastAttacked: number;
+    lastMoved: number;
+  }
 };
 
-
+export enum Speed {
+    SUPERFAST = 100,
+    FAST = 200,
+    NORMAL = 300,
+    SLOW = 400,
+    SUPERSLOW = 500
+}
 
 export type InventoryItem = {
   id: string;

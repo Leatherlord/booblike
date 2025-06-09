@@ -61,6 +61,10 @@ export class WorldManager {
         level: 1,
         slots: this.createEmptyInventory(),
         activeSlot: 1,
+        animation: {
+          lastAttacked: 0,
+          lastMoved: 0,
+        }
       },
       random: worldRandom,
     };
@@ -226,9 +230,13 @@ export class WorldManager {
     if(!room) return;
     room.entities.forEach((entity)  => {
       if (!this.world) return;
-      const {to, lookDir, attackResult} = entity.character.move({ x: entity.x, y: entity.y }, entity.lookDir, this.world);
+      const {to, lookDir, attackResult, lastAttacked, lastMoved} = entity.character.move({ x: entity.x, y: entity.y }, entity.lookDir, entity.animation, this.world);
+      
       if(lookDir) entity.lookDir = lookDir;
       if(attackResult) entity.lastAttackArray = attackResult.attackedTiles;
+      entity.animation.lastAttacked = lastAttacked;
+      entity.animation.lastMoved = lastMoved;
+
       const {x, y} = to;
       room.entities.delete({x: entity.x, y: entity.y}, entity);
       entity.x = x;

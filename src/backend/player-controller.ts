@@ -81,7 +81,10 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
     from: { x: world.player.x, y: world.player.y },
     lookDir: world.player.lookDir,
     character: character,
-    world: world
+    world: world,
+    lastMoved: world.player.animation.lastMoved,
+    lastAttacked: world.player.animation.lastAttacked
   }, character.attacks[attackNumber]);
+  world.player.animation.lastAttacked = playerAttack.lastAttacked;
   world.player.lastAttackArray = playerAttack.attackedTiles;
 };

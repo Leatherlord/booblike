@@ -1,7 +1,8 @@
-import { Entity, Grid, LookDirection, Point2d, generateGrid } from "../../common/interfaces";
+import { Entity, Grid, LookDirection, Point2d, generateGrid, Speed } from "../../common/interfaces";
 import { Buff } from "./buffs";
 
 export interface Attack {
+  speed: Speed;
   minDamage: number;
   maxDamage: number;
   attackBuffs: Buff[];
@@ -10,6 +11,7 @@ export interface Attack {
 }
 
 export let CircleAttack: Attack = {
+  speed: Speed.NORMAL,
   minDamage: 1,
   maxDamage: 2,
   attackBuffs: [],
@@ -29,6 +31,7 @@ export let CircleAttack: Attack = {
 }
 
 export let StraightAttack: Attack = {
+  speed: Speed.FAST,
   minDamage: 1,
   maxDamage: 3,
   attackBuffs: [],
@@ -48,6 +51,7 @@ export let StraightAttack: Attack = {
 }
 
 export let UnevenAttack: Attack = {
+  speed: Speed.SLOW,
   minDamage: 20,
   maxDamage: 30,
   attackBuffs: [],
@@ -68,6 +72,7 @@ export let UnevenAttack: Attack = {
 }
 
 export let SuperUnevenAttack: Attack = {
+  speed: Speed.SLOW,
   minDamage: 20,
   maxDamage: 30,
   attackBuffs: [],
