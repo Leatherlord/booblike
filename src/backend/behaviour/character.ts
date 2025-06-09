@@ -115,7 +115,7 @@ export class PlayerCharacter implements Character {
     }
 
     public getAttackSpeed(attack: Attack): Speed {
-        return attack.speed * 10;
+        return attack.speed * 5;
     }
 }
 
@@ -192,6 +192,6 @@ export class DummyCharacter implements Character {
     }
 
     public getAttackSpeed(attack: Attack): Speed {
-        return attack.speed * 10;
+        return attack.speed * 5;
     }
 }

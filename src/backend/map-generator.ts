@@ -371,7 +371,7 @@ export function getStartingRoom(): Room {
         x: 6,
         y: 6,
         lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Aggresive(), WeaklingClass, 1),
+        character: new DummyCharacter(new Aggresive(), WeaklingClass, 4),
         level: 1,
         texture: 'enemy',
 
