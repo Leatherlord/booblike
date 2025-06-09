@@ -1,5 +1,5 @@
 import { LookDirection, World } from '../common/interfaces';
-import { PlayerState } from './behaviour/state';
+import { PlayerStrategy } from './behaviour/strategy';
 
 export const movePlayer = (
   world: World,
@@ -68,7 +68,7 @@ export function createEmptyMask(dimX: number, dimY: number): number[][] {
 
 export const attackFromPlayer = (world: World, attackNumber: number) => {
   const character = world.player.character;
-  if(!(character.state instanceof PlayerState)) return;
+  if(!(character.strategy instanceof PlayerStrategy)) return;
 
   if (!character.attacks[attackNumber]) attackNumber = 1;
   if (!character.attacks[1]) {
@@ -77,7 +77,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
       center: { x: 0, y: 0 }
     };
   }
-  const playerAttack = world.player.character.state.attack({
+  const playerAttack = world.player.character.strategy.attack({
     from: { x: world.player.x, y: world.player.y },
     lookDir: world.player.lookDir,
     character: character,

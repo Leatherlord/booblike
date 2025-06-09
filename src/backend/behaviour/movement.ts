@@ -1,5 +1,5 @@
 import { getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, World } from "../../common/interfaces";
-import { Context } from "./state";
+import { Context } from "./strategy";
 
 function checkIfValidMove(room: Room, newX: number, newY: number) {
     return (

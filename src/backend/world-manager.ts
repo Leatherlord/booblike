@@ -6,7 +6,7 @@ import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
 import { DummyCharacter, PlayerCharacter } from './behaviour/character';
 import { WeaklingClass } from './behaviour/classes';
-import { Aggresive } from './behaviour/state';
+import { Aggresive } from './behaviour/strategy';
 import { read } from 'fs';
 
 export class WorldManager {
