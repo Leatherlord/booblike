@@ -2,7 +2,7 @@ import { EntitiesMap, Entity, LookDirection, Point2d, Room, Tile } from "../comm
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { DummyCharacter } from "./behaviour/character";
-import { Aggresive, Coward, Neutral } from "./behaviour/state";
+import { Aggresive, Coward, Neutral } from "./behaviour/strategy";
 import { WeaklingClass, WeaklingFastClass, WeaklingSlowClass } from "./behaviour/classes";
 
 const MAX_ROOM_SIZE = 50;

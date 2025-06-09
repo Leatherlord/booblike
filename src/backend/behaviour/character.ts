@@ -3,8 +3,8 @@ import { Attack } from "./attacks";
 import * as attackPack from "./attacks";
 import { Buff } from "./buffs";
 import { CharClass, getSpeed, PlayerClass } from "./classes";
-import { MovementResult } from "./state";
-import { PlayerState, State } from "./state";
+import { MovementResult } from "./strategy";
+import { PlayerStrategy, Strategy } from "./strategy";
 
 interface AttackResult {
     finalTarget: Entity;
@@ -15,7 +15,7 @@ interface AttackResult {
 
 function cloneCharacter(char: Character) {
     let copy = new PlayerCharacter(char.maxHealthBar);
-    copy.state = char.state;
+    copy.strategy = char.strategy;
     copy.healthBar = char.maxHealthBar;
     copy.maxHealthBar = char.maxHealthBar;
     copy.charClass = char.charClass;
@@ -28,7 +28,7 @@ function cloneCharacter(char: Character) {
 }
 
 export interface Character {
-    state: State;
+    strategy: Strategy;
     healthBar: number;
     maxHealthBar: number;
     activeBuffs: Buff[];
@@ -52,7 +52,7 @@ export interface Character {
 
 export class PlayerCharacter implements Character {
     constructor(maxHealthBar: number) {
-        this.state = new PlayerState();
+        this.strategy = new PlayerStrategy();
         this.healthBar = maxHealthBar;
         this.maxHealthBar = maxHealthBar;
         this.charClass = new PlayerClass();
@@ -74,7 +74,7 @@ export class PlayerCharacter implements Character {
                 ]
             );
     }
-    state: State;
+    strategy: Strategy;
     healthBar: number;
     maxHealthBar: number;
     activeBuffs: Buff[];
@@ -91,7 +91,7 @@ export class PlayerCharacter implements Character {
         lastAttacked: number;
         lastMoved: number;
     }, world: World): MovementResult {
-        const result: MovementResult = this.state.move({
+        const result: MovementResult = this.strategy.move({
             from: from, lookDir: lookDir, character: this, world: world, lastAttacked: animation.lastAttacked, lastMoved: animation.lastMoved
         });
         return result;
@@ -120,8 +120,8 @@ export class PlayerCharacter implements Character {
 }
 
 export class DummyCharacter implements Character {
-    constructor(state: State, charClass: CharClass, maxHealthBar: number) {
-        this.state = state;
+    constructor(strategy: Strategy, charClass: CharClass, maxHealthBar: number) {
+        this.strategy = strategy;
         this.healthBar = maxHealthBar;
         this.maxHealthBar = maxHealthBar;
         this.charClass = charClass;
@@ -151,7 +151,7 @@ export class DummyCharacter implements Character {
                 ]
             );
     }
-    state: State;
+    strategy: Strategy;
     healthBar: number;
     maxHealthBar: number;
     activeBuffs: Buff[];
@@ -168,7 +168,7 @@ export class DummyCharacter implements Character {
         lastAttacked: number;
         lastMoved: number;
     }, world: World): MovementResult {
-        const result: MovementResult = this.state.move({
+        const result: MovementResult = this.strategy.move({
             from: from, lookDir: lookDir, character: this, lastAttacked: animation.lastAttacked, lastMoved: animation.lastMoved, world: world
         });
         return result;

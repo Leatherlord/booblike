@@ -159,13 +159,13 @@ export type Context = {
     lastMoved: number
 }
 
-export interface State {
+export interface Strategy {
     move: (context: Context) => MovementResult;
     attack: (context: Context, attack: Attack, enemy?: Entity) 
     => AttackResult
 }
 
-export class PlayerState implements State {
+export class PlayerStrategy implements Strategy {
     public attack(
         context: Context, attack: Attack
     ): AttackResult {
@@ -187,7 +187,7 @@ export class PlayerState implements State {
     }
 }
 
-export class Aggresive implements State {
+export class Aggresive implements Strategy {
     public attack(
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
@@ -223,7 +223,7 @@ export class Aggresive implements State {
     }
 }
 
-export class Neutral implements State {
+export class Neutral implements Strategy {
     public attack(
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
@@ -243,7 +243,7 @@ export class Neutral implements State {
     }
 }
 
-export class Coward implements State {
+export class Coward implements Strategy {
     public attack(
         context: Context, attack: Attack, enemy?: Entity
     ): AttackResult {
@@ -264,7 +264,7 @@ export class Coward implements State {
     }
 }
 
-export class Fury implements State {
+export class Fury implements Strategy {
     public attack(
         context: Context, attack: Attack
     ): AttackResult {
