@@ -2,7 +2,7 @@ export type Event =
   | PlayerMoveEvent
   | PlayerAttackEvent
   | InventorySelectEvent
-  | NPCMoveEvent;
+  | PurchaseUpgradeEvent;
 
 export type PlayerMoveEvent = {
   type: 'player_move';
@@ -19,6 +19,7 @@ export type InventorySelectEvent = {
   slotId: number;
 };
 
-export type NPCMoveEvent = {
-  type: 'npc_move';
+export type PurchaseUpgradeEvent = {
+  type: 'purchase_upgrade';
+  upgradeId: string;
 };
