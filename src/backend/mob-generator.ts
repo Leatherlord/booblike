@@ -13,7 +13,6 @@ export function generateCharacterWithSeed(seed: number): Character {
 export function generateCharacter(): Character {
     const charClassMap = getCharClassMap();
     let classNames = Object.keys(charClassMap);
-    console.log(charClassMap)
     const classNum = Math.floor(Math.random() * classNames.length);
     return new RandomEnemyCharacter(charClassMap[classNames[classNum]]);
 }

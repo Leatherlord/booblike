@@ -237,10 +237,12 @@ export class WorldManager {
       entity.animation.lastMoved = lastMoved;
 
       const {x, y} = to;
-      room.entities.delete({x: entity.x, y: entity.y}, entity);
-      entity.x = x;
-      entity.y = y;
-      room.entities.add({x: entity.x, y: entity.y}, entity);
+      if(!room.entities.get(to)) {
+        room.entities.delete({x: entity.x, y: entity.y}, entity);
+        entity.x = x;
+        entity.y = y;
+        room.entities.add({x: entity.x, y: entity.y}, entity);
+      }
     });
 
     for(let entity of room.killedEntities) {
