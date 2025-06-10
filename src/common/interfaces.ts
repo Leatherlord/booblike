@@ -1,10 +1,13 @@
 import { Dictionary } from 'typescript-collections';
-import { Character } from '../backend/behaviour/character';
+import { Character, Characteristics } from '../backend/behaviour/character';
 
 export type World = {
   map: GameMap;
-  player: Entity & Inventory;
+  player: Entity & Inventory & LevelingData;
   random: any;
+  onEntityDeath?: (deadEntity: Entity, attacker: Entity) => void;
+  availableUpgrades: UpgradeOption[];
+  isPlayerDead?: boolean;
 };
 
 export type ExitMappingEntry = {
@@ -33,7 +36,6 @@ export type Room = {
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
   entities: EntitiesMap;
-  killedEntities: Entity[];
 };
 
 function pointToKey(p: Point2d): string {
@@ -175,6 +177,8 @@ export type Entity = {
 
   texture?: string;
   level: number;
+  experience: number;
+  experienceToNext: number;
 
   animation: {
     lastAttacked: number;
@@ -205,4 +209,20 @@ export type InventorySlot = {
 export type Inventory = {
   slots: InventorySlot[];
   activeSlot: number;
+};
+
+export type UpgradeOption = {
+  id: string;
+  name: string;
+  description: string;
+  characteristic: keyof Characteristics;
+  currentLevel: number;
+  maxLevel: number;
+  cost: number;
+};
+
+export type LevelingData = {
+  availableExperience: number;
+  spentExperience: number;
+  upgradesBought: Record<string, number>;
 };

@@ -15,15 +15,28 @@ import {
   neutralMovement,
 } from './movement';
 
-function processAttack(room: Room, from: Entity, attack: Attack, pos: Point2d) {
+function processEntityDeath(deadEntity: Entity, attacker: Entity, world: World) {
+  const room = world.map.rooms[world.map.currentRoom];
+  
+  room.entities.delete({ x: deadEntity.x, y: deadEntity.y }, deadEntity);
+  
+  if (world.onEntityDeath && attacker === world.player && deadEntity !== world.player) {
+    world.onEntityDeath(deadEntity, attacker);
+  }
+}
+
+function processAttack(room: Room, from: Entity, attack: Attack, pos: Point2d, world: World) {
   const entities = room.entities;
   entities.get(pos).forEach(function (entity) {
     let attackResult = from.character.damage(from, entity, attack);
-    if (
-      attackResult.status == 'normal' &&
-      attackResult.finalTarget.character.healthBar <= 0
-    )
-      room.killedEntities.push(entity);
+    
+    if (attackResult.finalTarget.character.healthBar <= 0) {
+      if (attackResult.finalTarget === world.player) {
+        console.log('Player dead.');
+      } else {
+        processEntityDeath(attackResult.finalTarget, from, world);
+      }
+    }
   });
 }
 
@@ -62,16 +75,13 @@ function attackOneEntity(
 
   const attackResult = attacker.character.damage(attacker, enemy, attack);
   const room = world.map.rooms[world.map.currentRoom];
-  if (
-    attackResult.finalTarget.character.healthBar <= 0 &&
-    attackResult.finalTarget != world.player
-  ) {
-    room.killedEntities.push(attackResult.finalTarget);
-  } else if (
-    attackResult.finalTarget.character.healthBar <= 0 &&
-    attackResult.finalTarget != world.player
-  ) {
-    console.log('Player dead.');
+  
+  if (attackResult.finalTarget.character.healthBar <= 0) {
+    if (attackResult.finalTarget === world.player) {
+      console.log('Player dead.');
+    } else {
+      processEntityDeath(attackResult.finalTarget, attacker, world);
+    }
   }
 
   const map = room.map;
@@ -134,7 +144,7 @@ function attackAll(
         const pos: Point2d = { x: targetX, y: targetY };
 
         if (room.entities.get(pos)) {
-          processAttack(room, attacker, attack, pos);
+          processAttack(room, attacker, attack, pos, world);
           success = true;
         }
 

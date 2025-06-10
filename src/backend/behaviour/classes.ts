@@ -25,11 +25,11 @@ export function getCharacteristicsFromClass(class_: CharClass) {
   const randomBetween = (minVal: number, maxVal: number) =>
     Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
   const characteristicsBounds = {
-    s: Math.min(15, Math.max(1, randomBetween(min.s, max.s))),
-    p: Math.min(15, Math.max(1, randomBetween(min.p, max.p))),
-    e: Math.min(15, Math.max(1, randomBetween(min.e, max.e))),
-    i: Math.min(15, Math.max(1, randomBetween(min.i, max.i))),
-    a: Math.min(15, Math.max(1, randomBetween(min.a, max.a))),
+    s: randomBetween(min.s, max.s),
+    p: randomBetween(min.p, max.p),
+    e: randomBetween(min.e, max.e),
+    i: randomBetween(min.i, max.i),
+    a: randomBetween(min.a, max.a),
   };
 
   const availableAttacks = class_.availableAttacks;

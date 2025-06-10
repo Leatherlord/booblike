@@ -8,8 +8,7 @@ import {
 } from '../common/interfaces';
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
-import { Aggresive, Coward, Neutral } from './behaviour/strategy';
-import { RandomEnemyCharacter } from './behaviour/character';
+import { calculateExperienceForNextLevel } from './behaviour/character';
 import { generateCharacter } from './mob-generator';
 
 const MAX_ROOM_SIZE = 50;
@@ -322,7 +321,6 @@ export function generateRoom(
     exits: exitMap,
     reverseExits: reverseExitMap,
     entities: new EntitiesMap(),
-    killedEntities: [],
   };
   console.log('Generated map: ', generated);
   return generated;
@@ -377,6 +375,8 @@ export function getStartingRoom(): Room {
         lookDir: LookDirection.Left,
         character: chararcter,
         level: 1,
+        experience: 0,
+        experienceToNext: calculateExperienceForNextLevel(1),
         texture: texture,
 
         animation: {
@@ -392,6 +392,5 @@ export function getStartingRoom(): Room {
     exits: exits,
     reverseExits: reverseExits,
     entities: entities,
-    killedEntities: [],
   };
 }
