@@ -6,43 +6,62 @@ import { states } from './state';
 import { MovementResult, Strategy } from './strategy';
 
 export type Characteristics = {
-  s: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
-  p: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
-  e: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
-  a: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
-  i: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+  s: number;
+  p: number;
+  e: number;
+  a: number;
+  i: number;
 };
+
+export function getEffectiveCharacteristics(character: Character, upgradesBought?: Record<string, number>): Characteristics {
+  if (!upgradesBought) {
+    return character.characteristics;
+  }
+  
+  return {
+    s: character.characteristics.s + (upgradesBought.strength || 0),
+    p: character.characteristics.p + (upgradesBought.perception || 0),
+    e: character.characteristics.e + (upgradesBought.endurance || 0),
+    a: character.characteristics.a + (upgradesBought.agility || 0),
+    i: character.characteristics.i + (upgradesBought.intelligence || 0),
+  };
+}
 
 export function attackStrength(
   attack: Attack,
   char: Character,
-  enemy: Character
+  enemy: Character,
+  attackerUpgrades?: Record<string, number>
 ) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, attackerUpgrades);
   const base =
     Math.random() * (attack.maxDamage - attack.minDamage) + attack.minDamage;
   const damage =
-    base * (1 + 0.25 * char.characteristics.s) * (1 + 0.05 * char.level);
+    base * (1 + 0.25 * effectiveCharacteristics.s) * (1 + 0.05 * char.level);
   const actualDamage = damage * (1 - 0.1 * enemy.characteristics.e);
   return actualDamage;
 }
 
-export function health(char: Character) {
+export function health(char: Character, upgradesBought?: Record<string, number>) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
   const HP =
     10 +
-    (0.25 * char.characteristics.s + 0.5 * char.characteristics.e) * char.level;
+    (0.25 * effectiveCharacteristics.s + 0.5 * effectiveCharacteristics.e) * char.level;
   return HP;
 }
 
-export function regen(char: Character) {
-  const regen = 0.05 * (char.characteristics.e + char.level);
+export function regen(char: Character, upgradesBought?: Record<string, number>) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+  const regen = 0.05 * (effectiveCharacteristics.e + char.level);
   return regen;
 }
 
-export function FOV(char: Character) {
-  const areaUp = 4 + Math.floor(0.5 * char.characteristics.p);
-  const areaDown = Math.floor(0.5 * char.characteristics.p);
-  const areaLeft = 2 + Math.floor(0.5 * char.characteristics.p);
-  const areaRight = 2 + Math.floor(0.5 * char.characteristics.p);
+export function FOV(char: Character, upgradesBought?: Record<string, number>) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+  const areaUp = 4 + Math.floor(0.5 * effectiveCharacteristics.p);
+  const areaDown = Math.floor(0.5 * effectiveCharacteristics.p);
+  const areaLeft = 2 + Math.floor(0.5 * effectiveCharacteristics.p);
+  const areaRight = 2 + Math.floor(0.5 * effectiveCharacteristics.p);
   return {
     areaUp: areaUp,
     areaDown: areaDown,
@@ -51,27 +70,26 @@ export function FOV(char: Character) {
   };
 }
 
-export function score(char: Character, enemy: Character) {
-  const score = char.characteristics.i * 0.25 + enemy.level;
+export function score(char: Character, enemy: Character, upgradesBought?: Record<string, number>) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+  const score = effectiveCharacteristics.i * 0.25 + enemy.level;
   return score;
 }
 
-export function speed(char: Character) {
-  switch (char.characteristics.a) {
-    case 1:
-    case 2:
-      return Speed.SUPERSLOW;
-    case 3:
-    case 4:
-      return Speed.SLOW;
-    case 5:
-    case 6:
-      return Speed.NORMAL;
-    case 7:
-    case 8:
-      return Speed.FAST;
-    default:
-      return Speed.SUPERFAST;
+export function speed(char: Character, upgradesBought?: Record<string, number>) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+  const agilityValue = effectiveCharacteristics.a;
+  
+  if (agilityValue <= 2) {
+    return Speed.SUPERSLOW;
+  } else if (agilityValue <= 4) {
+    return Speed.SLOW;
+  } else if (agilityValue <= 6) {
+    return Speed.NORMAL;
+  } else if (agilityValue <= 8) {
+    return Speed.FAST;
+  } else {
+    return Speed.SUPERFAST;
   }
 }
 
@@ -107,9 +125,13 @@ export function calculateAttackProbabilities(
   };
 }
 
-export function AttackOutcome(char: Character, enemy: Character) {
+export function AttackOutcome(char: Character, enemy: Character, attackerUpgrades?: Record<string, number>, enemyUpgrades?: Record<string, number>) {
+  const attackerCharacteristics = getEffectiveCharacteristics(char, attackerUpgrades);
+  const enemyCharacteristics = getEffectiveCharacteristics(enemy, enemyUpgrades);
+  
   const { phi_miss, phi_redirected, phi_self_hit, phi_normal } =
-    calculateAttackProbabilities(char.characteristics, enemy.characteristics);
+    calculateAttackProbabilities(attackerCharacteristics, enemyCharacteristics);
+  
   const rand = Math.random();
   const thresholds = [
     { threshold: phi_miss, outcome: 'miss' },
@@ -135,27 +157,11 @@ interface AttackResult {
   status: 'normal' | 'redirected' | 'self-hit' | 'miss';
 }
 
-function cloneCharacter(copy: Character, char: Character) {
-  copy.name = char.name;
-  copy.surname = char.surname;
-  copy.strategy = char.strategy;
-  copy.healthBar = char.maxHealthBar;
-  copy.maxHealthBar = char.maxHealthBar;
-  copy.charClass = char.charClass;
-  copy.activeBuffs = char.activeBuffs;
-  copy.attacks = char.attacks;
-  copy.characterSize = char.characterSize;
-  copy.areaSize = char.areaSize;
-  copy.level = char.level;
-  copy.characteristics = char.characteristics;
-  copy.speed = char.speed;
-  return copy;
-}
-
 function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
   const attackOutcome = AttackOutcome(char.character, enemy.character);
   let damage: number = 0;
   let finalTarget: Entity = enemy;
+  
   switch (attackOutcome) {
     case 'miss': {
       damage = 0;
@@ -163,13 +169,13 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
     }
     case 'redirected': {
       damage = attackStrength(attack, enemy.character, char.character);
-      char.character.healthBar -= damage; // TODO: CHECK FOR DEATH
+      char.character.healthBar -= damage;
       finalTarget = char;
       break;
     }
     case 'self-hit': {
       damage = attackStrength(attack, char.character, char.character);
-      char.character.healthBar -= damage; // TODO: CHECK FOR DEATH
+      char.character.healthBar -= damage;
       finalTarget = char;
       break;
     }
@@ -179,13 +185,6 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
       break;
     }
   }
-  console.log(
-    attackOutcome,
-    enemy.character.healthBar,
-    char.character.healthBar,
-    char.character.maxHealthBar,
-    damage
-  );
   return {
     finalTarget: finalTarget,
     finalAttack: attack,
@@ -212,7 +211,6 @@ export interface Character {
   score?: number;
   speed: Speed;
 
-  clone: () => Character;
   move: (context: Entity, world: World) => MovementResult;
   damage: (context: Entity, enemy: Entity, attack: Attack) => AttackResult;
   update: () => void; // runs in loop
@@ -254,10 +252,7 @@ export class PlayerCharacter implements Character {
   score?: number;
   speed: Speed;
 
-  public clone(): Character {
-    const character = new PlayerCharacter(this.name, this.characteristics);
-    return cloneCharacter(character, this);
-  }
+
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
     const from = { x: x, y: y };
@@ -318,10 +313,6 @@ export class RandomEnemyCharacter implements Character {
   characteristics: Characteristics;
   speed: Speed;
 
-  public clone(): Character {
-    const character = new RandomEnemyCharacter(this.charClass);
-    return cloneCharacter(character, this);
-  }
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
     const from = { x: x, y: y };
@@ -342,4 +333,33 @@ export class RandomEnemyCharacter implements Character {
   public getAttackSpeed(attack: Attack): Speed {
     return attack.speed * 5;
   }
+}
+
+export function calculateExperienceFromKill(player: Character, enemyLevel: number, upgradesBought?: Record<string, number>): number {
+  const effectiveCharacteristics = getEffectiveCharacteristics(player, upgradesBought);
+  const baseExperience = 10;
+  const levelDifference = enemyLevel - player.level;
+  const multiplier = Math.max(0.5, 1 + levelDifference * 0.2);
+  const intelligenceBonus = 1 + (effectiveCharacteristics.i * 0.1); // 10% bonus per intelligence point
+  return Math.floor(baseExperience * multiplier * enemyLevel * intelligenceBonus);
+}
+
+export function calculateExperienceForNextLevel(level: number): number {
+  return Math.floor(100 * Math.pow(1.5, level - 1));
+}
+
+export function canLevelUp(experience: number, experienceToNext: number): boolean {
+  return experience >= experienceToNext;
+}
+
+export function levelUp(entity: Entity & { experience: number; experienceToNext: number }): { level: number; experience: number; experienceToNext: number } {
+  const newLevel = entity.level + 1;
+  const remainingExperience = entity.experience - entity.experienceToNext;
+  const newExperienceToNext = calculateExperienceForNextLevel(newLevel);
+  
+  return {
+    level: newLevel,
+    experience: remainingExperience,
+    experienceToNext: newExperienceToNext
+  };
 }
