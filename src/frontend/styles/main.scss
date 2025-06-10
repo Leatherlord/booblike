@@ -335,7 +335,7 @@ body {
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #F44336, #FF5722, #FF9800, #4CAF50);
+  background: linear-gradient(90deg, #f44336, #ff5722, #ff9800, #4caf50);
   background-size: 400% 100%;
   animation: healthGradient 3s ease infinite;
   transition: width 0.3s ease;
@@ -352,9 +352,15 @@ body {
 }
 
 @keyframes healthGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .experience-bar-container {
@@ -382,7 +388,7 @@ body {
 
 .experience-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
   transition: width 0.3s ease;
   border-radius: 3px;
 }
@@ -463,16 +469,20 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(-50px) scale(0.9);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }

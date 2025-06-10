@@ -34,24 +34,28 @@ const UpgradeMenu: React.FC<UpgradeMenuProps> = ({
             ×
           </button>
         </div>
-        
+
         <div className="upgrade-menu-content">
           <div className="experience-info">
-            <span className="experience-amount">Available Experience: {availableExperience}</span>
+            <span className="experience-amount">
+              Available Experience: {availableExperience}
+            </span>
           </div>
-          
+
           <div className="upgrades-list">
             {upgrades.length === 0 ? (
               <div className="no-upgrades">All characteristics maxed out!</div>
             ) : (
               upgrades.map((upgrade) => (
-                <div 
-                  key={upgrade.id} 
+                <div
+                  key={upgrade.id}
                   className={`upgrade-item ${availableExperience >= upgrade.cost ? 'affordable' : 'expensive'}`}
                 >
                   <div className="upgrade-info">
                     <div className="upgrade-name">{upgrade.name}</div>
-                    <div className="upgrade-description">{upgrade.description}</div>
+                    <div className="upgrade-description">
+                      {upgrade.description}
+                    </div>
                     <div className="upgrade-stats">
                       Level: {upgrade.currentLevel}/{upgrade.maxLevel}
                     </div>
@@ -61,7 +65,9 @@ const UpgradeMenu: React.FC<UpgradeMenuProps> = ({
                     <button
                       className="upgrade-button"
                       disabled={availableExperience < upgrade.cost}
-                      onClick={() => handleUpgradeClick(upgrade.id, upgrade.cost)}
+                      onClick={() =>
+                        handleUpgradeClick(upgrade.id, upgrade.cost)
+                      }
                     >
                       Upgrade
                     </button>
@@ -76,4 +82,4 @@ const UpgradeMenu: React.FC<UpgradeMenuProps> = ({
   );
 };
 
-export default UpgradeMenu; 
+export default UpgradeMenu;

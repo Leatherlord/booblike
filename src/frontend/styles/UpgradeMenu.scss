@@ -8,9 +8,9 @@ $upgrade-border-secondary: #555;
 $upgrade-text-primary: #fff;
 $upgrade-text-secondary: #ccc;
 $upgrade-text-tertiary: #888;
-$upgrade-success: #4CAF50;
+$upgrade-success: #4caf50;
 $upgrade-success-dark: #45a049;
-$upgrade-cost-color: #FFD700;
+$upgrade-cost-color: #ffd700;
 $upgrade-disabled: #666;
 $overlay-bg: rgba(0, 0, 0, 0.8);
 $shadow-color: rgba(0, 0, 0, 0.5);
@@ -194,17 +194,17 @@ $success-glow: rgba(76, 175, 80, 0.2);
     width: 95%;
     margin: 10px;
   }
-  
+
   .upgrade-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
-  
+
   .upgrade-actions {
     width: 100%;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
   }
-} 
+}

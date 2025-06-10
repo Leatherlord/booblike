@@ -10,12 +10,23 @@ import {
   UpgradeOption,
   Entity,
 } from '../common/interfaces';
-import { Event, InventorySelectEvent, PlayerAttackEvent, PurchaseUpgradeEvent } from '../common/events';
+import {
+  Event,
+  InventorySelectEvent,
+  PlayerAttackEvent,
+  PurchaseUpgradeEvent,
+} from '../common/events';
 import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
-import { PlayerCharacter, calculateExperienceForNextLevel, calculateExperienceFromKill, canLevelUp, levelUp } from './behaviour/character';
+import {
+  PlayerCharacter,
+  calculateExperienceForNextLevel,
+  calculateExperienceFromKill,
+  canLevelUp,
+  levelUp,
+} from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
 
 export class WorldManager {
@@ -36,10 +47,10 @@ export class WorldManager {
     if (this.npcMovementTimer) {
       clearInterval(this.npcMovementTimer);
     }
-    
+
     this.npcMovementTimer = setInterval(() => {
       if (!this.world || this.world.player.character.healthBar <= 0) return;
-      
+
       this.handleNPCMovement();
     }, 1000);
   }
@@ -258,27 +269,32 @@ export class WorldManager {
 
   private handleAttack = (event: PlayerAttackEvent) => {
     if (!this.world) return;
-        
+
     const newWorld = {
       ...this.world,
-      onEntityDeath: (deadEntity: Entity, attacker: Entity) => this.handleEnemyKilled(newWorld, { enemyLevel: deadEntity.level }),
+      onEntityDeath: (deadEntity: Entity, attacker: Entity) =>
+        this.handleEnemyKilled(newWorld, { enemyLevel: deadEntity.level }),
     };
-    
+
     attackFromPlayer(newWorld, event.weaponChosen);
 
     const newWorldObject = {
       ...newWorld,
-      isPlayerDead: newWorld.player.character.healthBar <= 0
+      isPlayerDead: newWorld.player.character.healthBar <= 0,
     };
 
     this.updateWorld(newWorldObject);
   };
 
   private handleEnemyKilled(world: World, event: { enemyLevel: number }) {
-    const expGained = calculateExperienceFromKill(world.player.character, event.enemyLevel, world.player.upgradesBought);
+    const expGained = calculateExperienceFromKill(
+      world.player.character,
+      event.enemyLevel,
+      world.player.upgradesBought
+    );
     world.player.experience += expGained;
     world.player.availableExperience += expGained;
-    
+
     let leveledUp = false;
     while (canLevelUp(world.player.experience, world.player.experienceToNext)) {
       const levelUpResult = levelUp(world.player);
@@ -286,11 +302,14 @@ export class WorldManager {
       world.player.experience = levelUpResult.experience;
       world.player.experienceToNext = levelUpResult.experienceToNext;
       leveledUp = true;
-      
-      world.player.character.maxHealthBar = health(world.player.character, world.player.upgradesBought);
+
+      world.player.character.maxHealthBar = health(
+        world.player.character,
+        world.player.upgradesBought
+      );
       world.player.character.healthBar = world.player.character.maxHealthBar;
     }
-    
+
     if (leveledUp) {
       world.availableUpgrades = this.calculateAvailableUpgrades(world);
     }
@@ -301,26 +320,32 @@ export class WorldManager {
 
     const room = this.world.map?.rooms[this.world.map.currentRoom];
     if (!room) return;
-    
+
     const entitiesArray: Entity[] = [];
     room.entities.forEach((entity) => {
       if (entity.character.healthBar > 0) {
         entitiesArray.push(entity);
       }
     });
-    
+
     for (const entity of entitiesArray) {
       if (!this.world) return;
-      
+
       if (entity.character.healthBar <= 0) {
         continue;
       }
-      
-      const entitiesAtPosition = room.entities.get({ x: entity.x, y: entity.y });
-      if (!entitiesAtPosition || !Array.from(entitiesAtPosition).includes(entity)) {
+
+      const entitiesAtPosition = room.entities.get({
+        x: entity.x,
+        y: entity.y,
+      });
+      if (
+        !entitiesAtPosition ||
+        !Array.from(entitiesAtPosition).includes(entity)
+      ) {
         continue;
       }
-      
+
       const { to, lookDir, attackResult, lastAttacked, lastMoved } =
         entity.character.move(entity, this.world);
 
@@ -345,7 +370,7 @@ export class WorldManager {
     const newWorld = {
       ...this.world,
       player: { ...this.world.player },
-      isPlayerDead: this.world.player.character.healthBar <= 0
+      isPlayerDead: this.world.player.character.healthBar <= 0,
     };
 
     this.updateWorld(newWorld);
@@ -353,7 +378,7 @@ export class WorldManager {
 
   private calculateAvailableUpgrades(world: World): UpgradeOption[] {
     const upgradesBought = world.player.upgradesBought;
-    
+
     const upgrades: UpgradeOption[] = [
       {
         id: 'strength',
@@ -362,7 +387,10 @@ export class WorldManager {
         characteristic: 's',
         currentLevel: upgradesBought.strength || 0,
         maxLevel: 10,
-        cost: this.calculateUpgradeCost('strength', upgradesBought.strength || 0),
+        cost: this.calculateUpgradeCost(
+          'strength',
+          upgradesBought.strength || 0
+        ),
       },
       {
         id: 'perception',
@@ -371,7 +399,10 @@ export class WorldManager {
         characteristic: 'p',
         currentLevel: upgradesBought.perception || 0,
         maxLevel: 10,
-        cost: this.calculateUpgradeCost('perception', upgradesBought.perception || 0),
+        cost: this.calculateUpgradeCost(
+          'perception',
+          upgradesBought.perception || 0
+        ),
       },
       {
         id: 'endurance',
@@ -380,7 +411,10 @@ export class WorldManager {
         characteristic: 'e',
         currentLevel: upgradesBought.endurance || 0,
         maxLevel: 10,
-        cost: this.calculateUpgradeCost('endurance', upgradesBought.endurance || 0),
+        cost: this.calculateUpgradeCost(
+          'endurance',
+          upgradesBought.endurance || 0
+        ),
       },
       {
         id: 'agility',
@@ -398,48 +432,68 @@ export class WorldManager {
         characteristic: 'i',
         currentLevel: upgradesBought.intelligence || 0,
         maxLevel: 10,
-        cost: this.calculateUpgradeCost('intelligence', upgradesBought.intelligence || 0),
+        cost: this.calculateUpgradeCost(
+          'intelligence',
+          upgradesBought.intelligence || 0
+        ),
       },
     ];
-    
-    return upgrades.filter(upgrade => upgrade.currentLevel < upgrade.maxLevel);
+
+    return upgrades.filter(
+      (upgrade) => upgrade.currentLevel < upgrade.maxLevel
+    );
   }
 
-  private calculateUpgradeCost(upgradeId: string, currentUpgrades: number): number {
+  private calculateUpgradeCost(
+    upgradeId: string,
+    currentUpgrades: number
+  ): number {
     const baseCost = 50;
     return Math.floor(baseCost * Math.pow(1.5, currentUpgrades));
   }
 
   private handlePurchaseUpgrade(event: PurchaseUpgradeEvent) {
     if (!this.world) return;
-    
-    const upgrade = this.world.availableUpgrades.find(u => u.id === event.upgradeId);
+
+    const upgrade = this.world.availableUpgrades.find(
+      (u) => u.id === event.upgradeId
+    );
     if (!upgrade) return;
-    
+
     if (this.world.player.availableExperience < upgrade.cost) return;
-    
+
     const newWorld = { ...this.world };
     newWorld.player = { ...this.world.player };
     newWorld.player.availableExperience -= upgrade.cost;
     newWorld.player.spentExperience += upgrade.cost;
-    newWorld.player.upgradesBought = { 
+    newWorld.player.upgradesBought = {
       ...this.world.player.upgradesBought,
-      [event.upgradeId]: (this.world.player.upgradesBought[event.upgradeId] || 0) + 1
+      [event.upgradeId]:
+        (this.world.player.upgradesBought[event.upgradeId] || 0) + 1,
     };
-    
-    newWorld.player.character.maxHealthBar = health(newWorld.player.character, newWorld.player.upgradesBought);
+
+    newWorld.player.character.maxHealthBar = health(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
     newWorld.player.character.healthBar = Math.min(
       newWorld.player.character.healthBar,
       newWorld.player.character.maxHealthBar
     );
-    newWorld.player.character.areaSize = FOV(newWorld.player.character, newWorld.player.upgradesBought);
-    newWorld.player.character.speed = speed(newWorld.player.character, newWorld.player.upgradesBought);
-    
+    newWorld.player.character.areaSize = FOV(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
+    newWorld.player.character.speed = speed(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
+
     newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
-    
+
     const newWorldObject = {
       ...newWorld,
-      isPlayerDead: newWorld.player.character.healthBar <= 0
+      isPlayerDead: newWorld.player.character.healthBar <= 0,
     };
 
     this.updateWorld(newWorldObject);
@@ -453,5 +507,4 @@ export class WorldManager {
   public cleanup() {
     this.stopNPCMovementTimer();
   }
-
 }

@@ -27,7 +27,7 @@ export const WorldProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     worldManagerRef.current = new WorldManager(setWorld);
     worldManagerRef.current.generateStubWorld();
-    
+
     return () => {
       worldManagerRef.current?.cleanup();
     };

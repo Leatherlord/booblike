@@ -13,11 +13,14 @@ export type Characteristics = {
   i: number;
 };
 
-export function getEffectiveCharacteristics(character: Character, upgradesBought?: Record<string, number>): Characteristics {
+export function getEffectiveCharacteristics(
+  character: Character,
+  upgradesBought?: Record<string, number>
+): Characteristics {
   if (!upgradesBought) {
     return character.characteristics;
   }
-  
+
   return {
     s: character.characteristics.s + (upgradesBought.strength || 0),
     p: character.characteristics.p + (upgradesBought.perception || 0),
@@ -33,7 +36,10 @@ export function attackStrength(
   enemy: Character,
   attackerUpgrades?: Record<string, number>
 ) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, attackerUpgrades);
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    attackerUpgrades
+  );
   const base =
     Math.random() * (attack.maxDamage - attack.minDamage) + attack.minDamage;
   const damage =
@@ -42,22 +48,38 @@ export function attackStrength(
   return actualDamage;
 }
 
-export function health(char: Character, upgradesBought?: Record<string, number>) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+export function health(
+  char: Character,
+  upgradesBought?: Record<string, number>
+) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    upgradesBought
+  );
   const HP =
     10 +
-    (0.25 * effectiveCharacteristics.s + 0.5 * effectiveCharacteristics.e) * char.level;
+    (0.25 * effectiveCharacteristics.s + 0.5 * effectiveCharacteristics.e) *
+      char.level;
   return HP;
 }
 
-export function regen(char: Character, upgradesBought?: Record<string, number>) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+export function regen(
+  char: Character,
+  upgradesBought?: Record<string, number>
+) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    upgradesBought
+  );
   const regen = 0.05 * (effectiveCharacteristics.e + char.level);
   return regen;
 }
 
 export function FOV(char: Character, upgradesBought?: Record<string, number>) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    upgradesBought
+  );
   const areaUp = 4 + Math.floor(0.5 * effectiveCharacteristics.p);
   const areaDown = Math.floor(0.5 * effectiveCharacteristics.p);
   const areaLeft = 2 + Math.floor(0.5 * effectiveCharacteristics.p);
@@ -70,16 +92,29 @@ export function FOV(char: Character, upgradesBought?: Record<string, number>) {
   };
 }
 
-export function score(char: Character, enemy: Character, upgradesBought?: Record<string, number>) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+export function score(
+  char: Character,
+  enemy: Character,
+  upgradesBought?: Record<string, number>
+) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    upgradesBought
+  );
   const score = effectiveCharacteristics.i * 0.25 + enemy.level;
   return score;
 }
 
-export function speed(char: Character, upgradesBought?: Record<string, number>) {
-  const effectiveCharacteristics = getEffectiveCharacteristics(char, upgradesBought);
+export function speed(
+  char: Character,
+  upgradesBought?: Record<string, number>
+) {
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    char,
+    upgradesBought
+  );
   const agilityValue = effectiveCharacteristics.a;
-  
+
   if (agilityValue <= 2) {
     return Speed.SUPERSLOW;
   } else if (agilityValue <= 4) {
@@ -125,13 +160,24 @@ export function calculateAttackProbabilities(
   };
 }
 
-export function AttackOutcome(char: Character, enemy: Character, attackerUpgrades?: Record<string, number>, enemyUpgrades?: Record<string, number>) {
-  const attackerCharacteristics = getEffectiveCharacteristics(char, attackerUpgrades);
-  const enemyCharacteristics = getEffectiveCharacteristics(enemy, enemyUpgrades);
-  
+export function AttackOutcome(
+  char: Character,
+  enemy: Character,
+  attackerUpgrades?: Record<string, number>,
+  enemyUpgrades?: Record<string, number>
+) {
+  const attackerCharacteristics = getEffectiveCharacteristics(
+    char,
+    attackerUpgrades
+  );
+  const enemyCharacteristics = getEffectiveCharacteristics(
+    enemy,
+    enemyUpgrades
+  );
+
   const { phi_miss, phi_redirected, phi_self_hit, phi_normal } =
     calculateAttackProbabilities(attackerCharacteristics, enemyCharacteristics);
-  
+
   const rand = Math.random();
   const thresholds = [
     { threshold: phi_miss, outcome: 'miss' },
@@ -161,7 +207,7 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
   const attackOutcome = AttackOutcome(char.character, enemy.character);
   let damage: number = 0;
   let finalTarget: Entity = enemy;
-  
+
   switch (attackOutcome) {
     case 'miss': {
       damage = 0;
@@ -252,7 +298,6 @@ export class PlayerCharacter implements Character {
   score?: number;
   speed: Speed;
 
-
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
     const from = { x: x, y: y };
@@ -335,31 +380,45 @@ export class RandomEnemyCharacter implements Character {
   }
 }
 
-export function calculateExperienceFromKill(player: Character, enemyLevel: number, upgradesBought?: Record<string, number>): number {
-  const effectiveCharacteristics = getEffectiveCharacteristics(player, upgradesBought);
+export function calculateExperienceFromKill(
+  player: Character,
+  enemyLevel: number,
+  upgradesBought?: Record<string, number>
+): number {
+  const effectiveCharacteristics = getEffectiveCharacteristics(
+    player,
+    upgradesBought
+  );
   const baseExperience = 10;
   const levelDifference = enemyLevel - player.level;
   const multiplier = Math.max(0.5, 1 + levelDifference * 0.2);
-  const intelligenceBonus = 1 + (effectiveCharacteristics.i * 0.1); // 10% bonus per intelligence point
-  return Math.floor(baseExperience * multiplier * enemyLevel * intelligenceBonus);
+  const intelligenceBonus = 1 + effectiveCharacteristics.i * 0.1; // 10% bonus per intelligence point
+  return Math.floor(
+    baseExperience * multiplier * enemyLevel * intelligenceBonus
+  );
 }
 
 export function calculateExperienceForNextLevel(level: number): number {
   return Math.floor(100 * Math.pow(1.5, level - 1));
 }
 
-export function canLevelUp(experience: number, experienceToNext: number): boolean {
+export function canLevelUp(
+  experience: number,
+  experienceToNext: number
+): boolean {
   return experience >= experienceToNext;
 }
 
-export function levelUp(entity: Entity & { experience: number; experienceToNext: number }): { level: number; experience: number; experienceToNext: number } {
+export function levelUp(
+  entity: Entity & { experience: number; experienceToNext: number }
+): { level: number; experience: number; experienceToNext: number } {
   const newLevel = entity.level + 1;
   const remainingExperience = entity.experience - entity.experienceToNext;
   const newExperienceToNext = calculateExperienceForNextLevel(newLevel);
-  
+
   return {
     level: newLevel,
     experience: remainingExperience,
-    experienceToNext: newExperienceToNext
+    experienceToNext: newExperienceToNext,
   };
 }

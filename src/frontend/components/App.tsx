@@ -73,9 +73,9 @@ const App: React.FC = () => {
     if (!world) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
-      
+
       if (world.player.character.healthBar <= 0) return;
-      
+
       if (e.key >= '0' && e.key <= '9') {
         const slotNumber = parseInt(e.key, 10);
         handleEvent({
@@ -147,7 +147,10 @@ const App: React.FC = () => {
 
   const getHealthPercentage = () => {
     if (!world || world.player.character.maxHealthBar === 0) return 0;
-    return (world.player.character.healthBar / world.player.character.maxHealthBar) * 100;
+    return (
+      (world.player.character.healthBar / world.player.character.maxHealthBar) *
+      100
+    );
   };
 
 
@@ -193,12 +196,13 @@ const App: React.FC = () => {
               <div className="health-bar-container">
                 <div className="health-label">Health</div>
                 <div className="health-bar">
-                  <div 
+                  <div
                     className="health-fill"
                     style={{ width: `${getHealthPercentage()}%` }}
                   />
                   <div className="health-text">
-                    {Math.ceil(world.player.character.healthBar)}/{Math.ceil(world.player.character.maxHealthBar)}
+                    {Math.ceil(world.player.character.healthBar)}/
+                    {Math.ceil(world.player.character.maxHealthBar)}
                   </div>
                 </div>
               </div>
@@ -209,7 +213,14 @@ const App: React.FC = () => {
                 Available EXP: {world.player.availableExperience}
               </span>
               <span className="hud-item">
-                FOV: {world.player.character.areaSize.areaUp + world.player.character.areaSize.areaDown + 1}×{world.player.character.areaSize.areaLeft + world.player.character.areaSize.areaRight + 1}
+                FOV:{' '}
+                {world.player.character.areaSize.areaUp +
+                  world.player.character.areaSize.areaDown +
+                  1}
+                ×
+                {world.player.character.areaSize.areaLeft +
+                  world.player.character.areaSize.areaRight +
+                  1}
               </span>
               <span className="hud-item">
                 Player: ({world.player.x}, {world.player.y})
@@ -239,17 +250,14 @@ const App: React.FC = () => {
 
         <div className="hud right-hud">
           <div className="hud-content">
-            <button 
-              className="upgrade-menu-button"
-              onClick={toggleUpgradeMenu}
-            >
+            <button className="upgrade-menu-button" onClick={toggleUpgradeMenu}>
               Upgrades (U)
             </button>
             {world && (
               <div className="experience-bar-container">
                 <div className="experience-label">Experience Progress</div>
                 <div className="experience-bar">
-                  <div 
+                  <div
                     className="experience-fill"
                     style={{ width: `${getExperienceProgressPercentage()}%` }}
                   />
