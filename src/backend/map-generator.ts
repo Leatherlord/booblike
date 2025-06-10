@@ -336,7 +336,7 @@ export function getStartingRoom(): Room {
     
     let entities =  new EntitiesMap();
 
-    for(let i = 0; i < 5; i++) {
+    for(let i = 1; i <= 5; i++) {
         const chararcter = generateCharacter()
         let texture;
         if(chararcter.charClass.className == "strongClass") {
@@ -344,10 +344,10 @@ export function getStartingRoom(): Room {
         } else {
             texture = 'enemy' 
         }
-        entities.add({ x: 3, y: 3 }, {
+        entities.add({ x: 3, y: i }, {
             id: ""+1,
             x: 3,
-            y: 3,
+            y: i,
             lookDir: LookDirection.Left,
             character: chararcter,
             level: 1,
