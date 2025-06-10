@@ -1,30 +1,23 @@
-import { getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, World } from "../../common/interfaces";
-import { Context } from "./strategy";
+import { Entity, getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
 
 function checkIfValidMove(room: Room, newX: number, newY: number) {
     return (
         newY >= 0 && 
         newY < room.map.length && 
         newX >= 0 && newX < room.map[0].length && 
-        room.map[newY][newX] === 'floor' &&
-        !room.entities.get({x: newX, y: newY})
+        room.map[newY][newX] === 'floor'
     );
 }
 
 function inBounds(
-    mask: number[][], 
+    mask: Point2d, 
     pos: Point2d, 
     enemy: Point2d,
     offset: Point2d
 ): boolean {
     const dy = enemy.y - (pos.y - offset.y);
     const dx = enemy.x - (pos.x - offset.x);
-
-    if (dy < 0 || dy >= mask.length || dx < 0 || dx >= mask[0].length) {
-        return false;
-    }
-
-    return mask[dy][dx] === 1;
+    return !(dy < 0 || dy >= mask.y || dx < 0 || dx >= mask.x);
 }
 
 function isValidPosition(room: Room, pos: Point2d): boolean {
@@ -110,7 +103,9 @@ function calculateLookDirectionCoward(creaturePos: Point2d, playerPos: Point2d):
     return dy > 0 ? LookDirection.Up : LookDirection.Down;
 }
 
-export function neutralMovement(from: Point2d, world: World) : { to: Point2d, lookDir?: LookDirection } {
+export function neutralMovement(context: Entity, world: World) : { to: Point2d, lookDir?: LookDirection } {
+    const {animation, lookDir, x, y} = context;
+    const from = {x: x, y: y}
     const room = world.map.rooms[world.map.currentRoom];
     const availableShift = [[-1, 1], [1, -1], [0, 1], [0, -1], [1, 0], [-1, 0], [1, 1]];
     const shiftIndex = Math.floor(Math.random() * availableShift.length);
@@ -120,22 +115,25 @@ export function neutralMovement(from: Point2d, world: World) : { to: Point2d, lo
     const newX = from.x + movementShift[0];
     const newY = from.y + movementShift[1];
 
-    if (checkIfValidMove(room, newX, newY) || (newX === world.player.x && newY === world.player.y)) {
+    if ((checkIfValidMove(room, newX, newY) 
+        || (newX === world.player.x && newY === world.player.y))
+        && !(room.entities.get({x: newX, y: newY}))
+    ) {
         return { to: { x: newX, y: newY }, lookDir: lookDirect };
     }
 
     return { to: {x: from.x, y: from.y}, lookDir: lookDirect };
 }
 
-export function aggressiveMovement(context: Context) : { to: Point2d, lookDir?: LookDirection } {
-    const {from, lookDir, character, world} = context;
+export function aggressiveMovement(context: Entity, world: World) : { to: Point2d, lookDir?: LookDirection } {
+    const {animation, lookDir, x, y, character} = context;
+    const from = {x: x, y: y}
     const room = world.map.rooms[world.map.currentRoom];
     const offset = getOffsetsByPos(lookDir, character);
     const enemyPos = { x : world.player.x, y : world.player.y };
-    const mask = character.area[lookDir];
     //|| !hasLineOfSight(room, from, enemyPos)
-    if (!inBounds(mask, from, enemyPos, offset)) {
-        return neutralMovement(from, world);
+    if (!inBounds(getGridSize(character.areaSize, lookDir), from, enemyPos, offset)) {
+        return neutralMovement(context, world);
     }
     const availableShift = [[-1, 1], [1, -1], [0, 1], [0, -1], [1, 0], [-1, 0], [1, 1]];
     let bestDist = manhattanDistance(from, enemyPos);
@@ -143,6 +141,9 @@ export function aggressiveMovement(context: Context) : { to: Point2d, lookDir?: 
     for (const [dx, dy] of availableShift) {
         const target = { x: from.x + dx, y: from.y + dy };
         if (target.x === enemyPos.x && target.y === enemyPos.y) {
+            continue;
+        }
+        if (room.entities.get(target)) {
             continue;
         }
         if (!isValidPosition(room, target)) continue;
@@ -161,8 +162,9 @@ export function aggressiveMovement(context: Context) : { to: Point2d, lookDir?: 
     return { to: newPos, lookDir: finalLookDir };
 }
 
-export function cowardMovement(context: Context): { to: Point2d, lookDir?: LookDirection } {
-    const { from, lookDir, character, world } = context;
+export function cowardMovement(context: Entity, world: World): { to: Point2d, lookDir?: LookDirection } {
+    const {animation, lookDir, x, y, character} = context;
+    const from = {x: x, y: y}
     const room = world.map.rooms[world.map.currentRoom];
     const enemyPos = { x: world.player.x, y: world.player.y };
     let dir: LookDirection;
@@ -184,10 +186,9 @@ export function cowardMovement(context: Context): { to: Point2d, lookDir?: LookD
             break;
         }
     }
-    const mask = character.area[dir];
     const offset = getOffsetsByPos(dir, character);
-    if (!inBounds(mask, from, enemyPos, offset)) {
-        return neutralMovement(from, world);
+    if (!inBounds(getGridSize(character.areaSize, dir), from, enemyPos, offset)) {
+        return neutralMovement(context, world);
     }
 
     const availableShift = [[-1, 1], [1, -1], [0, 1], [0, -1], [1, 0], [-1, 0], [1, 1]];

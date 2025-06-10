@@ -3,7 +3,6 @@ import { Character } from "../backend/behaviour/character";
 
 export type World = {
   map: GameMap;
-  entities: Entity[];
   player: Entity & Inventory;
   random: any;
 };
@@ -34,6 +33,7 @@ export type Room = {
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
   entities: EntitiesMap;
+  killedEntities: Entity[];
 }
 
 

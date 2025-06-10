@@ -1,13 +1,10 @@
-import { World, InventorySlot, GameMap, Room, Entity, Point2d, ExitMappingEntry, LookDirection, EntitiesMap } from '../common/interfaces';
-import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
+import { World, InventorySlot, GameMap, Room, Point2d, ExitMappingEntry, LookDirection, EntitiesMap } from '../common/interfaces';
+import { Event, InventorySelectEvent } from '../common/events';
 import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
-import { DummyCharacter, PlayerCharacter } from './behaviour/character';
-import { WeaklingClass } from './behaviour/classes';
-import { Aggresive } from './behaviour/strategy';
-import { read } from 'fs';
+import { PlayerCharacter } from './behaviour/character';
 
 export class WorldManager {
   private world: World | null = null;
@@ -51,12 +48,11 @@ export class WorldManager {
     let worldRandom = prngAlea(worldSeed);
     const stubWorld: World = {
       map: this.generateStubMap(worldSeed),
-      entities: [],
       player: {
         id: 'player',
         x: 8,
         y: 8,
-        character: new PlayerCharacter(10),
+        character: new PlayerCharacter("Sanya", {s: 10, p: 10, e: 10, i: 10, a: 10}),
         lookDir: LookDirection.Right,
         level: 1,
         slots: this.createEmptyInventory(),
@@ -74,6 +70,7 @@ export class WorldManager {
 
   private generateStubMap(seed: number): GameMap {
     const stubRoom: Room = {
+      killedEntities: [],
       map: Array(20)
         .fill(null)
         .map(() =>
@@ -214,6 +211,10 @@ export class WorldManager {
 
   private handleAttack = () => {
     if (!this.world) return;
+    const room = this.world.map?.rooms[this.world.map.currentRoom];
+    for(let entity of room.killedEntities) {
+      room.entities.delete({x: entity.x, y: entity.y}, entity)
+    }
     const newWorld = {
       ...this.world
     };
@@ -228,7 +229,7 @@ export class WorldManager {
     if(!room) return;
     room.entities.forEach((entity)  => {
       if (!this.world) return;
-      const {to, lookDir, attackResult, lastAttacked, lastMoved} = entity.character.move({ x: entity.x, y: entity.y }, entity.lookDir, entity.animation, this.world);
+      const {to, lookDir, attackResult, lastAttacked, lastMoved} = entity.character.move(entity, this.world);
       
       if(lookDir) entity.lookDir = lookDir;
       if(attackResult) entity.lastAttackArray = attackResult.attackedTiles;
@@ -241,6 +242,10 @@ export class WorldManager {
       entity.y = y;
       room.entities.add({x: entity.x, y: entity.y}, entity);
     });
+
+    for(let entity of room.killedEntities) {
+      room.entities.delete({x: entity.x, y: entity.y}, entity)
+    }
 
     this.updateWorld(this.world);
   }

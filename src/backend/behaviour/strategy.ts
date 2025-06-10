@@ -1,19 +1,17 @@
 import { Entity, getGridSize, getOffsetsByPos, LookDirection, Point2d, Room, Size, World } from "../../common/interfaces";
 import { Attack } from "./attacks";
 import { aggressiveMovement, cowardMovement, neutralMovement } from "./movement";
-import { Character } from "./character";
-import { getSpeed } from "./classes";
 
-function processAttack(room: Room, from: Character, attack: Attack, pos: Point2d) {
+function processAttack(room: Room, from: Entity, attack: Attack, pos: Point2d) {
     const entities = room.entities;
     entities.get(pos).forEach(function (entity) {
-        let attackResult = from.damage(entity, attack,);
+        let attackResult = from.character.damage(from, entity, attack);
         if (
             attackResult.status == 'normal'
             &&
             attackResult.finalTarget.character.healthBar <= 0
         )
-            entities.delete(pos, entity);
+            room.killedEntities.push(entity)
     });
 }
 
@@ -34,7 +32,7 @@ function inBounds(
 }
 
 function attackOneEntity(
-    attacker: Character, 
+    attacker: Entity, 
     attack: Attack, 
     lookDir: LookDirection, 
     pos: Point2d, 
@@ -50,14 +48,20 @@ function attackOneEntity(
         return { success: false, attackedTiles: [] };
     }
 
-    const attackResult = attacker.damage(enemy, attack);
+    const attackResult = attacker.character.damage(attacker, enemy, attack);
     const room = world.map.rooms[world.map.currentRoom];
     if (
-        attackResult.status == 'normal'
-        &&
         attackResult.finalTarget.character.healthBar <= 0
+        &&
+        attackResult.finalTarget != world.player
     ) {
-        room.entities.delete(pos, enemy);
+        room.killedEntities.push(attackResult.finalTarget)
+    } else if (
+        attackResult.finalTarget.character.healthBar <= 0
+        &&
+        attackResult.finalTarget != world.player
+    ) {
+        console.log("Player dead.")
     }
 
     const map = room.map;
@@ -87,13 +91,13 @@ function attackOneEntity(
 }
 
 function attackAll(
-    attacker: Character, 
+    attacker: Entity, 
     attack: Attack, 
     lookDir: LookDirection, 
     pos: Point2d, 
     world: World
 ) : { success: boolean, attackedTiles: Point2d[] } {
-const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
+    const { x: width, y: height } = getGridSize(attack.areaSize, lookDir);
     const { x: xOffset, y: yOffset } = getOffsetsByPos(lookDir, attack);
     const mask = attack.area[lookDir];
 
@@ -146,27 +150,19 @@ export type MovementResult = {
     lastMoved: number
 }
 
-export type Context = {
-    from: Point2d,
-    lookDir: LookDirection,
-    character: Character,
-    world: World,
-    lastAttacked: number,
-    lastMoved: number
-}
-
 export interface Strategy {
-    move: (context: Context) => MovementResult;
-    attack: (context: Context, attack: Attack, enemy?: Entity) 
+    move: (context: Entity, world: World) => MovementResult;
+    attack: (context: Entity, world: World, attack: Attack, enemy?: Entity) 
     => AttackResult
 }
 
 export class PlayerStrategy implements Strategy {
     public attack(
-        context: Context, attack: Attack
+        context: Entity, world: World, attack: Attack
     ): AttackResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked} = context;
+        const {x, y, lookDir, character, animation} = context;
+        const lastAttacked = animation.lastAttacked;
+        const from = {x: x, y: y};
         if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
             return {
                 success: false,
@@ -174,20 +170,24 @@ export class PlayerStrategy implements Strategy {
                 lastAttacked: lastAttacked
             };
         }
-        return {...attackAll(character, attack, lookDir, from, world), lastAttacked: Date.now()};
+        return {...attackAll(context, attack, lookDir, from, world), lastAttacked: Date.now()};
     }
-    public move(context: Context): MovementResult {
-        const {from, lookDir, character, world, lastAttacked, lastMoved} = context;
-        let pos = neutralMovement(from, world);
+    public move(context: Entity, world: World): MovementResult {
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        const {lastAttacked, lastMoved} = animation;
+        let pos = neutralMovement(context, world);
         return {...pos, lastAttacked: lastAttacked, lastMoved: lastMoved};
     }
 }
 
 export class Aggresive implements Strategy {
     public attack(
-        context: Context, attack: Attack, enemy?: Entity
+        context: Entity, world: World, attack: Attack, enemy?: Entity
     ): AttackResult {
-        const {from, lookDir, character, world, lastAttacked} = context;
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        const {lastAttacked, lastMoved} = animation;
         if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
             return {
                 success: false,
@@ -195,22 +195,22 @@ export class Aggresive implements Strategy {
                 lastAttacked: lastAttacked
             };
         }
-        return { ...attackOneEntity(character, attack, lookDir, from, world, enemy), lastAttacked: Date.now()}
+        return { ...attackOneEntity(context, attack, lookDir, from, world, enemy), lastAttacked: Date.now()}
     }
-    public move(context: Context): MovementResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
-        let pos = aggressiveMovement(context);
+    public move(context: Entity, world: World): MovementResult {
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        let {lastAttacked, lastMoved} = animation;
+        let pos = aggressiveMovement(context, world);
         if(!pos.lookDir) pos.lookDir = lookDir;
 
-        if(Date.now() - lastMoved < getSpeed(character.charClass.speed)) { 
+        if(Date.now() - lastMoved < character.getSpeed()) { 
             pos.to = from 
         } else {
             lastMoved = Date.now();
         }
-
         for(const attack of character.attacks) {
-            let attackResult = this.attack(context, attack, world.player)
+            let attackResult = this.attack(context, world, attack, world.player)
             if(attackResult.success) {
                 return {...pos, attackResult: attackResult, lastAttacked: attackResult.lastAttacked, lastMoved: lastMoved};
             }
@@ -221,16 +221,19 @@ export class Aggresive implements Strategy {
 
 export class Neutral implements Strategy {
     public attack(
-        context: Context, attack: Attack, enemy?: Entity
+        context: Entity, world: World, attack: Attack
     ): AttackResult {
-        const {from, lookDir, character, world, lastAttacked} = context;
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        const {lastAttacked, lastMoved} = animation;
         return { success: false, attackedTiles: [], lastAttacked: lastAttacked };
     }
-    public move(context: Context): MovementResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
-        let pos = neutralMovement(from, world);
-        if(Date.now() - lastMoved < getSpeed(character.charClass.speed)) { 
+    public move(context: Entity, world: World): MovementResult {
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        let {lastAttacked, lastMoved} = animation;
+        let pos = neutralMovement(context, world);
+        if(Date.now() - lastMoved < character.getSpeed()) { 
             pos.to = from 
         } else {
             lastMoved = Date.now();
@@ -241,16 +244,18 @@ export class Neutral implements Strategy {
 
 export class Coward implements Strategy {
     public attack(
-        context: Context, attack: Attack, enemy?: Entity
+        context: Entity, world: World, attack: Attack
     ): AttackResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        const {lastAttacked, lastMoved} = animation;
         return { success: false, attackedTiles: [], lastAttacked: lastAttacked };
     }
-    public move(context: Context): MovementResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
-        let pos = cowardMovement(context);
+    public move(context: Entity, world: World): MovementResult {
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        let {lastAttacked, lastMoved} = animation;
+        let pos = cowardMovement(context, world);
         if(Date.now() - lastMoved < character.getSpeed()) { 
             pos.to = from 
         } else {
@@ -262,10 +267,11 @@ export class Coward implements Strategy {
 
 export class Fury implements Strategy {
     public attack(
-        context: Context, attack: Attack
+        context: Entity, world: World, attack: Attack
     ): AttackResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        let {lastAttacked, lastMoved} = animation;
         if(Date.now() - lastAttacked < character.getAttackSpeed(attack)) {
             return {
                 success: false,
@@ -273,12 +279,13 @@ export class Fury implements Strategy {
                 lastAttacked: lastAttacked
             };
         }
-        return {...attackAll(character, attack, lookDir, from, world), lastAttacked: Date.now()};
+        return {...attackAll(context, attack, lookDir, from, world), lastAttacked: Date.now()};
     }
-    public move(context: Context): MovementResult {
-        const {from, lookDir, character, world} = context;
-        let {lastAttacked, lastMoved} = context;
-        let pos = neutralMovement(from, world);
+    public move(context: Entity, world: World): MovementResult {
+        const {x, y, lookDir, character, animation} = context;
+        const from = {x: x, y: y};
+        let {lastAttacked, lastMoved} = animation;
+        let pos = neutralMovement(context, world);
         if(!pos.lookDir) pos.lookDir = lookDir;
         if(Date.now() - lastMoved < character.getSpeed()) { 
             pos.to = from 
@@ -288,7 +295,14 @@ export class Fury implements Strategy {
         
         const attackChosen = Math.floor(Math.random() * character.attacks.length);
         const attack =  character.attacks[attackChosen]; 
-        let attackResult = this.attack(context, attack);
+        let attackResult = this.attack(context, world, attack);
         return {...pos, lastAttacked: attackResult.lastAttacked, lastMoved: lastMoved, attackResult: attackResult};
     }
 }
+
+export const strategyMap: Record<string, Strategy> = {
+  Neutral: new Neutral(),
+  Coward: new Coward(),
+  Aggresive: new Aggresive(),
+  Fury: new Fury()
+};
