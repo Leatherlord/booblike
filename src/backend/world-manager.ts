@@ -1,4 +1,13 @@
-import { World, InventorySlot, GameMap, Room, Point2d, ExitMappingEntry, LookDirection, EntitiesMap } from '../common/interfaces';
+import {
+  World,
+  InventorySlot,
+  GameMap,
+  Room,
+  Point2d,
+  ExitMappingEntry,
+  LookDirection,
+  EntitiesMap,
+} from '../common/interfaces';
 import { Event, InventorySelectEvent } from '../common/events';
 import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
@@ -52,7 +61,13 @@ export class WorldManager {
         id: 'player',
         x: 8,
         y: 8,
-        character: new PlayerCharacter("Sanya", {s: 10, p: 10, e: 10, i: 10, a: 10}),
+        character: new PlayerCharacter('Sanya', {
+          s: 10,
+          p: 10,
+          e: 10,
+          i: 10,
+          a: 10,
+        }),
         lookDir: LookDirection.Right,
         level: 1,
         slots: this.createEmptyInventory(),
@@ -60,7 +75,7 @@ export class WorldManager {
         animation: {
           lastAttacked: 0,
           lastMoved: 0,
-        }
+        },
       },
       random: worldRandom,
     };
@@ -99,10 +114,11 @@ export class WorldManager {
         }),
       exits: new Dictionary(JSON.stringify),
       reverseExits: new Dictionary(),
-      entities: new EntitiesMap()
-    }
+      entities: new EntitiesMap(),
+    };
 
-    let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> = new Dictionary(JSON.stringify);
+    let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> =
+      new Dictionary(JSON.stringify);
     const stubMap: GameMap = {
       rooms: [getStartingRoom()],
       currentRoom: 0,
@@ -212,41 +228,42 @@ export class WorldManager {
   private handleAttack = () => {
     if (!this.world) return;
     const room = this.world.map?.rooms[this.world.map.currentRoom];
-    for(let entity of room.killedEntities) {
-      room.entities.delete({x: entity.x, y: entity.y}, entity)
+    for (let entity of room.killedEntities) {
+      room.entities.delete({ x: entity.x, y: entity.y }, entity);
     }
     const newWorld = {
-      ...this.world
+      ...this.world,
     };
 
     this.updateWorld(newWorld);
-  }
+  };
 
-  public handleNPCMovement () {
+  public handleNPCMovement() {
     if (!this.world) return;
 
     const room = this.world.map?.rooms[this.world.map.currentRoom];
-    if(!room) return;
-    room.entities.forEach((entity)  => {
+    if (!room) return;
+    room.entities.forEach((entity) => {
       if (!this.world) return;
-      const {to, lookDir, attackResult, lastAttacked, lastMoved} = entity.character.move(entity, this.world);
-      
-      if(lookDir) entity.lookDir = lookDir;
-      if(attackResult) entity.lastAttackArray = attackResult.attackedTiles;
+      const { to, lookDir, attackResult, lastAttacked, lastMoved } =
+        entity.character.move(entity, this.world);
+
+      if (lookDir) entity.lookDir = lookDir;
+      if (attackResult) entity.lastAttackArray = attackResult.attackedTiles;
       entity.animation.lastAttacked = lastAttacked;
       entity.animation.lastMoved = lastMoved;
 
-      const {x, y} = to;
-      if(!room.entities.get(to)) {
-        room.entities.delete({x: entity.x, y: entity.y}, entity);
+      const { x, y } = to;
+      if (!room.entities.get(to)) {
+        room.entities.delete({ x: entity.x, y: entity.y }, entity);
         entity.x = x;
         entity.y = y;
-        room.entities.add({x: entity.x, y: entity.y}, entity);
+        room.entities.add({ x: entity.x, y: entity.y }, entity);
       }
     });
 
-    for(let entity of room.killedEntities) {
-      room.entities.delete({x: entity.x, y: entity.y}, entity)
+    for (let entity of room.killedEntities) {
+      room.entities.delete({ x: entity.x, y: entity.y }, entity);
     }
 
     this.updateWorld(this.world);

@@ -1,9 +1,16 @@
-import { EntitiesMap, Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
+import {
+  EntitiesMap,
+  Entity,
+  LookDirection,
+  Point2d,
+  Room,
+  Tile,
+} from '../common/interfaces';
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
-import { Aggresive, Coward, Neutral } from "./behaviour/strategy";
-import { RandomEnemyCharacter } from "./behaviour/character";
-import { generateCharacter } from "./mob-generator";
+import { Aggresive, Coward, Neutral } from './behaviour/strategy';
+import { RandomEnemyCharacter } from './behaviour/character';
+import { generateCharacter } from './mob-generator';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -304,61 +311,87 @@ export function generateRoom(
     while (!okForExit(exitId)) {
       exitId = (exitId + 1) % border.length;
     }
-    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: new EntitiesMap(), killedEntities: []};
+    prevExitId = exitId;
+    const p = border[exitId];
+    map[p.y][p.x] = 'door';
+    exitMap.setValue(border[exitId], i);
+    reverseExitMap.setValue(i, border[exitId]);
+  }
+  const generated = {
+    map: map,
+    exits: exitMap,
+    reverseExits: reverseExitMap,
+    entities: new EntitiesMap(),
+    killedEntities: [],
+  };
+  console.log('Generated map: ', generated);
+  return generated;
 }
 
 export function getStartingRoom(): Room {
-    let map: Tile[][] = Array(STARTING_ROOM_SIZE)
-      .fill(null)
-      .map(() =>
-        Array(STARTING_ROOM_SIZE)
-          .fill(null)
-          .map((_, colIndex) => {
-            if (colIndex === 0 || colIndex === STARTING_ROOM_SIZE - 1) return 'wall';
-            return 'floor';
-          })
-      )
-      .map((row, rowIndex) => {
-        if (rowIndex === 0 || rowIndex === STARTING_ROOM_SIZE - 1) {
-          return Array(STARTING_ROOM_SIZE).fill('wall');
-        }
-        return row;
-      });
-    const doorPos: Point2d = {
-        x: Math.trunc(STARTING_ROOM_SIZE / 2),
-        y: 0
-    };
-    map[doorPos.y][doorPos.x] = 'door';
-    let exits: Collections.Dictionary<Point2d, number> = new Collections.Dictionary(JSON.stringify);
-    exits.setValue(doorPos, 0);
-    let reverseExits: Collections.Dictionary<number, Point2d> = new Collections.Dictionary();
-    reverseExits.setValue(0, {x: doorPos.x, y: doorPos.y});
-    
-    let entities =  new EntitiesMap();
+  let map: Tile[][] = Array(STARTING_ROOM_SIZE)
+    .fill(null)
+    .map(() =>
+      Array(STARTING_ROOM_SIZE)
+        .fill(null)
+        .map((_, colIndex) => {
+          if (colIndex === 0 || colIndex === STARTING_ROOM_SIZE - 1)
+            return 'wall';
+          return 'floor';
+        })
+    )
+    .map((row, rowIndex) => {
+      if (rowIndex === 0 || rowIndex === STARTING_ROOM_SIZE - 1) {
+        return Array(STARTING_ROOM_SIZE).fill('wall');
+      }
+      return row;
+    });
+  const doorPos: Point2d = {
+    x: Math.trunc(STARTING_ROOM_SIZE / 2),
+    y: 0,
+  };
+  map[doorPos.y][doorPos.x] = 'door';
+  let exits: Collections.Dictionary<Point2d, number> =
+    new Collections.Dictionary(JSON.stringify);
+  exits.setValue(doorPos, 0);
+  let reverseExits: Collections.Dictionary<number, Point2d> =
+    new Collections.Dictionary();
+  reverseExits.setValue(0, { x: doorPos.x, y: doorPos.y });
 
-    for(let i = 1; i <= 5; i++) {
-        const chararcter = generateCharacter()
-        let texture;
-        if(chararcter.charClass.className == "strongClass") {
-            texture = 'player' 
-        } else {
-            texture = 'enemy' 
-        }
-        entities.add({ x: 3, y: i }, {
-            id: ""+1,
-            x: 3,
-            y: i,
-            lookDir: LookDirection.Left,
-            character: chararcter,
-            level: 1,
-            texture: texture,
+  let entities = new EntitiesMap();
 
-            animation: {
-                lastAttacked: 0,
-                lastMoved: 0
-            }
-        });
+  for (let i = 1; i <= 5; i++) {
+    const chararcter = generateCharacter();
+    let texture;
+    if (chararcter.charClass.className == 'strongClass') {
+      texture = 'player';
+    } else {
+      texture = 'enemy';
     }
-    
-    return {map: map, exits: exits, reverseExits: reverseExits, entities: entities, killedEntities: []};
+    entities.add(
+      { x: 3, y: i },
+      {
+        id: '' + 1,
+        x: 3,
+        y: i,
+        lookDir: LookDirection.Left,
+        character: chararcter,
+        level: 1,
+        texture: texture,
+
+        animation: {
+          lastAttacked: 0,
+          lastMoved: 0,
+        },
+      }
+    );
+  }
+
+  return {
+    map: map,
+    exits: exits,
+    reverseExits: reverseExits,
+    entities: entities,
+    killedEntities: [],
+  };
 }
