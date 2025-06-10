@@ -1,4 +1,4 @@
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from 'typescript-collections';
 
 export type World = {
   map: GameMap;
@@ -10,7 +10,7 @@ export type World = {
 export type ExitMappingEntry = {
   roomId: number;
   exitId: number;
-}
+};
 
 export type GameMap = {
   rooms: Room[];
@@ -21,13 +21,13 @@ export type GameMap = {
 export type Point2d = {
   x: number;
   y: number;
-}
+};
 
 export type Room = {
   map: Tile[][];
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
-}
+};
 
 export type Tile = 'empty' | 'wall' | 'floor' | 'door';
 

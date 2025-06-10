@@ -8,8 +8,9 @@
     "build": "webpack",
     "watch": "webpack --watch",
     "start": "webpack serve --open",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,html}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,html}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,html,scss}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,html,scss}\"",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,7 @@
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "css-loader": "^7.1.2",
+    "husky": "^9.1.7",
     "prettier": "^3.5.3",
     "sass": "^1.89.0",
     "sass-loader": "^16.0.5",

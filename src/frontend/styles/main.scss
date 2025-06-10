@@ -1,4 +1,4 @@
-@use "sass:color";
+@use 'sass:color';
 
 $primary-color: #67138f;
 $secondary-color: #c221a7;
@@ -10,7 +10,6 @@ $hud-text: #eee;
 $field-color: #0a0a0a;
 $inventory-active: #4a0866;
 $inventory-hover: #2b0438;
-
 
 * {
   margin: 0;

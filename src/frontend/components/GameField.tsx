@@ -23,13 +23,13 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
   useEffect(() => {
     const textureManager = new TextureManager(TEXTURE_CONFIG);
     textureManagerRef.current = textureManager;
-    
+
     // Start loading textures
     textureManager.loadAllTextures().then(() => {
       setTexturesLoaded(true);
       setLoadingProgress(100);
     });
-    
+
     // Update loading progress periodically
     const progressInterval = setInterval(() => {
       if (textureManager.isFullyLoaded()) {
@@ -38,7 +38,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
         setLoadingProgress(textureManager.getLoadingProgress());
       }
     }, 100);
-    
+
     return () => {
       clearInterval(progressInterval);
     };
@@ -81,23 +81,17 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           screenY < canvas.height
         ) {
           const texture = textureManagerRef.current?.getTexture(tile);
-          
+
           if (texture) {
             // Draw the texture if available
-            ctx.drawImage(
-              texture,
-              screenX,
-              screenY,
-              tileSize,
-              tileSize
-            );
-            
+            ctx.drawImage(texture, screenX, screenY, tileSize, tileSize);
+
             ctx.strokeStyle = '#121212';
             ctx.strokeRect(screenX, screenY, tileSize, tileSize);
           } else if (tile && tile !== 'empty') {
             ctx.fillStyle = tile === 'wall' ? '#666' : '#eee';
             ctx.fillRect(screenX, screenY, tileSize, tileSize);
-            
+
             ctx.strokeStyle = '#121212';
             ctx.strokeRect(screenX, screenY, tileSize, tileSize);
           } else {
@@ -106,7 +100,8 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
           }
 
           if (x === cameraX && y === cameraY) {
-            const playerTexture = textureManagerRef.current?.getTexture('player');
+            const playerTexture =
+              textureManagerRef.current?.getTexture('player');
             if (playerTexture) {
               ctx.drawImage(
                 playerTexture,
@@ -186,8 +181,9 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
             height={600}
           />
           <div className="camera-info">
-            Player position: ({world.player.x}, {world.player.y}) | Room id: {world.map.currentRoom} | Tile size:{' '}
-            {tileSize}px | Renders: {renderCountRef.current}
+            Player position: ({world.player.x}, {world.player.y}) | Room id:{' '}
+            {world.map.currentRoom} | Tile size: {tileSize}px | Renders:{' '}
+            {renderCountRef.current}
             {!texturesLoaded && (
               <span> | Loading textures: {Math.round(loadingProgress)}%</span>
             )}
