@@ -1,0 +1,126 @@
+{
+    "WeaklingClass": {
+        "className": "weaklingClass",
+        "possibleNames": [
+            "Daniil",
+            "Vladimir",
+            "Pavel"
+        ],
+        "possibleSurnames": [
+            "Very Scared",
+            "Fearful",
+            "Hates you"
+        ],
+        "characteristicsBounds": [
+            {
+                "s": 1,
+                "p": 1,
+                "e": 1,
+                "i": 1,
+                "a": 1
+            },
+            {
+                "s": 5,
+                "p": 5,
+                "e": 5,
+                "i": 5,
+                "a": 5
+            }
+        ],
+        "availableAttacks": [
+            "StraightAttack",
+            "AttackForward",
+            "CircleAttack"
+        ],
+        "numberOfAttacks": 2,
+        "strategy": {
+            "Pacifist": "Neutral",
+            "Normal": "Coward",
+            "Panic": "Coward",
+            "Angry": "Coward"
+        }
+    },
+    "MiddleClass": {
+        "className": "middleClass",
+        "possibleNames": [
+            "Some Dude",
+            "Villagerina",
+            "Valentina"
+        ],
+        "possibleSurnames": [
+            "Smith",
+            "Mikhailovna",
+            "IDK Kevin's mom or SMTH"
+        ],
+        "characteristicsBounds": [
+            {
+                "s": 6,
+                "p": 6,
+                "e": 6,
+                "i": 6,
+                "a": 6
+            },
+            {
+                "s": 10,
+                "p": 5,
+                "e": 5,
+                "i": 5,
+                "a": 5
+            }
+        ],
+        "availableAttacks": [
+            "StraightAttack",
+            "CircleAttack"
+        ],
+        "numberOfAttacks": 1,
+        "strategy": {
+            "Pacifist": "Neutral",
+            "Normal": "Neutral",
+            "Panic": "Coward",
+            "Angry": "Aggresive"
+        }
+    },
+    "StrongClass": {
+        "className": "strongClass",
+        "possibleNames": [
+            "Beaver",
+            "Daniil",
+            "Caveman",
+            "Kevin"
+        ],
+        "possibleSurnames": [
+            "The Fearsome",
+            "The Sinful",
+            "The Homosexual",
+            "The Defiler"
+        ],
+        "characteristicsBounds": [
+            {
+                "s": 6,
+                "p": 6,
+                "e": 6,
+                "i": 6,
+                "a": 6
+            },
+            {
+                "s": 10,
+                "p": 5,
+                "e": 5,
+                "i": 5,
+                "a": 5
+            }
+        ],
+        "availableAttacks": [
+            "StraightAttack",
+            "AttackForward",
+            "CircleAttack"
+        ],
+        "numberOfAttacks": 2,
+        "strategy": {
+            "Pacifist": "Neutral",
+            "Normal": "Aggresive",
+            "Panic": "Coward",
+            "Angry": "Aggresive"
+        }
+    }
+}

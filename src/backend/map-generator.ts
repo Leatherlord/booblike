@@ -1,9 +1,9 @@
 import { EntitiesMap, Entity, LookDirection, Point2d, Room, Tile } from "../common/interfaces";
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
-import { DummyCharacter } from "./behaviour/character";
 import { Aggresive, Coward, Neutral } from "./behaviour/strategy";
-import { WeaklingClass, WeaklingFastClass, WeaklingSlowClass } from "./behaviour/classes";
+import { RandomEnemyCharacter } from "./behaviour/character";
+import { generateCharacter } from "./mob-generator";
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -304,7 +304,7 @@ export function generateRoom(
     while (!okForExit(exitId)) {
       exitId = (exitId + 1) % border.length;
     }
-    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: new EntitiesMap()};
+    return {map: map, exits: exitMap, reverseExits: reverseExitMap, entities: new EntitiesMap(), killedEntities: []};
 }
 
 export function getStartingRoom(): Room {
@@ -336,65 +336,29 @@ export function getStartingRoom(): Room {
     
     let entities =  new EntitiesMap();
 
-    entities.add({ x: 3, y: 3 }, {
-        id: ""+1,
-        x: 3,
-        y: 3,
-        lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Neutral(), WeaklingFastClass, 1),
-        level: 1,
-        texture: 'enemy',
-
-        animation: {
-            lastAttacked: 0,
-            lastMoved: 0
+    for(let i = 0; i < 5; i++) {
+        const chararcter = generateCharacter()
+        let texture;
+        if(chararcter.charClass.className == "strongClass") {
+            texture = 'player' 
+        } else {
+            texture = 'enemy' 
         }
-    });
+        entities.add({ x: 3, y: 3 }, {
+            id: ""+1,
+            x: 3,
+            y: 3,
+            lookDir: LookDirection.Left,
+            character: chararcter,
+            level: 1,
+            texture: texture,
 
-    entities.add({ x: 3, y: 3 }, {
-        id: ""+2,
-        x: 3,
-        y: 3,
-        lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Neutral(), WeaklingSlowClass, 1),
-        level: 1,
-        texture: 'enemy',
-
-        animation: {
-            lastAttacked: 0,
-            lastMoved: 0
-        }
-    });
-
-    entities.add({ x: 6, y: 6 }, {
-        id: ""+3,
-        x: 6,
-        y: 6,
-        lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Aggresive(), WeaklingClass, 4),
-        level: 1,
-        texture: 'enemy',
-
-        animation: {
-            lastAttacked: 0,
-            lastMoved: 0
-        }
-    });
-
-    entities.add({ x: 6, y: 6 }, {
-        id: ""+4,
-        x: 6,
-        y: 6,
-        lookDir: LookDirection.Left,
-        character: new DummyCharacter(new Coward(), WeaklingClass, 1),
-        level: 1,
-        texture: 'enemy',
-
-        animation: {
-            lastAttacked: 0,
-            lastMoved: 0
-        }
-    });
+            animation: {
+                lastAttacked: 0,
+                lastMoved: 0
+            }
+        });
+    }
     
-    return {map: map, exits: exits, reverseExits: reverseExits, entities: entities};
+    return {map: map, exits: exits, reverseExits: reverseExits, entities: entities, killedEntities: []};
 }
