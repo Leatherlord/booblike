@@ -1,5 +1,12 @@
-import { Entity, Grid, LookDirection, Point2d, generateGrid, Speed } from "../../common/interfaces";
-import { Buff } from "./buffs";
+import {
+  Entity,
+  Grid,
+  LookDirection,
+  Point2d,
+  generateGrid,
+  Speed,
+} from '../../common/interfaces';
+import { Buff } from './buffs';
 
 export interface Attack {
   name: string;
@@ -12,7 +19,7 @@ export interface Attack {
 }
 
 export let CircleAttack: Attack = {
-  name: "CircleAttack",
+  name: 'CircleAttack',
   speed: Speed.NORMAL,
   minDamage: 1,
   maxDamage: 2,
@@ -21,19 +28,17 @@ export let CircleAttack: Attack = {
     areaUp: 1,
     areaDown: 1,
     areaRight: 1,
-    areaLeft: 1
+    areaLeft: 1,
   },
-  area: generateGrid(
-    [
-      [1, 1, 1], 
-      [1, 0, 1], 
-      [1, 1, 1]
-    ]
-  )
-}
+  area: generateGrid([
+    [1, 1, 1],
+    [1, 0, 1],
+    [1, 1, 1],
+  ]),
+};
 
 export let StraightAttack: Attack = {
-  name: "StraightAttack",
+  name: 'StraightAttack',
   speed: Speed.FAST,
   minDamage: 1,
   maxDamage: 3,
@@ -42,13 +47,11 @@ export let StraightAttack: Attack = {
     areaUp: 1,
     areaDown: 1,
     areaRight: 1,
-    areaLeft: 1
+    areaLeft: 1,
   },
-  area: generateGrid(
-    [
-      [0, 0, 0], 
-      [0, 0, 0], 
-      [0, 1, 0]
-    ]
-  )
-}
+  area: generateGrid([
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 1, 0],
+  ]),
+};

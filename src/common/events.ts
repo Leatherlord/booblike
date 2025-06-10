@@ -1,4 +1,8 @@
-export type Event = PlayerMoveEvent | PlayerAttackEvent | InventorySelectEvent | NPCMoveEvent;
+export type Event =
+  | PlayerMoveEvent
+  | PlayerAttackEvent
+  | InventorySelectEvent
+  | NPCMoveEvent;
 
 export type PlayerMoveEvent = {
   type: 'player_move';

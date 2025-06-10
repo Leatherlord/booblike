@@ -71,7 +71,7 @@ const App: React.FC = () => {
       if (now - lastEventTimeRef.current < 100) {
         return;
       }
-      
+
       let event: Event;
 
       switch (e.key) {
@@ -102,7 +102,7 @@ const App: React.FC = () => {
         case ' ':
           event = {
             type: 'player_attack',
-            weaponChosen: world.player.activeSlot
+            weaponChosen: world.player.activeSlot,
           };
           break;
         default:
@@ -113,7 +113,6 @@ const App: React.FC = () => {
       handleEvent(event);
     };
 
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [world, handleEvent]);
@@ -121,10 +120,10 @@ const App: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const event: Event = {
-        type: 'npc_move'
+        type: 'npc_move',
       };
-      handleEvent(event)
-    }, 100);
+      handleEvent(event);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [world]);
@@ -163,7 +162,6 @@ const App: React.FC = () => {
 
   return (
     <div className="game-container">
-
       <div className="hud top-hud">
         <div className="hud-content">
           <span className="hud-item">Score: 0</span>

@@ -5,5 +5,5 @@ export const TEXTURE_CONFIG: TextureConfig = {
   wall: '/resources/wall.png',
   door: '/resources/door.png',
   player: '/resources/player.png',
-  enemy: '/resources/enemy.png'
-}; 
+  enemy: '/resources/enemy.png',
+};
