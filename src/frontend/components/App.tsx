@@ -10,7 +10,7 @@ const App: React.FC = () => {
 
   const handleSelectSlot = (slotId: number) => {
     if (!world) return;
-    
+
     handleEvent({
       type: 'inventory_select',
       slotId,
@@ -94,10 +94,10 @@ const App: React.FC = () => {
         <div className="hud left-hud">
           <div className="hud-content">
             {world && (
-              <Inventory 
-                activeSlot={world.player.activeSlot} 
-                slots={world.player.slots} 
-                onSelectSlot={handleSelectSlot} 
+              <Inventory
+                activeSlot={world.player.activeSlot}
+                slots={world.player.slots}
+                onSelectSlot={handleSelectSlot}
               />
             )}
           </div>
