@@ -14,7 +14,8 @@ const DeathModal: React.FC<DeathModalProps> = ({ isOpen, onRestart }) => {
         <div className="death-modal-content">
           <h2 className="death-title">💀 YOU DIED 💀</h2>
           <p className="death-message">
-            Your adventure has come to an end, but death is not the final chapter.
+            Your adventure has come to an end, but death is not the final
+            chapter.
           </p>
           <p className="death-encouragement">
             Rise again, hero. The dungeon awaits your return.
@@ -28,4 +29,4 @@ const DeathModal: React.FC<DeathModalProps> = ({ isOpen, onRestart }) => {
   );
 };
 
-export default DeathModal; 
+export default DeathModal;
