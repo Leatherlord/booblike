@@ -2,7 +2,7 @@ import { Entity, Grid, Size, Speed, World } from '../../common/interfaces';
 import { Attack, StraightAttack } from './attacks';
 import { Buff } from './buffs';
 import { CharClass, getCharacteristicsFromClass, PlayerClass } from './classes';
-import { states } from './state';
+import { EventType, handleStateChange, states } from './state';
 import { MovementResult, Strategy } from './strategy';
 
 export type Characteristics = {
@@ -231,6 +231,10 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
       break;
     }
   }
+  handleStateChange(enemy, EventType.Anger);
+  handleStateChange(finalTarget, EventType.Damage);
+  //console.log("Enemy's state " + enemy.character.state, "Enemy's strategy " + enemy.character.strategy.constructor.name)
+  //console.log("Character's state " + char.character.state, "Character's strategy " + char.character.strategy.constructor.name)
   return {
     finalTarget: finalTarget,
     finalAttack: attack,
@@ -257,11 +261,14 @@ export interface Character {
   score?: number;
   speed: Speed;
 
+  state: states;
+
   move: (context: Entity, world: World) => MovementResult;
   damage: (context: Entity, enemy: Entity, attack: Attack) => AttackResult;
   update: () => void; // runs in loop
   getSpeed: () => Speed;
   getAttackSpeed: (attack: Attack) => Speed;
+  setState: (state: states) => void;
 }
 
 export class PlayerCharacter implements Character {
@@ -273,6 +280,7 @@ export class PlayerCharacter implements Character {
     this.characterSize = { width: 1, height: 1 };
     this.level = 1;
     this.score = 0;
+    this.state = states.Normal;
 
     this.characteristics = characteristics;
     this.name = name;
@@ -297,6 +305,7 @@ export class PlayerCharacter implements Character {
   characteristics: Characteristics;
   score?: number;
   speed: Speed;
+  state: states;
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
@@ -318,6 +327,10 @@ export class PlayerCharacter implements Character {
   public getAttackSpeed(attack: Attack): Speed {
     return attack.speed * 5;
   }
+
+  public setState(state: states): void {
+    this.state = state;
+  }
 }
 
 export class RandomEnemyCharacter implements Character {
@@ -331,6 +344,7 @@ export class RandomEnemyCharacter implements Character {
     this.characteristics = characteristics as Characteristics;
     this.attacks = attacks;
     this.strategy = strategy;
+    this.state = states.Normal;
 
     this.activeBuffs = [];
     this.characterSize = { width: 1, height: 1 };
@@ -357,6 +371,7 @@ export class RandomEnemyCharacter implements Character {
   level: number;
   characteristics: Characteristics;
   speed: Speed;
+  state: states;
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
@@ -377,6 +392,10 @@ export class RandomEnemyCharacter implements Character {
 
   public getAttackSpeed(attack: Attack): Speed {
     return attack.speed * 5;
+  }
+
+  public setState(state: states): void {
+    this.state = state;
   }
 }
 

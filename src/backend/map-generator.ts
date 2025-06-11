@@ -363,8 +363,10 @@ export function getStartingRoom(): Room {
     let texture;
     if (chararcter.charClass.className == 'strongClass') {
       texture = 'player';
-    } else {
+    } else if (chararcter.charClass.className == 'middleClass') {
       texture = 'enemy';
+    } else {
+      texture = 'coward';
     }
     entities.add(
       { x: 3, y: i },

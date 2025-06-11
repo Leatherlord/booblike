@@ -36,6 +36,7 @@ function convertJsonToCharClass(
         return [state, strategyMap[stratNameStr]];
       })
     ) as Record<states, Strategy>,
+    transitions: json.transitions,
   };
 }
 
