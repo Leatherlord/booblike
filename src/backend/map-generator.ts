@@ -1,6 +1,15 @@
-import { Point2d, Room, Tile } from '../common/interfaces';
+import {
+  EntitiesMap,
+  Entity,
+  LookDirection,
+  Point2d,
+  Room,
+  Tile,
+} from '../common/interfaces';
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
+import { calculateExperienceForNextLevel } from './behaviour/character';
+import { generateCharacter } from './mob-generator';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -307,7 +316,14 @@ export function generateRoom(
     exitMap.setValue(border[exitId], i);
     reverseExitMap.setValue(i, border[exitId]);
   }
-  return { map: map, exits: exitMap, reverseExits: reverseExitMap };
+  const generated = {
+    map: map,
+    exits: exitMap,
+    reverseExits: reverseExitMap,
+    entities: new EntitiesMap(),
+  };
+  console.log('Generated map: ', generated);
+  return generated;
 }
 
 export function getStartingRoom(): Room {
@@ -339,5 +355,44 @@ export function getStartingRoom(): Room {
   let reverseExits: Collections.Dictionary<number, Point2d> =
     new Collections.Dictionary();
   reverseExits.setValue(0, { x: doorPos.x, y: doorPos.y });
-  return { map: map, exits: exits, reverseExits: reverseExits };
+
+  let entities = new EntitiesMap();
+
+  for (let i = 1; i <= 5; i++) {
+    const chararcter = generateCharacter();
+    let texture;
+    if (chararcter.charClass.className == 'strongClass') {
+      texture = 'player';
+    } else if (chararcter.charClass.className == 'middleClass') {
+      texture = 'enemy';
+    } else {
+      texture = 'coward';
+    }
+    entities.add(
+      { x: 3, y: i },
+      {
+        id: '' + 1,
+        x: 3,
+        y: i,
+        lookDir: LookDirection.Left,
+        character: chararcter,
+        level: 1,
+        experience: 0,
+        experienceToNext: calculateExperienceForNextLevel(1),
+        texture: texture,
+
+        animation: {
+          lastAttacked: 0,
+          lastMoved: 0,
+        },
+      }
+    );
+  }
+
+  return {
+    map: map,
+    exits: exits,
+    reverseExits: reverseExits,
+    entities: entities,
+  };
 }

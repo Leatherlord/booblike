@@ -1,0 +1,57 @@
+{
+  "StraightAttack": {
+    "id": "StraightAttack",
+    "speed": "SUPERFAST",
+    "minDamage": 5,
+    "maxDamage": 10,
+    "attackBuffs": [],
+    "areaSize": {
+      "areaUp": 1,
+      "areaDown": 1,
+      "areaRight": 1,
+      "areaLeft": 1
+    },
+    "area": [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 1, 0]
+    ]
+  },
+  "CircleAttack": {
+    "id": "CircleAttack",
+    "speed": "NORMAL",
+    "minDamage": 10,
+    "maxDamage": 15,
+    "attackBuffs": [],
+    "areaSize": {
+      "areaUp": 1,
+      "areaDown": 1,
+      "areaRight": 1,
+      "areaLeft": 1
+    },
+    "area": [
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 1, 1]
+    ]
+  },
+  "AttackForward": {
+    "id": "AttackForward",
+    "speed": "SLOW",
+    "minDamage": 10,
+    "maxDamage": 15,
+    "attackBuffs": [],
+    "areaSize": {
+      "areaUp": 0,
+      "areaDown": 3,
+      "areaRight": 1,
+      "areaLeft": 1
+    },
+    "area": [
+      [1, 0, 1],
+      [1, 1, 1],
+      [1, 1, 1],
+      [1, 1, 1]
+    ]
+  }
+}
