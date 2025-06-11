@@ -26,6 +26,12 @@
       "Normal": "Coward",
       "Panic": "Coward",
       "Angry": "Coward"
+    },
+    "transitions": {
+      "Pacifist": { "Anger": "Normal" },
+      "Normal": { "Anger": "Angry", "Damage": "Panic" },
+      "Angry": { "Pacify": "Normal", "Damage": "Panic" },
+      "Panic": { "Heal": "Normal", "Anger": "Angry" }
     }
   },
   "MiddleClass": {
@@ -55,6 +61,12 @@
       "Normal": "Neutral",
       "Panic": "Coward",
       "Angry": "Aggresive"
+    },
+    "transitions": {
+      "Pacifist": { "Anger": "Normal" },
+      "Normal": { "Anger": "Angry", "Damage": "Panic" },
+      "Angry": { "Pacify": "Normal", "Damage": "Panic" },
+      "Panic": { "Heal": "Normal", "Anger": "Angry" }
     }
   },
   "StrongClass": {
@@ -89,6 +101,12 @@
       "Normal": "Aggresive",
       "Panic": "Coward",
       "Angry": "Aggresive"
+    },
+    "transitions": {
+      "Pacifist": { "Anger": "Normal" },
+      "Normal": { "Anger": "Angry", "Damage": "Panic" },
+      "Angry": { "Pacify": "Normal", "Damage": "Panic" },
+      "Panic": { "Heal": "Normal", "Anger": "Angry" }
     }
   }
 }

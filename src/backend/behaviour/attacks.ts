@@ -1,8 +1,6 @@
 import {
-  Entity,
   Grid,
   LookDirection,
-  Point2d,
   generateGrid,
   Speed,
 } from '../../common/interfaces';

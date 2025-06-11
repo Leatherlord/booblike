@@ -1,6 +1,6 @@
 import * as Attacks from './attacks';
 import { Characteristics } from './character';
-import { states } from './state';
+import { states, EventType } from './state';
 import {
   Aggresive,
   Coward,
@@ -64,6 +64,7 @@ export interface CharClass {
   availableAttacks: Attacks.Attack[];
   numberOfAttacks: number;
   strategy: Record<states, Strategy>;
+  transitions: Record<states, Partial<Record<EventType, states>>>;
 }
 
 export let PlayerClass: CharClass = {
@@ -82,26 +83,30 @@ export let PlayerClass: CharClass = {
     [states.Panic]: new Coward(),
     [states.Angry]: new Fury(),
   },
-};
-export let StrongClass: CharClass = {
-  className: 'stringClass',
-  possibleNames: ['Beaver', 'Daniil', 'Caveman', 'Kevin'],
-  possibleSurnames: [
-    'The Fearsome',
-    'The Sinful',
-    'The Homosexual',
-    'The Defiler',
-  ],
-  characteristicsBounds: [
-    { s: 6, p: 6, e: 6, i: 6, a: 6 },
-    { s: 10, p: 5, e: 5, i: 5, a: 5 },
-  ],
-  availableAttacks: [Attacks.StraightAttack, Attacks.CircleAttack],
-  numberOfAttacks: 3,
-  strategy: {
-    [states.Pacifist]: new Neutral(),
-    [states.Normal]: new Aggresive(),
-    [states.Panic]: new Coward(),
-    [states.Angry]: new Aggresive(),
+  transitions: {
+    [states.Pacifist]: {
+      [EventType.Pacify]: states.Normal,
+      [EventType.Anger]: states.Normal,
+      [EventType.Damage]: states.Normal,
+      [EventType.Heal]: states.Normal,
+    },
+    [states.Normal]: {
+      [EventType.Pacify]: states.Normal,
+      [EventType.Anger]: states.Normal,
+      [EventType.Damage]: states.Normal,
+      [EventType.Heal]: states.Normal,
+    },
+    [states.Angry]: {
+      [EventType.Pacify]: states.Normal,
+      [EventType.Anger]: states.Normal,
+      [EventType.Damage]: states.Normal,
+      [EventType.Heal]: states.Normal,
+    },
+    [states.Panic]: {
+      [EventType.Pacify]: states.Normal,
+      [EventType.Anger]: states.Normal,
+      [EventType.Damage]: states.Normal,
+      [EventType.Heal]: states.Normal,
+    },
   },
 };
