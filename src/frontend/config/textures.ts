@@ -7,4 +7,5 @@ export const TEXTURE_CONFIG: TextureConfig = {
   player: '/resources/player.png',
   enemy: '/resources/enemy.png',
   coward: '/resources/COWARD.png',
+  attack: '/resources/attack.png',
 };
