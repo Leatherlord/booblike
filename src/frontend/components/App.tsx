@@ -18,7 +18,6 @@ const App: React.FC = () => {
   const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
   const [isUpgradeMenuOpen, setIsUpgradeMenuOpen] = useState(false);
 
-
   useEffect(() => {
     const loadDefaultPack = async () => {
       try {
@@ -153,7 +152,6 @@ const App: React.FC = () => {
     );
   };
 
-
   if (isLoadingTexturePacks) {
     return (
       <div className="loading-screen">
@@ -183,7 +181,6 @@ const App: React.FC = () => {
       />
     );
   }
-  
 
   return (
     <div className="game-container">
@@ -246,7 +243,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <GameField world={world} selectedTexturePack={selectedTexturePack}/>
+        <GameField world={world} selectedTexturePack={selectedTexturePack} />
 
         <div className="hud right-hud">
           <div className="hud-content">

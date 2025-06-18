@@ -613,7 +613,6 @@ const GameField: React.FC<GameFieldProps> = ({
     return () => observer.disconnect();
   }, [world]);
 
-
   if (!selectedTexturePack) {
     return (
       <div className="game-field">
