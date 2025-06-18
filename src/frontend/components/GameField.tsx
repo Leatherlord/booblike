@@ -250,8 +250,14 @@ const GameField: React.FC<GameFieldProps> = ({
       const y = tile.y;
       const screenX = (x - offsetX) * tileSize;
       const screenY = (y - offsetY) * tileSize;
-      ctx.fillStyle = 'rgba(255, 0, 0)';
-      ctx.fillRect(screenX, screenY, tileSize, tileSize);
+
+      const attackTexture = textureManagerRef.current?.getTexture('attack');
+      if (attackTexture) {
+        ctx.drawImage(attackTexture, screenX, screenY, tileSize, tileSize);
+      } else {
+        ctx.fillStyle = 'rgba(255, 0, 0)';
+        ctx.fillRect(screenX, screenY, tileSize, tileSize);
+      }
     });
     ctx.globalAlpha = 1.0;
     renderOverlayCountRef.current += 1;
