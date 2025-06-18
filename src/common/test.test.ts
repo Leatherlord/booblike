@@ -4,4 +4,4 @@ describe('Test test Scenario', () => {
       expect(true).toBe(true);
     });
   });
-}); 
+});
