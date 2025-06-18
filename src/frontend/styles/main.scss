@@ -122,6 +122,14 @@ body {
     height: 100%;
   }
 
+  .overlay-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
   .camera-info {
     position: absolute;
     top: 10px;
@@ -132,12 +140,21 @@ body {
     font-family: monospace;
     font-size: 12px;
     color: #fff;
+    z-index: 10;
   }
 }
 
 .right-hud {
   width: 5vw;
   height: 100%;
+
+  .hud-content {
+    padding: 5px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 
 .bottom-hud {
@@ -186,7 +203,6 @@ body {
   }
 }
 
-// Inventory styles
 .inventory {
   display: flex;
   flex-direction: column;
@@ -241,5 +257,233 @@ body {
     height: 50%;
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+// temporary animation for attack
+
+.character {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.damage-effect {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  opacity: 1;
+  animation: slide-in 0.5s ease-in-out forwards;
+
+  @keyframes slide-in {
+    from {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+.upgrade-menu-button {
+  padding: 8px 12px;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 12px;
+  font-weight: bold;
+  width: 100%;
+
+  &:hover {
+    background-color: color.adjust($primary-color, $lightness: -10%);
+  }
+}
+
+.health-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 15px;
+}
+
+.health-label {
+  font-size: 12px;
+  color: $hud-text;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.health-bar {
+  width: 120px;
+  height: 16px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid $hud-border;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.health-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #f44336, #ff5722, #ff9800, #4caf50);
+  background-size: 400% 100%;
+  animation: healthGradient 3s ease infinite;
+  transition: width 0.3s ease;
+  border-radius: 7px;
+}
+
+.health-text {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes healthGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.experience-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.experience-label {
+  font-size: 10px;
+  text-align: center;
+  color: $hud-text;
+  opacity: 0.8;
+}
+
+.experience-bar {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid $hud-border;
+}
+
+.experience-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.death-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.death-modal {
+  background: linear-gradient(135deg, #1a0000, #330000);
+  border: 3px solid #ff4444;
+  border-radius: 15px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(255, 68, 68, 0.4);
+  animation: slideIn 0.5s ease-out;
+}
+
+.death-modal-content {
+  color: white;
+}
+
+.death-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #ff4444;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
+}
+
+.death-message {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  color: #ffcccc;
+  line-height: 1.5;
+}
+
+.death-encouragement {
+  font-size: 1rem;
+  margin-bottom: 30px;
+  color: #ffdddd;
+  font-style: italic;
+}
+
+.restart-button {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, #ff6666, #ff0000);
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

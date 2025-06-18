@@ -1,19 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, ReactNode } from 'react';
 import GameField from './GameField';
 import Inventory from './Inventory';
 import TexturePackSelector from './TexturePackSelector';
+import UpgradeMenu from './UpgradeMenu';
+import DeathModal from './DeathModal';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
 import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
 
 const App: React.FC = () => {
-  const { world, handleEvent } = useWorld();
+  const { world, handleEvent, restartGame } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
   const [selectedTexturePack, setSelectedTexturePack] =
     useState<TexturePack | null>(null);
   const [showTexturePackSelector, setShowTexturePackSelector] = useState(true);
   const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
+  const [isUpgradeMenuOpen, setIsUpgradeMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadDefaultPack = async () => {
@@ -54,11 +57,23 @@ const App: React.FC = () => {
     });
   };
 
+  const handlePurchaseUpgrade = (upgradeId: string) => {
+    handleEvent({
+      type: 'purchase_upgrade',
+      upgradeId,
+    });
+  };
+
+  const toggleUpgradeMenu = () => {
+    setIsUpgradeMenuOpen(!isUpgradeMenuOpen);
+  };
+
   useEffect(() => {
     if (!world) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
+
+      if (world.player.character.healthBar <= 0) return;
 
       if (e.key >= '0' && e.key <= '9') {
         const slotNumber = parseInt(e.key, 10);
@@ -66,6 +81,11 @@ const App: React.FC = () => {
           type: 'inventory_select',
           slotId: slotNumber,
         });
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'u') {
+        toggleUpgradeMenu();
         return;
       }
 
@@ -101,6 +121,12 @@ const App: React.FC = () => {
             direction: 'right',
           };
           break;
+        case ' ':
+          event = {
+            type: 'player_attack',
+            weaponChosen: world.player.activeSlot,
+          };
+          break;
         default:
           return;
       }
@@ -111,7 +137,20 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [world, handleEvent]);
+  }, [world, handleEvent, isUpgradeMenuOpen]);
+
+  const getExperienceProgressPercentage = () => {
+    if (!world || world.player.experienceToNext === 0) return 0;
+    return (world.player.experience / world.player.experienceToNext) * 100;
+  };
+
+  const getHealthPercentage = () => {
+    if (!world || world.player.character.maxHealthBar === 0) return 0;
+    return (
+      (world.player.character.healthBar / world.player.character.maxHealthBar) *
+      100
+    );
+  };
 
   if (isLoadingTexturePacks) {
     return (
@@ -150,9 +189,40 @@ const App: React.FC = () => {
           <span className="hud-item">Score: 0</span>
           <span className="hud-item">Level: {world?.player.level}</span>
           {world && (
-            <span className="hud-item">
-              Player: ({world.player.x}, {world.player.y})
-            </span>
+            <>
+              <div className="health-bar-container">
+                <div className="health-label">Health</div>
+                <div className="health-bar">
+                  <div
+                    className="health-fill"
+                    style={{ width: `${getHealthPercentage()}%` }}
+                  />
+                  <div className="health-text">
+                    {Math.ceil(world.player.character.healthBar)}/
+                    {Math.ceil(world.player.character.maxHealthBar)}
+                  </div>
+                </div>
+              </div>
+              <span className="hud-item">
+                EXP: {world.player.experience}/{world.player.experienceToNext}
+              </span>
+              <span className="hud-item">
+                Available EXP: {world.player.availableExperience}
+              </span>
+              <span className="hud-item">
+                FOV:{' '}
+                {world.player.character.areaSize.areaUp +
+                  world.player.character.areaSize.areaDown +
+                  1}
+                ×
+                {world.player.character.areaSize.areaLeft +
+                  world.player.character.areaSize.areaRight +
+                  1}
+              </span>
+              <span className="hud-item">
+                Player: ({world.player.x}, {world.player.y})
+              </span>
+            </>
           )}
           {selectedTexturePack && (
             <span className="hud-item">Pack: {selectedTexturePack.name}</span>
@@ -176,7 +246,22 @@ const App: React.FC = () => {
         <GameField world={world} selectedTexturePack={selectedTexturePack} />
 
         <div className="hud right-hud">
-          <div className="hud-content"></div>
+          <div className="hud-content">
+            <button className="upgrade-menu-button" onClick={toggleUpgradeMenu}>
+              Upgrades (U)
+            </button>
+            {world && (
+              <div className="experience-bar-container">
+                <div className="experience-label">Experience Progress</div>
+                <div className="experience-bar">
+                  <div
+                    className="experience-fill"
+                    style={{ width: `${getExperienceProgressPercentage()}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -184,8 +269,27 @@ const App: React.FC = () => {
         <div className="hud-content">
           <div className="hud-item">Use arrow keys to move the player</div>
           <div className="hud-item">Press 0-9 to select inventory slots</div>
+          <div className="hud-item">Press SPACE to attack</div>
+          <div className="hud-item">Press U to open upgrades menu</div>
         </div>
       </div>
+
+      {world && (
+        <UpgradeMenu
+          isOpen={isUpgradeMenuOpen}
+          availableExperience={world.player.availableExperience}
+          upgrades={world.availableUpgrades}
+          onPurchaseUpgrade={handlePurchaseUpgrade}
+          onClose={() => setIsUpgradeMenuOpen(false)}
+        />
+      )}
+
+      {world && (
+        <DeathModal
+          isOpen={world.player.character.healthBar <= 0}
+          onRestart={restartGame}
+        />
+      )}
     </div>
   );
 };

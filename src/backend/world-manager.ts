@@ -5,16 +5,34 @@ import {
   Room,
   Point2d,
   ExitMappingEntry,
+  LookDirection,
+  EntitiesMap,
+  UpgradeOption,
+  Entity,
 } from '../common/interfaces';
-import { Event, PlayerMoveEvent, InventorySelectEvent } from '../common/events';
-import { movePlayer } from './player-controller';
+import {
+  Event,
+  InventorySelectEvent,
+  PlayerAttackEvent,
+  PurchaseUpgradeEvent,
+} from '../common/events';
+import { attackFromPlayer, movePlayer } from './player-controller';
 import { generateRoom, getStartingRoom } from './map-generator';
 import { Dictionary } from 'typescript-collections';
 import { prngAlea } from 'ts-seedrandom';
+import {
+  PlayerCharacter,
+  calculateExperienceForNextLevel,
+  calculateExperienceFromKill,
+  canLevelUp,
+  levelUp,
+} from './behaviour/character';
+import { health, FOV, speed } from './behaviour/character';
 
 export class WorldManager {
   private world: World | null = null;
   private updateCallback: (world: World) => void;
+  private npcMovementTimer: NodeJS.Timeout | null = null;
 
   constructor(updateCallback: (world: World) => void) {
     this.updateCallback = updateCallback;
@@ -23,6 +41,25 @@ export class WorldManager {
   private updateWorld(world: World) {
     this.world = world;
     this.updateCallback(world);
+  }
+
+  private startNPCMovementTimer() {
+    if (this.npcMovementTimer) {
+      clearInterval(this.npcMovementTimer);
+    }
+
+    this.npcMovementTimer = setInterval(() => {
+      if (!this.world || this.world.player.character.healthBar <= 0) return;
+
+      this.handleNPCMovement();
+    }, 1000);
+  }
+
+  private stopNPCMovementTimer() {
+    if (this.npcMovementTimer) {
+      clearInterval(this.npcMovementTimer);
+      this.npcMovementTimer = null;
+    }
   }
 
   public exampleUpdate() {
@@ -54,19 +91,45 @@ export class WorldManager {
     let worldRandom = prngAlea(worldSeed);
     const stubWorld: World = {
       map: this.generateStubMap(worldSeed),
-      entities: [],
       player: {
         id: 'player',
         x: 8,
         y: 8,
+        character: new PlayerCharacter('Sanya', {
+          s: 10,
+          p: 10,
+          e: 10,
+          i: 10,
+          a: 10,
+        }),
+        lookDir: LookDirection.Right,
+        level: 1,
+        experience: 0,
+        experienceToNext: calculateExperienceForNextLevel(1),
         slots: this.createEmptyInventory(),
         activeSlot: 1,
-        level: 1,
+        availableExperience: 10000,
+        spentExperience: 0,
+        upgradesBought: {},
+        animation: {
+          lastAttacked: 0,
+          lastMoved: 0,
+        },
       },
       random: worldRandom,
+      onEntityDeath: (deadEntity: Entity, attacker: Entity) => {
+        if (this.world) {
+          this.handleEnemyKilled(this.world, { enemyLevel: deadEntity.level });
+        }
+      },
+      availableUpgrades: [],
+      isPlayerDead: false,
     };
 
+    stubWorld.availableUpgrades = this.calculateAvailableUpgrades(stubWorld);
+
     this.updateWorld(stubWorld);
+    this.startNPCMovementTimer();
   }
 
   private generateStubMap(seed: number): GameMap {
@@ -99,7 +162,9 @@ export class WorldManager {
         }),
       exits: new Dictionary(JSON.stringify),
       reverseExits: new Dictionary(),
+      entities: new EntitiesMap(),
     };
+
     let defaultExitMapping: Dictionary<ExitMappingEntry, ExitMappingEntry> =
       new Dictionary(JSON.stringify);
     const stubMap: GameMap = {
@@ -173,19 +238,17 @@ export class WorldManager {
     switch (event.type) {
       case 'player_move':
         const playerMovedWorld = movePlayer(this.world, event.direction);
-        const player = playerMovedWorld.player;
-        const playerPos: Point2d = {
-          x: player.x,
-          y: player.y,
-        };
         const transitionHandledWorld = this.processTransition(playerMovedWorld);
         this.updateWorld(transitionHandledWorld);
         return;
       case 'player_attack':
-        // TODO: implement
+        this.handleAttack(event);
         break;
       case 'inventory_select':
         this.handleInventorySelect(event);
+        break;
+      case 'purchase_upgrade':
+        this.handlePurchaseUpgrade(event);
         break;
     }
   }
@@ -202,5 +265,246 @@ export class WorldManager {
     };
 
     this.updateWorld(newWorld);
+  }
+
+  private handleAttack = (event: PlayerAttackEvent) => {
+    if (!this.world) return;
+
+    const newWorld = {
+      ...this.world,
+      onEntityDeath: (deadEntity: Entity, attacker: Entity) =>
+        this.handleEnemyKilled(newWorld, { enemyLevel: deadEntity.level }),
+    };
+
+    attackFromPlayer(newWorld, event.weaponChosen);
+
+    const newWorldObject = {
+      ...newWorld,
+      isPlayerDead: newWorld.player.character.healthBar <= 0,
+    };
+
+    this.updateWorld(newWorldObject);
+  };
+
+  private handleEnemyKilled(world: World, event: { enemyLevel: number }) {
+    const expGained = calculateExperienceFromKill(
+      world.player.character,
+      event.enemyLevel,
+      world.player.upgradesBought
+    );
+    world.player.experience += expGained;
+    world.player.availableExperience += expGained;
+
+    let leveledUp = false;
+    while (canLevelUp(world.player.experience, world.player.experienceToNext)) {
+      const levelUpResult = levelUp(world.player);
+      world.player.level = levelUpResult.level;
+      world.player.experience = levelUpResult.experience;
+      world.player.experienceToNext = levelUpResult.experienceToNext;
+      leveledUp = true;
+
+      world.player.character.maxHealthBar = health(
+        world.player.character,
+        world.player.upgradesBought
+      );
+      world.player.character.healthBar = world.player.character.maxHealthBar;
+    }
+
+    if (leveledUp) {
+      world.availableUpgrades = this.calculateAvailableUpgrades(world);
+    }
+  }
+
+  public handleNPCMovement() {
+    if (!this.world) return;
+
+    const room = this.world.map?.rooms[this.world.map.currentRoom];
+    if (!room) return;
+
+    const entitiesArray: Entity[] = [];
+    room.entities.forEach((entity) => {
+      if (entity.character.healthBar > 0) {
+        entitiesArray.push(entity);
+      }
+    });
+
+    for (const entity of entitiesArray) {
+      if (!this.world) return;
+
+      if (entity.character.healthBar <= 0) {
+        continue;
+      }
+
+      const entitiesAtPosition = room.entities.get({
+        x: entity.x,
+        y: entity.y,
+      });
+      if (
+        !entitiesAtPosition ||
+        !Array.from(entitiesAtPosition).includes(entity)
+      ) {
+        continue;
+      }
+
+      const { to, lookDir, attackResult, lastAttacked, lastMoved } =
+        entity.character.move(entity, this.world);
+
+      if (entity.character.healthBar <= 0) {
+        continue;
+      }
+
+      if (lookDir) entity.lookDir = lookDir;
+      if (attackResult) entity.lastAttackArray = attackResult.attackedTiles;
+      entity.animation.lastAttacked = lastAttacked;
+      entity.animation.lastMoved = lastMoved;
+
+      const { x, y } = to;
+      if (!room.entities.get(to)) {
+        room.entities.delete({ x: entity.x, y: entity.y }, entity);
+        entity.x = x;
+        entity.y = y;
+        room.entities.add({ x: entity.x, y: entity.y }, entity);
+      }
+    }
+
+    const newWorld = {
+      ...this.world,
+      player: { ...this.world.player },
+      isPlayerDead: this.world.player.character.healthBar <= 0,
+    };
+
+    this.updateWorld(newWorld);
+  }
+
+  private calculateAvailableUpgrades(world: World): UpgradeOption[] {
+    const upgradesBought = world.player.upgradesBought;
+
+    const upgrades: UpgradeOption[] = [
+      {
+        id: 'strength',
+        name: 'Strength',
+        description: 'Increases damage and health',
+        characteristic: 's',
+        currentLevel: upgradesBought.strength || 0,
+        maxLevel: 10,
+        cost: this.calculateUpgradeCost(
+          'strength',
+          upgradesBought.strength || 0
+        ),
+      },
+      {
+        id: 'perception',
+        name: 'Perception',
+        description: 'Increases field of view and accuracy',
+        characteristic: 'p',
+        currentLevel: upgradesBought.perception || 0,
+        maxLevel: 10,
+        cost: this.calculateUpgradeCost(
+          'perception',
+          upgradesBought.perception || 0
+        ),
+      },
+      {
+        id: 'endurance',
+        name: 'Endurance',
+        description: 'Increases health and defense',
+        characteristic: 'e',
+        currentLevel: upgradesBought.endurance || 0,
+        maxLevel: 10,
+        cost: this.calculateUpgradeCost(
+          'endurance',
+          upgradesBought.endurance || 0
+        ),
+      },
+      {
+        id: 'agility',
+        name: 'Agility',
+        description: 'Increases movement and attack speed',
+        characteristic: 'a',
+        currentLevel: upgradesBought.agility || 0,
+        maxLevel: 10,
+        cost: this.calculateUpgradeCost('agility', upgradesBought.agility || 0),
+      },
+      {
+        id: 'intelligence',
+        name: 'Intelligence',
+        description: 'Increases experience gain',
+        characteristic: 'i',
+        currentLevel: upgradesBought.intelligence || 0,
+        maxLevel: 10,
+        cost: this.calculateUpgradeCost(
+          'intelligence',
+          upgradesBought.intelligence || 0
+        ),
+      },
+    ];
+
+    return upgrades.filter(
+      (upgrade) => upgrade.currentLevel < upgrade.maxLevel
+    );
+  }
+
+  private calculateUpgradeCost(
+    upgradeId: string,
+    currentUpgrades: number
+  ): number {
+    const baseCost = 50;
+    return Math.floor(baseCost * Math.pow(1.5, currentUpgrades));
+  }
+
+  private handlePurchaseUpgrade(event: PurchaseUpgradeEvent) {
+    if (!this.world) return;
+
+    const upgrade = this.world.availableUpgrades.find(
+      (u) => u.id === event.upgradeId
+    );
+    if (!upgrade) return;
+
+    if (this.world.player.availableExperience < upgrade.cost) return;
+
+    const newWorld = { ...this.world };
+    newWorld.player = { ...this.world.player };
+    newWorld.player.availableExperience -= upgrade.cost;
+    newWorld.player.spentExperience += upgrade.cost;
+    newWorld.player.upgradesBought = {
+      ...this.world.player.upgradesBought,
+      [event.upgradeId]:
+        (this.world.player.upgradesBought[event.upgradeId] || 0) + 1,
+    };
+
+    newWorld.player.character.maxHealthBar = health(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
+    newWorld.player.character.healthBar = Math.min(
+      newWorld.player.character.healthBar,
+      newWorld.player.character.maxHealthBar
+    );
+    newWorld.player.character.areaSize = FOV(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
+    newWorld.player.character.speed = speed(
+      newWorld.player.character,
+      newWorld.player.upgradesBought
+    );
+
+    newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
+
+    const newWorldObject = {
+      ...newWorld,
+      isPlayerDead: newWorld.player.character.healthBar <= 0,
+    };
+
+    this.updateWorld(newWorldObject);
+  }
+
+  public restartGame() {
+    this.stopNPCMovementTimer();
+    this.generateStubWorld();
+  }
+
+  public cleanup() {
+    this.stopNPCMovementTimer();
   }
 }
