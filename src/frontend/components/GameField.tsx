@@ -484,6 +484,8 @@ const GameField: React.FC<GameFieldProps> = ({
   const enemiesRenderAttack = () => {
     if (!world) return;
     const room = world.map.rooms[world.map.currentRoom];
+    let hasAttacks = false;
+
     room.entities.forEach((entity) => {
       if (!entity.lastAttackArray || entity.lastAttackArray.length == 0) return;
       entity.lastAttackArray.map((tile, i) => {
@@ -494,8 +496,13 @@ const GameField: React.FC<GameFieldProps> = ({
         });
       });
       entity.lastAttackArray = [];
-      setAttackTrigger((prev) => (prev == 0 ? prev + 1 : prev - 1));
+      hasAttacks = true;
     });
+
+    // Trigger overlay animation if there were any attacks
+    if (hasAttacks) {
+      setAttackTrigger((prev) => (prev == 0 ? prev + 1 : prev - 1));
+    }
   };
 
   const renderEnemies = () => {
@@ -583,16 +590,26 @@ const GameField: React.FC<GameFieldProps> = ({
     let animationFrameId: number;
 
     const loop = (timestamp: number) => {
-      renderOverlay();
-      animationFrameId = requestAnimationFrame(loop);
+      if (fadingTilesRef.current.length > 0) {
+        renderOverlay();
+        animationFrameId = requestAnimationFrame(loop);
+      } else {
+        renderOverlay();
+      }
     };
 
-    animationFrameId = requestAnimationFrame(loop);
+    if (fadingTilesRef.current.length > 0 || attackTrigger !== 0) {
+      animationFrameId = requestAnimationFrame(loop);
+    } else {
+      renderOverlay();
+    }
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, [world, tileSize, texturesLoaded]);
+  }, [world, tileSize, texturesLoaded, attackTrigger]);
 
   useLayoutEffect(() => {
     const updateTileSize = () => {
@@ -641,6 +658,7 @@ const GameField: React.FC<GameFieldProps> = ({
   useEffect(() => {
     if (world) {
       renderCanvas();
+      renderOverlay();
     }
   }, [world, tileSize, texturesLoaded]);
 
