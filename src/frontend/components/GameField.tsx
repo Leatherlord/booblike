@@ -221,14 +221,12 @@ const GameField: React.FC<GameFieldProps> = ({
     entity.lastAttackArray = [];
   };
 
-  const animateAttack = () => {
+  const renderPlayerHalo = () => {
     if (!world) return;
     const canvas = overlayCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (fadingTilesRef.current.length == 0) return;
 
     const viewportWidth = Math.floor(canvas.width / tileSize);
     const viewportHeight = Math.floor(canvas.height / tileSize);
@@ -237,29 +235,95 @@ const GameField: React.FC<GameFieldProps> = ({
     const offsetX = cameraX - Math.floor(viewportWidth / 2);
     const offsetY = cameraY - Math.floor(viewportHeight / 2);
 
-    fadingTilesRef.current = fadingTilesRef.current
-      .map((tile) => ({
-        ...tile,
-        alpha: tile.alpha - 0.05,
-      }))
-      .filter((tile) => tile.alpha > 0);
+    const screenX = (world.player.x - offsetX) * tileSize;
+    const screenY = (world.player.y - offsetY) * tileSize;
 
-    fadingTilesRef.current.map((tile, i) => {
-      ctx.globalAlpha = tile.alpha;
-      const x = tile.x;
-      const y = tile.y;
-      const screenX = (x - offsetX) * tileSize;
-      const screenY = (y - offsetY) * tileSize;
+    const centerX = screenX + tileSize / 2;
+    const centerY = screenY + tileSize / 2;
+    const haloRadius = tileSize * 0.6;
 
-      const attackTexture = textureManagerRef.current?.getTexture('attack');
-      if (attackTexture) {
-        ctx.drawImage(attackTexture, screenX, screenY, tileSize, tileSize);
-      } else {
-        ctx.fillStyle = 'rgba(255, 0, 0)';
-        ctx.fillRect(screenX, screenY, tileSize, tileSize);
-      }
-    });
-    ctx.globalAlpha = 1.0;
+    // Base halo
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, haloRadius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(100, 150, 255, 0.1)';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    let directionAngle = 0;
+    switch (world.player.lookDir) {
+      case 'UP':
+        directionAngle = -Math.PI / 2;
+        break;
+      case 'DOWN':
+        directionAngle = Math.PI / 2;
+        break;
+      case 'LEFT':
+        directionAngle = Math.PI;
+        break;
+      case 'RIGHT':
+        directionAngle = 0;
+        break;
+      default:
+        directionAngle = -Math.PI / 2;
+    }
+
+    // Draw arc
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      centerY,
+      haloRadius,
+      directionAngle - Math.PI / 3,
+      directionAngle + Math.PI / 3
+    );
+    ctx.strokeStyle = 'rgba(255, 100, 221, 0.3)';
+    ctx.lineWidth = 10;
+    ctx.stroke();
+  };
+
+  const renderOverlay = () => {
+    if (!world) return;
+    const canvas = overlayCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    renderPlayerHalo();
+
+    if (fadingTilesRef.current.length > 0) {
+      const viewportWidth = Math.floor(canvas.width / tileSize);
+      const viewportHeight = Math.floor(canvas.height / tileSize);
+      const cameraX = world.player.x;
+      const cameraY = world.player.y;
+      const offsetX = cameraX - Math.floor(viewportWidth / 2);
+      const offsetY = cameraY - Math.floor(viewportHeight / 2);
+
+      fadingTilesRef.current = fadingTilesRef.current
+        .map((tile) => ({
+          ...tile,
+          alpha: tile.alpha - 0.05,
+        }))
+        .filter((tile) => tile.alpha > 0);
+
+      fadingTilesRef.current.map((tile, i) => {
+        ctx.globalAlpha = tile.alpha;
+        const x = tile.x;
+        const y = tile.y;
+        const screenX = (x - offsetX) * tileSize;
+        const screenY = (y - offsetY) * tileSize;
+
+        const attackTexture = textureManagerRef.current?.getTexture('attack');
+        if (attackTexture) {
+          ctx.drawImage(attackTexture, screenX, screenY, tileSize, tileSize);
+        } else {
+          ctx.fillStyle = 'rgba(255, 0, 0)';
+          ctx.fillRect(screenX, screenY, tileSize, tileSize);
+        }
+      });
+      ctx.globalAlpha = 1.0;
+    }
+
     renderOverlayCountRef.current += 1;
   };
 
@@ -339,7 +403,6 @@ const GameField: React.FC<GameFieldProps> = ({
           );
 
           if (isVisible) {
-            // Render visible tiles normally
             const texture = textureManagerRef.current?.getTexture(tile);
             const fogIntensity = getFogIntensity(
               x,
@@ -364,23 +427,19 @@ const GameField: React.FC<GameFieldProps> = ({
               ctx.fillRect(screenX, screenY, tileSize, tileSize);
             }
 
-            // Apply fog gradient at the edges of vision
             if (fogIntensity < 1.0) {
               ctx.fillStyle = `rgba(20, 20, 40, ${0.7 * (1 - fogIntensity)})`;
               ctx.fillRect(screenX, screenY, tileSize, tileSize);
             }
           } else {
-            // Render fog of war for non-visible tiles
             ctx.fillStyle = '#000000';
             ctx.fillRect(screenX, screenY, tileSize, tileSize);
 
-            // Add animated fog texture
             const time = Date.now() * 0.001;
             const fogAnimation = Math.sin(time + x * 0.5 + y * 0.3) * 0.1;
             ctx.fillStyle = `rgba(25, 25, 45, ${0.8 + fogAnimation})`;
             ctx.fillRect(screenX, screenY, tileSize, tileSize);
 
-            // Add subtle noise pattern
             ctx.fillStyle = `rgba(40, 40, 70, ${0.3 + Math.random() * 0.1})`;
             ctx.fillRect(
               screenX + Math.random() * 4,
@@ -390,7 +449,6 @@ const GameField: React.FC<GameFieldProps> = ({
             );
           }
 
-          // Render player (always visible)
           if (x === cameraX && y === cameraY) {
             const playerTexture = textureManagerRef.current?.getTexture(
               world.player.character.getTexture()
@@ -525,7 +583,7 @@ const GameField: React.FC<GameFieldProps> = ({
     let animationFrameId: number;
 
     const loop = (timestamp: number) => {
-      animateAttack();
+      renderOverlay();
       animationFrameId = requestAnimationFrame(loop);
     };
 
@@ -534,7 +592,7 @@ const GameField: React.FC<GameFieldProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [attackTrigger]);
+  }, [world, tileSize, texturesLoaded]);
 
   useLayoutEffect(() => {
     const updateTileSize = () => {
@@ -566,7 +624,7 @@ const GameField: React.FC<GameFieldProps> = ({
           overlayCanvasRef.current.width = gameFieldWidth;
           overlayCanvasRef.current.height = gamefieldRef.current.clientHeight;
 
-          requestAnimationFrame(animateAttack);
+          requestAnimationFrame(renderOverlay);
         }
       }
     };
@@ -615,7 +673,7 @@ const GameField: React.FC<GameFieldProps> = ({
 
     const canvas = overlayCanvasRef.current;
     const observer = new ResizeObserver(() => {
-      animateAttack();
+      renderOverlay();
     });
 
     observer.observe(canvas);
