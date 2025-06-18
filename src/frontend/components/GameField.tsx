@@ -1,16 +1,20 @@
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { World } from '../../common/interfaces';
 import { TextureManager } from '../utils/TextureManager';
-import { TEXTURE_CONFIG } from '../config/textures';
+import { TexturePack } from '../types/texturePack';
 
 interface GameFieldProps {
   world: World | null;
+  selectedTexturePack: TexturePack | null;
 }
 
 const MAX_HORIZONTAL_TILES = 20;
 const DEFAULT_TILE_SIZE = 32;
 
-const GameField: React.FC<GameFieldProps> = ({ world }) => {
+const GameField: React.FC<GameFieldProps> = ({
+  world,
+  selectedTexturePack,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gamefieldRef = useRef<HTMLDivElement>(null);
   const [tileSize, setTileSize] = useState(DEFAULT_TILE_SIZE);
@@ -19,18 +23,19 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
 
-  // Initialize and load textures
   useEffect(() => {
-    const textureManager = new TextureManager(TEXTURE_CONFIG);
-    textureManagerRef.current = textureManager;
+    if (!selectedTexturePack) return;
 
-    // Start loading textures
-    textureManager.loadAllTextures().then(() => {
+    const textureManager = new TextureManager();
+    textureManagerRef.current = textureManager;
+    setTexturesLoaded(false);
+    setLoadingProgress(0);
+
+    textureManager.loadTexturePack(selectedTexturePack).then(() => {
       setTexturesLoaded(true);
       setLoadingProgress(100);
     });
 
-    // Update loading progress periodically
     const progressInterval = setInterval(() => {
       if (textureManager.isFullyLoaded()) {
         clearInterval(progressInterval);
@@ -42,7 +47,7 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
     return () => {
       clearInterval(progressInterval);
     };
-  }, []);
+  }, [selectedTexturePack]);
 
   const renderCanvas = () => {
     if (!world || !canvasRef.current || !textureManagerRef.current) return;
@@ -169,6 +174,14 @@ const GameField: React.FC<GameFieldProps> = ({ world }) => {
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [world]);
+
+  if (!selectedTexturePack) {
+    return (
+      <div className="game-field">
+        <div className="loading">Loading texture pack...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="game-field" ref={gamefieldRef}>
