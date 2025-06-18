@@ -1,3 +1,6 @@
+import { TEXTURE_CONFIG } from '../config/textures';
+import { TexturePack } from '../types/texturePack';
+
 export interface TextureConfig {
   [tileType: string]: string;
 }
@@ -5,10 +8,43 @@ export interface TextureConfig {
 export class TextureManager {
   private textures: Map<string, HTMLImageElement> = new Map();
   private loadingPromises: Map<string, Promise<HTMLImageElement>> = new Map();
+  private currentPack: TexturePack | null = null;
+  private defaultTextures: Record<string, string> = {};
 
-  constructor(private textureConfig: TextureConfig) {}
+  constructor(private textureConfig?: TextureConfig) {
+    this.defaultTextures = TEXTURE_CONFIG;
+  }
+
+  async loadTexturePack(pack: TexturePack): Promise<void> {
+    this.textures.clear();
+    this.loadingPromises.clear();
+    this.currentPack = pack;
+
+    const combinedTextures: Record<string, string> = {};
+    const requiredTextures = Object.keys(TEXTURE_CONFIG);
+
+    for (const texture of requiredTextures) {
+      combinedTextures[texture] = this.defaultTextures[texture];
+    }
+
+    Object.entries(pack.textures).forEach(([texture, path]) => {
+      combinedTextures[texture] = path;
+    });
+
+    const loadPromises = Object.entries(combinedTextures).map(
+      ([tileType, path]) => this.loadTexture(tileType, path)
+    );
+
+    await Promise.allSettled(loadPromises);
+  }
 
   async loadAllTextures(): Promise<void> {
+    if (!this.textureConfig) {
+      throw new Error(
+        'No texture configuration provided. Use loadTexturePack instead.'
+      );
+    }
+
     const loadPromises = Object.entries(this.textureConfig).map(
       ([tileType, path]) => this.loadTexture(tileType, path)
     );
@@ -46,6 +82,19 @@ export class TextureManager {
       img.onerror = () => {
         console.error(`Failed to load texture for ${tileType}: ${path}`);
         this.loadingPromises.delete(tileType);
+
+        // If this was a pack texture that failed, try loading the default
+        if (this.currentPack && path !== this.defaultTextures[tileType]) {
+          const defaultPath = this.defaultTextures[tileType];
+          if (defaultPath) {
+            console.warn(
+              `Falling back to default texture for ${tileType}: ${defaultPath}`
+            );
+            this.loadTexture(tileType, defaultPath).then(resolve).catch(reject);
+            return;
+          }
+        }
+
         reject(new Error(`Failed to load texture: ${path}`));
       };
     });
@@ -67,7 +116,7 @@ export class TextureManager {
   }
 
   getTotalCount(): number {
-    return Object.keys(this.textureConfig).length;
+    return Object.keys(TEXTURE_CONFIG).length;
   }
 
   getLoadingProgress(): number {
@@ -77,6 +126,10 @@ export class TextureManager {
   }
 
   isFullyLoaded(): boolean {
-    return this.getLoadedCount() === this.getTotalCount();
+    return this.getLoadedCount() >= Object.keys(TEXTURE_CONFIG).length;
+  }
+
+  getCurrentPack(): TexturePack | null {
+    return this.currentPack;
   }
 }

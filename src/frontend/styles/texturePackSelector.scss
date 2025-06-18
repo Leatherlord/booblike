@@ -1,0 +1,242 @@
+.texture-pack-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.texture-pack-selector {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  max-height: 80vh;
+  width: 90vw;
+  color: white;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid #404040;
+  overflow-y: auto;
+
+  h2 {
+    margin: 0 0 8px 0;
+    color: #ffffff;
+    font-size: 24px;
+    text-align: center;
+  }
+
+  p {
+    margin: 0 0 20px 0;
+    color: #cccccc;
+    text-align: center;
+  }
+}
+
+.loading-spinner {
+  text-align: center;
+  font-size: 32px;
+  animation: spin 2s linear infinite;
+  margin: 20px 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.custom-pack-loader {
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    color: #ffffff;
+    font-size: 16px;
+  }
+
+  .pack-input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .pack-name-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+
+      &::placeholder {
+        color: #888;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #4caf50;
+        box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
+      }
+
+      &:disabled {
+        background: #222;
+        color: #666;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .error-message {
+    color: #ff5555;
+    font-size: 12px;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background: rgba(255, 85, 85, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #ff5555;
+  }
+
+  .pack-hint {
+    color: #888;
+    font-size: 11px;
+    font-style: italic;
+    display: block;
+  }
+}
+
+.texture-packs-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+
+.texture-pack-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #333;
+  }
+
+  &.selected {
+    background: #2d5a3d;
+    border-left: 4px solid #4caf50;
+  }
+
+  .pack-info {
+    flex: 1;
+    margin-right: 16px;
+
+    h3 {
+      margin: 0 0 4px 0;
+      color: #ffffff;
+      font-size: 16px;
+    }
+
+    .pack-description {
+      margin: 4px 0;
+      color: #cccccc;
+      font-size: 14px;
+    }
+
+    .pack-author,
+    .pack-version {
+      display: inline-block;
+      margin-right: 12px;
+      color: #888;
+      font-size: 12px;
+    }
+  }
+
+  .pack-preview {
+    flex-shrink: 0;
+  }
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 24px);
+  grid-gap: 2px;
+
+  .preview-texture {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border: 1px solid #555;
+    border-radius: 2px;
+    image-rendering: pixelated;
+  }
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+
+  &.primary {
+    background: #4caf50;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #45a049;
+    }
+
+    &:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+  }
+
+  &.secondary {
+    background: #666;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #777;
+    }
+
+    &:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}

@@ -1,12 +1,49 @@
 import React, { useEffect, useState, useRef } from 'react';
 import GameField from './GameField';
 import Inventory from './Inventory';
+import TexturePackSelector from './TexturePackSelector';
 import { useWorld } from '../../common/context/WorldContext';
 import { Event } from '../../common/events';
+import { TexturePack } from '../types/texturePack';
+import { TexturePackScanner } from '../utils/texturePackScanner';
 
 const App: React.FC = () => {
   const { world, handleEvent } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
+  const [selectedTexturePack, setSelectedTexturePack] =
+    useState<TexturePack | null>(null);
+  const [showTexturePackSelector, setShowTexturePackSelector] = useState(true);
+  const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
+
+  useEffect(() => {
+    const loadDefaultPack = async () => {
+      try {
+        const scanResult = await TexturePackScanner.scanTexturePacks();
+        setIsLoadingTexturePacks(false);
+      } catch (error) {
+        console.error('Failed to scan texture packs:', error);
+        setSelectedTexturePack({
+          id: 'default',
+          name: 'Default Textures',
+          textures: {
+            floor: '/resources/floor.png',
+            wall: '/resources/wall.png',
+            door: '/resources/door.png',
+            player: '/resources/player.png',
+          },
+        });
+        setShowTexturePackSelector(false);
+        setIsLoadingTexturePacks(false);
+      }
+    };
+
+    loadDefaultPack();
+  }, []);
+
+  const handleTexturePackSelected = (pack: TexturePack) => {
+    setSelectedTexturePack(pack);
+    setShowTexturePackSelector(false);
+  };
 
   const handleSelectSlot = (slotId: number) => {
     if (!world) return;
@@ -76,6 +113,36 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [world, handleEvent]);
 
+  if (isLoadingTexturePacks) {
+    return (
+      <div className="loading-screen">
+        <h2>Loading Game...</h2>
+        <p>Preparing texture pack system...</p>
+      </div>
+    );
+  }
+
+  if (showTexturePackSelector) {
+    return (
+      <TexturePackSelector
+        onPackSelected={handleTexturePackSelected}
+        onCancel={() => {
+          const defaultPack = {
+            id: 'default',
+            name: 'Default Textures',
+            textures: {
+              floor: '/resources/floor.png',
+              wall: '/resources/wall.png',
+              door: '/resources/door.png',
+              player: '/resources/player.png',
+            },
+          };
+          handleTexturePackSelected(defaultPack);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="game-container">
       <div className="hud top-hud">
@@ -86,6 +153,9 @@ const App: React.FC = () => {
             <span className="hud-item">
               Player: ({world.player.x}, {world.player.y})
             </span>
+          )}
+          {selectedTexturePack && (
+            <span className="hud-item">Pack: {selectedTexturePack.name}</span>
           )}
         </div>
       </div>
@@ -103,7 +173,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <GameField world={world} />
+        <GameField world={world} selectedTexturePack={selectedTexturePack} />
 
         <div className="hud right-hud">
           <div className="hud-content"></div>
