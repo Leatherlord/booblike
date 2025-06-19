@@ -321,6 +321,22 @@ export class WorldManager {
     const room = this.world.map?.rooms[this.world.map.currentRoom];
     if (!room) return;
 
+    room.entities.forEach((entity) => {
+      if (entity.character.healthBar > 0 && this.world) {
+        entity.character.update(entity, this.world);
+        console.log('---', entity.id);
+        console.log(
+          entity.character.baseCharacteristics,
+          entity.character.characteristics
+        );
+        console.log(
+          entity.character.baseMaxHealthBar,
+          entity.character.maxHealthBar
+        );
+        console.log(entity.character.buffsBonus);
+      }
+    });
+
     const entitiesArray: Entity[] = [];
     room.entities.forEach((entity) => {
       if (entity.character.healthBar > 0) {
