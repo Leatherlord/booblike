@@ -1,3 +1,4 @@
+import { StringDecoder } from 'string_decoder';
 import { Entity, Grid, Size, Speed, World } from '../../common/interfaces';
 import { Attack, StraightAttack } from './attacks';
 import {
@@ -10,8 +11,9 @@ import {
 } from './buffs';
 import { CharClass, getCharacteristicsFromClass, PlayerClass } from './classes';
 import { EventType, handleStateChange, states } from './state';
-import { MovementResult, Strategy } from './strategy';
+import { Aggresive, MovementResult, Strategy } from './strategy';
 import { PriorityQueue } from 'typescript-collections';
+import { chooseDecorator, FurryCharacter } from '../data/actions';
 
 // Characteristics and Calculations based on them
 
@@ -208,7 +210,7 @@ export function AttackOutcome(
   return 'normal';
 }
 
-interface AttackResult {
+export interface AttackResult {
   finalTarget: Entity;
   finalAttack: Attack;
   finalDamage: number;
@@ -263,8 +265,10 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
   BuffDuration - type which stores value about bonus buffs - modifications,
   time when it was appied and duration.
   This is the result of processing Buff type for temporary buffs.
+  buff of Buff is used to output the buffs used on character.
 */
-type BuffDuration = {
+export type BuffDuration = {
+  buff?: Buff;
   value?: number;
   action?: (world: World, entity: Entity) => void;
   startTime: number;
@@ -287,17 +291,6 @@ const durationComparator = (a: BuffDuration, b: BuffDuration): number => {
   const durationB = b.duration + b.startTime;
   return durationA - durationB;
 };
-export type BuffActions = {
-  action: PriorityQueue<BuffDuration>;
-};
-// export type BuffAddOns = {
-//   multiplyHealth: PriorityQueue<BuffDuration>;
-//   multiplyAttack: PriorityQueue<BuffDuration>;
-//   addHealth: PriorityQueue<BuffDuration>;
-//   addAttack: PriorityQueue<BuffDuration>;
-//   multiplyAttribute: Partial<Record<keyof Characteristics, PriorityQueue<BuffDuration>>>;
-//   addAttribute: Partial<Record<keyof Characteristics, PriorityQueue<BuffDuration>>>;
-// }
 export type BuffAddOns = {
   [statType in StatType]: statType extends StatType.Attribute
     ? Record<
@@ -341,13 +334,6 @@ function createBuffAddOnsTable(): BuffAddOns {
     }
   }
   return table as BuffAddOns;
-}
-function createBuffActionTable(): BuffActions {
-  const createQueue = () => new PriorityQueue<BuffDuration>(durationComparator);
-  const table: BuffActions = {
-    action: createQueue(),
-  };
-  return table;
 }
 /*
   type for controlling changes in table for less calculations
@@ -420,7 +406,6 @@ function filterExpiredBuffs(table: BuffAddOns, currentTime: number) {
       if (changed) attributeChanged[key] ||= true;
     }
   }
-
   return { healthChanged, attackChanged, attributeChanged };
 }
 /*
@@ -499,60 +484,111 @@ function recalculateAttributes(
   }
   return attributeChanged;
 }
-function recalculateBaseValues(char: Character) {
+function recalculateBaseValues(entity: any) {
   // recalculates stuff affected by attributes
-  char.baseMaxHealthBar = health(char); // maxHealthBar is updated later
-  char.areaSize = FOV(char);
-  char.speed = speed(char);
+  const char = entity.character;
+  if (entity.upgradesBought) {
+    console.log(entity.upgradesBought);
+    char.baseMaxHealthBar = health(char, entity.upgradesBought); // maxHealthBar is updated later
+    char.areaSize = FOV(char, entity.upgradesBought);
+    char.speed = speed(char, entity.upgradesBought);
+  } else {
+    char.baseMaxHealthBar = health(char); // maxHealthBar is updated later
+    char.areaSize = FOV(char);
+    char.speed = speed(char);
+  }
 }
-function recalculateHealth(char: Character) {
-  // recalculates health
-  const oldMaxHealthBar = char.maxHealthBar;
+function recalculateHealth(char: Character): void {
+  const previousMaxHealth = char.maxHealthBar;
   const newMaxHealth = applyTableOnHealth(char);
+  if (typeof newMaxHealth !== 'number' || newMaxHealth <= 0) {
+    throw new Error(`Invalid max health value: ${newMaxHealth}`);
+  }
   char.maxHealthBar = newMaxHealth;
-  if (char.maxHealthBar > oldMaxHealthBar) {
-    char.healthBar += char.baseMaxHealthBar - oldMaxHealthBar;
+  if (newMaxHealth > previousMaxHealth) {
+    const healthIncrease = newMaxHealth - previousMaxHealth;
+    char.healthBar = Math.min(char.healthBar + healthIncrease, newMaxHealth);
+  } else if (char.healthBar > newMaxHealth) {
+    char.healthBar = newMaxHealth;
   }
-  if (char.healthBar > char.maxHealthBar) {
-    char.healthBar = char.maxHealthBar;
-  }
+  char.healthBar = Math.max(0, char.healthBar);
 }
-function recalculatePlayerStats(char: Character, ifChanged: buffsChanged) {
+export function recalculatePlayerStats(entity: Entity, changed?: buffsChanged) {
   // recalculates everything for player
+  let ifChanged = changed
+    ? changed
+    : {
+        healthChanged: true,
+        attackChanged: true,
+        attributeChanged: {
+          s: true,
+          p: true,
+          e: true,
+          a: true,
+          i: true,
+        },
+      };
+  const char = entity.character;
   const attributeChanged = recalculateAttributes(
     char,
     ifChanged.attributeChanged
   );
-  console.log('attributeChanged', attributeChanged);
-  if (attributeChanged) {
-    recalculateBaseValues(char);
-  }
+  //console.log('attributeChanged', attributeChanged);
+
+  recalculateBaseValues(entity);
   if (attributeChanged || ifChanged.healthChanged) recalculateHealth(char);
+}
+
+function applyAction(
+  finalToEntity: Entity,
+  buff: Buff,
+  currentChild?: Character
+) {
+  const finalTo = currentChild ? currentChild : finalToEntity.character;
+  if (finalTo.childCharacter) {
+    applyAction(finalToEntity, buff, finalTo.childCharacter);
+  } else {
+    finalTo.childCharacter = chooseDecorator(finalTo, buff);
+  }
+  if (finalTo.childCharacter) {
+    finalToEntity.character = finalTo.childCharacter;
+  }
 }
 /*
   Function which applies bonus and action buffs from type Buff
 */
-function applyBuffOnCharacter(buffs: Buff[], from: Character, to?: Character) {
+function applyBuffOnCharacter(
+  buffs: Buff[],
+  fromEntity: Entity,
+  toEntity?: Entity
+) {
+  let from = fromEntity.character;
+  let to = toEntity?.character;
   let finalTo = to ? to : from;
+  let finalToEntity = toEntity ? toEntity : fromEntity;
   for (const buff of buffs) {
     // Choose Target
     switch (buff.targetType) {
       case TargetType.Self: {
         finalTo = from;
+        finalToEntity = fromEntity;
         break;
       }
       case TargetType.Enemy: {
-        if (!to) continue;
+        if (!to || !toEntity) continue;
         finalTo = to;
+        finalToEntity = toEntity;
         break;
       }
       case TargetType.Random: {
         const rand = Math.random();
         if (rand >= 0.5) {
           finalTo = from;
+          finalToEntity = fromEntity;
         } else {
-          if (!to) continue;
+          if (!to || !toEntity) continue;
           finalTo = to;
+          finalToEntity = toEntity;
         }
         break;
       }
@@ -565,7 +601,11 @@ function applyBuffOnCharacter(buffs: Buff[], from: Character, to?: Character) {
       startTime: startTime,
       duration: duration,
     };
-    // Get Buffs (for now only temporary supported)
+    finalTo.allBuffs.enqueue({
+      buff: buff,
+      startTime: Date.now(),
+      duration: buff.duration.duration,
+    });
     if (isBonus(buff.effect)) {
       const table = finalTo.buffsBonus;
       result.value = buff.effect.value;
@@ -594,9 +634,7 @@ function applyBuffOnCharacter(buffs: Buff[], from: Character, to?: Character) {
         table[buff.effect.statType][buff.effect.modifierType].enqueue(result);
       }
     } else if (isEffect(buff.effect)) {
-      const table = finalTo.buffsAction;
-      result.action = buff.effect.applyEffect;
-      table.action.enqueue(result);
+      applyAction(finalToEntity, buff);
     } else {
       console.error('Buff not supported: ', buff);
     }
@@ -612,8 +650,8 @@ function applyBuffOnCharacter(buffs: Buff[], from: Character, to?: Character) {
       i: true,
     },
   };
-  recalculatePlayerStats(from, changed);
-  if (to) recalculatePlayerStats(to, changed);
+  recalculatePlayerStats(fromEntity, changed);
+  if (toEntity) recalculatePlayerStats(toEntity, changed);
 }
 
 // -------------------------CHARACTER CLASS------------------------- //
@@ -621,6 +659,7 @@ function applyBuffOnCharacter(buffs: Buff[], from: Character, to?: Character) {
 export interface Character {
   name: string;
   surname?: string;
+  texture?: string;
 
   strategy: Strategy;
   healthBar: number;
@@ -640,7 +679,9 @@ export interface Character {
   state: states;
 
   buffsBonus: BuffAddOns;
-  buffsAction: BuffActions;
+  allBuffs: PriorityQueue<BuffDuration>;
+  inheritedCharacter?: Character;
+  childCharacter?: Character;
 
   move: (context: Entity, world: World) => MovementResult;
   damage: (context: Entity, enemy: Entity, attack: Attack) => AttackResult;
@@ -650,9 +691,16 @@ export interface Character {
   setState: (state: states) => void;
   applyBuff: (context: Entity, buffs: Buff[]) => void;
   onDeath: (context: Entity, world: World) => void;
+
+  getTexture: () => string;
+  getBuffs: () => PriorityQueue<BuffDuration>;
 }
 export class PlayerCharacter implements Character {
-  constructor(name: string, characteristics: Characteristics) {
+  constructor(
+    name: string,
+    characteristics: Characteristics,
+    texture?: string
+  ) {
     this.charClass = PlayerClass;
     this.strategy = this.charClass.strategy[states.Normal as states];
     this.attacks = [StraightAttack];
@@ -661,8 +709,8 @@ export class PlayerCharacter implements Character {
     this.score = 0;
     this.state = states.Normal;
 
-    this.baseCharacteristics = { ...characteristics };
-    this.characteristics = { ...characteristics };
+    this.baseCharacteristics = { ...characteristics }; //
+    this.characteristics = { ...characteristics }; //
     this.name = name;
 
     this.baseMaxHealthBar = health(this);
@@ -672,10 +720,18 @@ export class PlayerCharacter implements Character {
     this.speed = speed(this);
 
     this.buffsBonus = createBuffAddOnsTable();
-    this.buffsAction = createBuffActionTable();
+    this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
+
+    if (texture) {
+      this.texture = texture;
+    } else {
+      this.texture = 'player';
+    }
   }
+  surname?: string | undefined;
 
   name: string;
+  texture?: string;
 
   charClass: CharClass;
   attacks: Attack[];
@@ -685,7 +741,6 @@ export class PlayerCharacter implements Character {
   strategy: Strategy;
   state: states;
   buffsBonus: BuffAddOns;
-  buffsAction: BuffActions;
 
   level: number;
   characteristics: Characteristics;
@@ -696,6 +751,9 @@ export class PlayerCharacter implements Character {
 
   score?: number;
   healthBar: number;
+
+  childCharacter?: Character;
+  allBuffs: PriorityQueue<BuffDuration>;
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
@@ -708,12 +766,11 @@ export class PlayerCharacter implements Character {
   }
   public update(context: Entity, world: World): void {
     const currentTime = Date.now();
-    const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
-    filterQueue(this.buffsAction.action, currentTime);
-    recalculatePlayerStats(this, changed);
-    // this.buffsAction.action.forEach( buff => {
-    //   buff.action
-    // });
+    const changedQueue = filterQueue(this.allBuffs, currentTime);
+    if (changedQueue) {
+      const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
+      recalculatePlayerStats(context, changed);
+    }
   }
 
   public getSpeed(): Speed {
@@ -729,22 +786,25 @@ export class PlayerCharacter implements Character {
   }
 
   public applyBuff(context: Entity, buffs: Buff[]): void {
-    applyBuffOnCharacter(buffs, this);
+    applyBuffOnCharacter(buffs, context);
+    recalculatePlayerStats(context);
   }
   public onDeath(context: Entity, world: World): void {}
-}
+  public getTexture(): string {
+    if (this.texture) return this.texture;
+    return '';
+  }
 
-// DECORATORS FOR PERMANENT BUFFS
-// export class ConfusedPlayerCharacter extends PlayerCharacter {
-//   public damage(context: Entity, enemy: Entity, attack: Attack): AttackResult {
-//     return getDamage(context, enemy, attack);
-//   }
-// }
+  public getBuffs(): PriorityQueue<BuffDuration> {
+    return this.allBuffs;
+  }
+}
+//var clone = Object.create(customer);
 
 export class RandomEnemyCharacter implements Character {
   constructor(charClass: CharClass) {
     this.charClass = charClass;
-    const { name, surname, characteristics, attacks, strategy } =
+    const { name, surname, characteristics, attacks, strategy, texture } =
       getCharacteristicsFromClass(charClass);
 
     this.name = name;
@@ -769,11 +829,13 @@ export class RandomEnemyCharacter implements Character {
     this.speed = speed(this);
 
     this.buffsBonus = createBuffAddOnsTable();
-    this.buffsAction = createBuffActionTable();
+    this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
+    if (texture) this.texture = texture;
   }
 
   name: string;
   surname: string;
+  texture?: string;
 
   charClass: CharClass;
   attacks: Attack[];
@@ -784,7 +846,6 @@ export class RandomEnemyCharacter implements Character {
   state: states;
 
   buffsBonus: BuffAddOns;
-  buffsAction: BuffActions;
 
   level: number;
   characteristics: Characteristics;
@@ -795,6 +856,9 @@ export class RandomEnemyCharacter implements Character {
 
   score?: number;
   healthBar: number;
+
+  childCharacter?: Character;
+  allBuffs: PriorityQueue<BuffDuration>;
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
@@ -807,12 +871,11 @@ export class RandomEnemyCharacter implements Character {
   }
   public update(context: Entity, world: World): void {
     const currentTime = Date.now();
-    const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
-    filterQueue(this.buffsAction.action, currentTime);
-    recalculatePlayerStats(this, changed);
-    // this.buffsAction.action.forEach( buff => {
-    //   buff.action
-    // });
+    const changedQueue = filterQueue(this.allBuffs, currentTime);
+    if (changedQueue) {
+      const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
+      recalculatePlayerStats(context, changed);
+    }
   }
   public getSpeed(): Speed {
     return this.speed;
@@ -825,21 +888,17 @@ export class RandomEnemyCharacter implements Character {
   }
   public applyBuff(context: Entity, buffs: Buff[]): void {
     console.log(this.characteristics);
-    applyBuffOnCharacter(buffs, this);
-    const changed = {
-      healthChanged: true,
-      attackChanged: true,
-      attributeChanged: {
-        s: true,
-        p: true,
-        e: true,
-        a: true,
-        i: true,
-      },
-    };
-    recalculatePlayerStats(this, changed);
+    applyBuffOnCharacter(buffs, context);
+    recalculatePlayerStats(context);
   }
   public onDeath(context: Entity, world: World): void {}
+  public getTexture(): string {
+    if (this.texture) return this.texture;
+    return '';
+  }
+  public getBuffs(): PriorityQueue<BuffDuration> {
+    return this.allBuffs;
+  }
 }
 
 // -------------------------LEVEL SYSTEM------------------------- //

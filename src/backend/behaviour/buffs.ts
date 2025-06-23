@@ -33,7 +33,7 @@ interface Bonus {
 
 interface Effect {
   name: string;
-  applyEffect: (world: World, entity: Entity) => void;
+  applyEffect: string;
 }
 
 export function isBonus(effect: Effect | Bonus): effect is Bonus {
@@ -88,35 +88,35 @@ export let SimpleHealthBuff: Buff = {
 
 export let Duplication: Effect = {
   name: 'Duplication',
-  applyEffect: (world: World, entity: Entity) => {
-    console.log(`${entity} is duplicating in`, world);
-  },
+  applyEffect: 'duplicationEffect',
 };
 
 export let Fury: Effect = {
   name: 'Fury',
-  applyEffect: (world: World, entity: Entity) => {
-    console.log(`${entity} is enraged in`, world);
-  },
+  applyEffect: 'furyEffect',
 };
 
 export let Furry: Effect = {
   name: 'Become a Furry',
-  applyEffect: (world: World, entity: Entity) => {
-    console.log(`${entity} is now a furry`);
-  },
+  applyEffect: 'furryEffect',
 };
 
 export let Pacify: Effect = {
   name: 'Pacify',
-  applyEffect: (world: World, entity: Entity) => {
-    console.log(`${entity} is pacified in`, world);
-  },
+  applyEffect: 'pacifyEffect',
 };
 
 export let Stun: Effect = {
   name: 'Stun',
-  applyEffect: (world: World, entity: Entity) => {
-    console.log(`${entity} is stunned in`, world);
+  applyEffect: 'stunEffect',
+};
+
+export let SimpleFurryBuff: Buff = {
+  name: 'SimpleFurryBuff',
+  targetType: TargetType.Self,
+  duration: {
+    duration: 3000,
+    type: 'Temporary',
   },
+  effect: Furry,
 };

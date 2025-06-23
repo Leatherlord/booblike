@@ -26,8 +26,10 @@ import {
   calculateExperienceFromKill,
   canLevelUp,
   levelUp,
+  recalculatePlayerStats,
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
+import { SimpleFurryBuff, SimpleHealthBuff } from './behaviour/buffs';
 
 export class WorldManager {
   private world: World | null = null;
@@ -96,11 +98,11 @@ export class WorldManager {
         x: 8,
         y: 8,
         character: new PlayerCharacter('Sanya', {
-          s: 10,
-          p: 10,
-          e: 10,
-          i: 10,
-          a: 10,
+          s: 1,
+          p: 1,
+          e: 1,
+          i: 1,
+          a: 1,
         }),
         lookDir: LookDirection.Right,
         level: 1,
@@ -318,22 +320,28 @@ export class WorldManager {
   public handleNPCMovement() {
     if (!this.world) return;
 
+    //update player
+    if (this.world.player && !this.world.isPlayerDead) {
+      this.world.player.character.update(this.world.player, this.world);
+    }
+
     const room = this.world.map?.rooms[this.world.map.currentRoom];
     if (!room) return;
 
+    //update entities
     room.entities.forEach((entity) => {
       if (entity.character.healthBar > 0 && this.world) {
         entity.character.update(entity, this.world);
-        console.log('---', entity.id);
-        console.log(
-          entity.character.baseCharacteristics,
-          entity.character.characteristics
-        );
-        console.log(
-          entity.character.baseMaxHealthBar,
-          entity.character.maxHealthBar
-        );
-        console.log(entity.character.buffsBonus);
+        //console.log('---', entity.id);
+        //console.log(
+        //  entity.character.baseCharacteristics,
+        //   entity.character.characteristics
+        // );
+        // console.log(
+        //   entity.character.baseMaxHealthBar,
+        //   entity.character.maxHealthBar
+        // );
+        // console.log(entity.character.buffsBonus);
       }
     });
 
@@ -488,23 +496,27 @@ export class WorldManager {
         (this.world.player.upgradesBought[event.upgradeId] || 0) + 1,
     };
 
-    newWorld.player.character.maxHealthBar = health(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
-    newWorld.player.character.healthBar = Math.min(
-      newWorld.player.character.healthBar,
-      newWorld.player.character.maxHealthBar
-    );
-    newWorld.player.character.areaSize = FOV(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
-    newWorld.player.character.speed = speed(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
-
+    newWorld.player.character.applyBuff(newWorld.player, [
+      SimpleHealthBuff,
+      SimpleFurryBuff,
+    ]);
+    // newWorld.player.character.baseMaxHealthBar = health(
+    //   newWorld.player.character,
+    //   newWorld.player.upgradesBought
+    // );
+    // newWorld.player.character.healthBar = Math.min(
+    //   newWorld.player.character.healthBar,
+    //   newWorld.player.character.maxHealthBar
+    // );
+    // newWorld.player.character.areaSize = FOV(
+    //   newWorld.player.character,
+    //   newWorld.player.upgradesBought
+    // );
+    // newWorld.player.character.speed = speed(
+    //   newWorld.player.character,
+    //   newWorld.player.upgradesBought
+    // );
+    recalculatePlayerStats(newWorld.player);
     newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
 
     const newWorldObject = {

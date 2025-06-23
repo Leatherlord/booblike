@@ -175,7 +175,7 @@ export type Entity = {
   character: Character;
   lastAttackArray?: Point2d[];
 
-  texture?: string;
+  //texture?: string;
   level: number;
   experience: number;
   experienceToNext: number;

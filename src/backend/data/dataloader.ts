@@ -18,6 +18,7 @@ function convertJsonToCharClass(
     className: json.className,
     possibleNames: json.possibleNames,
     possibleSurnames: json.possibleSurnames,
+    possibleTextures: json.possibleTextures,
     characteristicsBounds: json.characteristicsBounds,
     availableAttacks: json.availableAttacks.map((name: string) => {
       const attack = attackMap[name];

@@ -390,6 +390,7 @@ export function getStartingRoom(): Room {
       Buffs.SimpleHealthBuff,
       Buffs.SimpleAttributeBuff,
     ]);
+    entity.character.applyBuff(entity, [Buffs.SimpleFurryBuff]);
   }
 
   return {

@@ -47,19 +47,32 @@ export function getCharacteristicsFromClass(class_: CharClass) {
 
   const strategy = class_.strategy[states.Normal as states];
 
-  return {
+  let texture: string = '';
+  if (class_.possibleTextures && class_.possibleTextures.length > 0) {
+    texture =
+      class_.possibleTextures[
+        Math.floor(Math.random() * class_.possibleTextures.length)
+      ];
+  }
+
+  let ans: any = {
     name: name,
     surname: surname,
     characteristics: characteristicsBounds,
     attacks: attacks,
     strategy: strategy,
   };
+  if (texture != '') {
+    ans.texture = texture;
+  }
+  return ans;
 }
 
 export interface CharClass {
   className: string;
   possibleNames: string[];
   possibleSurnames: string[];
+  possibleTextures?: string[];
   characteristicsBounds: [Characteristics, Characteristics];
   availableAttacks: Attacks.Attack[];
   numberOfAttacks: number;
@@ -71,6 +84,7 @@ export let PlayerClass: CharClass = {
   className: 'player class',
   possibleNames: ['Player'],
   possibleSurnames: ['Player'],
+  possibleTextures: ['player'],
   characteristicsBounds: [
     { s: 1, p: 1, e: 1, i: 1, a: 1 },
     { s: 10, p: 10, e: 10, i: 10, a: 10 },
