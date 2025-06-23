@@ -1,33 +1,33 @@
 import { PriorityQueue } from 'typescript-collections';
 import { Entity, Grid, Size, Speed, World } from '../../common/interfaces';
-import { Attack, StraightAttack } from '../behaviour/attacks';
-import { Buff, isEffect } from '../behaviour/buffs';
+import { Attack, StraightAttack } from './attacks';
+import { Buff, isEffect } from './buffs';
 import {
   AttackResult,
   BuffAddOns,
   BuffDuration,
   Character,
   Characteristics,
-} from '../behaviour/character';
-import { CharClass } from '../behaviour/classes';
-import { states } from '../behaviour/state';
-import { MovementResult, Strategy } from '../behaviour/strategy';
+} from './character';
+import { CharClass } from './classes';
+import { states } from './state';
+import { Fury, MovementResult, Strategy, strategyMap } from './strategy';
 
 export function chooseDecorator(character: Character, buff: Buff) {
   if (!isEffect(buff.effect)) return;
   switch (buff.effect.applyEffect) {
-    // case "furyEffect" : {
-    //   return;
-    // }
+    case 'furyEffect': {
+      return new FuryCharacter(character, buff);
+    }
     case 'furryEffect': {
       return new FurryCharacter(character, buff);
     }
     case 'pacifyEffect': {
       return new PacifiedCharacter(character, buff);
     }
-    // case "stunEffect" : {
-    //   return;
-    // }
+    case 'stunEffect': {
+      return new StunnedCharacter(character, buff);
+    }
   }
   console.error(
     "chooseDecorator cound't choose decorator for",
@@ -41,31 +41,9 @@ function shallow_clone_all<T extends Character>(char1: T, char2: T): void {
   });
 }
 
-function shallow_clone_Character(char1: Character, char2: Character): void {
-  char1.name = char2.name;
-  char1.surname = char2.surname;
-  char1.strategy = char2.strategy;
-  char1.healthBar = char2.healthBar;
-  char1.baseMaxHealthBar = char2.baseMaxHealthBar;
-  char1.maxHealthBar = char2.maxHealthBar;
-  char1.charClass = char2.charClass;
-  char1.attacks = char2.attacks; // Shallow copy
-  char1.characterSize = char2.characterSize;
-  char1.areaSize = char2.areaSize;
-  char1.level = char2.level;
-  char1.baseCharacteristics = char2.baseCharacteristics; // Shallow copy
-  char1.characteristics = char2.characteristics; // Shallow copy
-  char1.score = char2.score;
-  char1.speed = char2.speed;
-  char1.state = char2.state;
-  char1.buffsBonus = char2.buffsBonus; // Shallow copy
-  char1.texture = char2.texture;
-  char1.allBuffs = char2.allBuffs;
-}
-
 export class Decorator implements Character {
   constructor(character: Character, buff: Buff) {
-    shallow_clone_Character(this, character);
+    shallow_clone_all(this, character);
     this.inheritedCharacter = character;
     this.timer = buff.duration.duration;
     this.startTime = Date.now();
@@ -145,6 +123,7 @@ export class PacifiedCharacter extends Decorator {
     super(character, buff);
     this.state = states.Pacifist;
     this.strategy = this.charClass.strategy[this.state as states];
+    console.log('applied Pacified on', character.name);
   }
 
   public move(context: Entity, world: World): MovementResult {
@@ -162,7 +141,6 @@ export class FurryCharacter extends Decorator {
   constructor(character: Character, buff: Buff) {
     super(character, buff);
     this.texture = 'furry';
-    console.log('applied furry on', character.name);
   }
   public getTexture(): string {
     if (this.texture) return this.texture;
@@ -170,13 +148,35 @@ export class FurryCharacter extends Decorator {
   }
 }
 
+export class FuryCharacter extends Decorator {
+  constructor(character: Character, buff: Buff) {
+    super(character, buff);
+    this.strategy = strategyMap['Fury'];
+    console.log('applied Fury on', character.name);
+  }
+  public move(context: Entity, world: World): MovementResult {
+    const { animation, lookDir, x, y } = context;
+    const from = { x: x, y: y };
+    const result: MovementResult = this.strategy.move(context, world);
+    return result;
+  }
+}
+
 export class StunnedCharacter extends Decorator {
   constructor(character: Character, buff: Buff) {
     super(character, buff);
     this.strategy = this.charClass.strategy[this.state as states];
+    console.log('applied Stun on', character.name);
   }
-  public getTexture(): string {
-    if (this.texture) return this.texture;
-    return '';
+  public move(context: Entity, world: World): MovementResult {
+    const { animation, lookDir, x, y } = context;
+    const from = { x: x, y: y };
+    const result: MovementResult = {
+      to: from,
+      lookDir: lookDir,
+      lastAttacked: animation.lastAttacked,
+      lastMoved: animation.lastMoved,
+    };
+    return result;
   }
 }

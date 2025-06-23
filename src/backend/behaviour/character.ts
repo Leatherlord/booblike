@@ -13,7 +13,7 @@ import { CharClass, getCharacteristicsFromClass, PlayerClass } from './classes';
 import { EventType, handleStateChange, states } from './state';
 import { Aggresive, MovementResult, Strategy } from './strategy';
 import { PriorityQueue } from 'typescript-collections';
-import { chooseDecorator, FurryCharacter } from '../data/actions';
+import { chooseDecorator, FurryCharacter } from './actions';
 
 // Characteristics and Calculations based on them
 
@@ -695,65 +695,32 @@ export interface Character {
   getTexture: () => string;
   getBuffs: () => PriorityQueue<BuffDuration>;
 }
-export class PlayerCharacter implements Character {
-  constructor(
-    name: string,
-    characteristics: Characteristics,
-    texture?: string
-  ) {
-    this.charClass = PlayerClass;
-    this.strategy = this.charClass.strategy[states.Normal as states];
-    this.attacks = [StraightAttack];
-    this.characterSize = { width: 1, height: 1 };
-    this.level = 1;
-    this.score = 0;
-    this.state = states.Normal;
 
-    this.baseCharacteristics = { ...characteristics }; //
-    this.characteristics = { ...characteristics }; //
-    this.name = name;
-
-    this.baseMaxHealthBar = health(this);
-    this.maxHealthBar = this.baseMaxHealthBar;
-    this.healthBar = this.maxHealthBar;
-    this.areaSize = FOV(this);
-    this.speed = speed(this);
-
-    this.buffsBonus = createBuffAddOnsTable();
-    this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
-
-    if (texture) {
-      this.texture = texture;
-    } else {
-      this.texture = 'player';
-    }
-  }
+export class BaseCharacter implements Character {
   surname?: string | undefined;
-
-  name: string;
+  name!: string;
   texture?: string;
+  charClass!: CharClass;
+  attacks!: Attack[];
+  characterSize!: Size;
+  areaSize!: Grid;
 
-  charClass: CharClass;
-  attacks: Attack[];
-  characterSize: Size;
-  areaSize: Grid;
+  strategy!: Strategy;
+  state!: states;
+  buffsBonus!: BuffAddOns;
 
-  strategy: Strategy;
-  state: states;
-  buffsBonus: BuffAddOns;
-
-  level: number;
-  characteristics: Characteristics;
-  speed: Speed;
-  baseMaxHealthBar: number;
-  baseCharacteristics: Characteristics;
-  maxHealthBar: number;
+  level!: number;
+  characteristics!: Characteristics;
+  speed!: Speed;
+  baseMaxHealthBar!: number;
+  baseCharacteristics!: Characteristics;
+  maxHealthBar!: number;
 
   score?: number;
-  healthBar: number;
+  healthBar!: number;
 
   childCharacter?: Character;
-  allBuffs: PriorityQueue<BuffDuration>;
+  allBuffs!: PriorityQueue<BuffDuration>;
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
@@ -799,14 +766,49 @@ export class PlayerCharacter implements Character {
     return this.allBuffs;
   }
 }
-//var clone = Object.create(customer);
 
-export class RandomEnemyCharacter implements Character {
+export class PlayerCharacter extends BaseCharacter {
+  constructor(
+    name: string,
+    characteristics: Characteristics,
+    texture?: string
+  ) {
+    super();
+    this.charClass = PlayerClass;
+    this.strategy = this.charClass.strategy[states.Normal as states];
+    this.attacks = [StraightAttack];
+    this.characterSize = { width: 1, height: 1 };
+    this.level = 1;
+    this.score = 0;
+    this.state = states.Normal;
+
+    this.baseCharacteristics = { ...characteristics }; //
+    this.characteristics = { ...characteristics }; //
+    this.name = name;
+
+    this.baseMaxHealthBar = health(this);
+    this.maxHealthBar = this.baseMaxHealthBar;
+    this.healthBar = this.maxHealthBar;
+    this.areaSize = FOV(this);
+    this.speed = speed(this);
+
+    this.buffsBonus = createBuffAddOnsTable();
+    this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
+
+    if (texture) {
+      this.texture = texture;
+    } else {
+      this.texture = 'player';
+    }
+  }
+}
+
+export class RandomEnemyCharacter extends BaseCharacter {
   constructor(charClass: CharClass) {
+    super();
     this.charClass = charClass;
     const { name, surname, characteristics, attacks, strategy, texture } =
       getCharacteristicsFromClass(charClass);
-
     this.name = name;
     this.surname = surname;
     this.attacks = attacks;
@@ -831,73 +833,6 @@ export class RandomEnemyCharacter implements Character {
     this.buffsBonus = createBuffAddOnsTable();
     this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
     if (texture) this.texture = texture;
-  }
-
-  name: string;
-  surname: string;
-  texture?: string;
-
-  charClass: CharClass;
-  attacks: Attack[];
-  characterSize: Size;
-  areaSize: Grid;
-
-  strategy: Strategy;
-  state: states;
-
-  buffsBonus: BuffAddOns;
-
-  level: number;
-  characteristics: Characteristics;
-  speed: Speed;
-  baseMaxHealthBar: number;
-  baseCharacteristics: Characteristics;
-  maxHealthBar: number;
-
-  score?: number;
-  healthBar: number;
-
-  childCharacter?: Character;
-  allBuffs: PriorityQueue<BuffDuration>;
-
-  public move(context: Entity, world: World): MovementResult {
-    const { animation, lookDir, x, y } = context;
-    const from = { x: x, y: y };
-    const result: MovementResult = this.strategy.move(context, world);
-    return result;
-  }
-  public damage(context: Entity, enemy: Entity, attack: Attack): AttackResult {
-    return getDamage(context, enemy, attack);
-  }
-  public update(context: Entity, world: World): void {
-    const currentTime = Date.now();
-    const changedQueue = filterQueue(this.allBuffs, currentTime);
-    if (changedQueue) {
-      const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
-      recalculatePlayerStats(context, changed);
-    }
-  }
-  public getSpeed(): Speed {
-    return this.speed;
-  }
-  public getAttackSpeed(attack: Attack): Speed {
-    return attack.speed * 5;
-  }
-  public setState(state: states): void {
-    this.state = state;
-  }
-  public applyBuff(context: Entity, buffs: Buff[]): void {
-    console.log(this.characteristics);
-    applyBuffOnCharacter(buffs, context);
-    recalculatePlayerStats(context);
-  }
-  public onDeath(context: Entity, world: World): void {}
-  public getTexture(): string {
-    if (this.texture) return this.texture;
-    return '';
-  }
-  public getBuffs(): PriorityQueue<BuffDuration> {
-    return this.allBuffs;
   }
 }
 
