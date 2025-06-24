@@ -356,14 +356,26 @@ export function generateRoom(
 
   let entities = new EntitiesMap();
   let entitiesNum = Math.round(
-    rng() *
-      ENTITY_BIRTH_RATE *
-      (mapSize * ENTITY_MAP_SIZE_COEF) *
-      (level * ENTITY_LEVEL_COEF)
+    rng() * ENTITY_BIRTH_RATE * (mapSize * ENTITY_MAP_SIZE_COEF)
   );
   for (let i = 0; i < entitiesNum; ++i) {
     let character = generateCharacterWithSeed(rng());
     let pos = generateEntityPosition(rng(), map, entities);
+    let entity: Entity = {
+      id: '' + i,
+      x: pos.x,
+      y: pos.y,
+      lookDir: LookDirection.Up,
+      character: character,
+      level: level,
+      experience: 0,
+      experienceToNext: calculateExperienceForNextLevel(level),
+      animation: {
+        lastAttacked: 0,
+        lastMoved: 0,
+      },
+    };
+    entities.add(pos, entity);
   }
 
   const generated = {
@@ -410,16 +422,9 @@ export function getStartingRoom(): Room {
 
   for (let i = 1; i <= 1; i++) {
     const chararcter = generateCharacter();
-    let texture;
-    if (chararcter.charClass.className == 'strongClass') {
-      texture = 'player';
-    } else if (chararcter.charClass.className == 'middleClass') {
-      texture = 'enemy';
-    } else {
-      texture = 'coward';
-    }
+    let texture = chararcter.texture!;
     const entity = {
-      id: '' + 1,
+      id: '' + i,
       x: 3,
       y: i,
       lookDir: LookDirection.Left,
