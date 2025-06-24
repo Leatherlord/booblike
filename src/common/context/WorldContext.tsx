@@ -14,6 +14,8 @@ interface WorldContextType {
   world: World | null;
   handleEvent: (event: Event) => void;
   restartGame: () => void;
+  saveGame: () => string;
+  loadGame: (saveData: string) => void;
 }
 
 const WorldContext = createContext<WorldContextType | undefined>(undefined);
@@ -41,8 +43,24 @@ export const WorldProvider: React.FC<{ children: ReactNode }> = ({
     worldManagerRef.current?.restartGame();
   };
 
+  const saveGame = () => {
+    if (!worldManagerRef.current) {
+      throw new Error('WorldManager not initialized');
+    }
+    return worldManagerRef.current.saveGame();
+  };
+
+  const loadGame = (saveData: string) => {
+    if (!worldManagerRef.current) {
+      throw new Error('WorldManager not initialized');
+    }
+    worldManagerRef.current.loadGame(saveData);
+  };
+
   return (
-    <WorldContext.Provider value={{ world, handleEvent, restartGame }}>
+    <WorldContext.Provider
+      value={{ world, handleEvent, restartGame, saveGame, loadGame }}
+    >
       {children}
     </WorldContext.Provider>
   );

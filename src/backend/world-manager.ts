@@ -30,6 +30,7 @@ import {
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
 import { getBuffsClassMap } from './data/dataloader';
+import { serializeWorld, deserializeWorld } from './serializer';
 
 export class WorldManager {
   private world: World | null = null;
@@ -487,5 +488,25 @@ export class WorldManager {
 
   public cleanup() {
     this.stopNPCMovementTimer();
+  }
+
+  public saveGame(): string {
+    if (!this.world) {
+      throw new Error('No world to save');
+    }
+    return serializeWorld(this.world);
+  }
+
+  public loadGame(saveData: string): void {
+    try {
+      const world = deserializeWorld(saveData);
+      this.stopNPCMovementTimer();
+      this.world = world;
+      this.updateWorld(world);
+      this.startNPCMovementTimer();
+    } catch (error) {
+      console.error('Failed to load game:', error);
+      throw new Error('Invalid save data');
+    }
   }
 }
