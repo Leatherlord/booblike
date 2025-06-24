@@ -29,7 +29,7 @@ import {
   recalculatePlayerStats,
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
-import { SimpleFurryBuff, SimpleHealthBuff } from './behaviour/buffs';
+import { getBuffsClassMap } from './data/dataloader';
 
 export class WorldManager {
   private world: World | null = null;
@@ -497,25 +497,10 @@ export class WorldManager {
     };
 
     newWorld.player.character.applyBuff(newWorld.player, [
-      SimpleHealthBuff,
-      SimpleFurryBuff,
+      getBuffsClassMap()['SimpleAttributeBuff'],
+      getBuffsClassMap()['SimpleFurryBuff'],
     ]);
-    // newWorld.player.character.baseMaxHealthBar = health(
-    //   newWorld.player.character,
-    //   newWorld.player.upgradesBought
-    // );
-    // newWorld.player.character.healthBar = Math.min(
-    //   newWorld.player.character.healthBar,
-    //   newWorld.player.character.maxHealthBar
-    // );
-    // newWorld.player.character.areaSize = FOV(
-    //   newWorld.player.character,
-    //   newWorld.player.upgradesBought
-    // );
-    // newWorld.player.character.speed = speed(
-    //   newWorld.player.character,
-    //   newWorld.player.upgradesBought
-    // );
+
     recalculatePlayerStats(newWorld.player);
     newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
 

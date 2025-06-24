@@ -11,6 +11,7 @@ import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
 import { generateCharacter } from './mob-generator';
 import * as Buffs from './behaviour/buffs';
+import { getBuffsClassMap } from './data/dataloader';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -386,11 +387,11 @@ export function getStartingRoom(): Room {
       },
     };
     entities.add({ x: 3, y: i }, entity);
-    entity.character.applyBuff(entity, [
-      Buffs.SimpleHealthBuff,
-      Buffs.SimpleAttributeBuff,
-    ]);
-    entity.character.applyBuff(entity, [Buffs.SimpleFurryBuff]);
+    // entity.character.applyBuff(entity, [
+    //   getBuffsClassMap()['SimpleAttributeBuff'],
+    //   getBuffsClassMap()['SimpleHealthBuff'],
+    // ]);
+    // entity.character.applyBuff(entity, [getBuffsClassMap()['SimpleFurryBuff']]);
   }
 
   return {

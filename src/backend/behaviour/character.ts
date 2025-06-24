@@ -566,6 +566,7 @@ function applyBuffOnCharacter(
   let finalTo = to ? to : from;
   let finalToEntity = toEntity ? toEntity : fromEntity;
   for (const buff of buffs) {
+    if (!buff) continue;
     // Choose Target
     switch (buff.targetType) {
       case TargetType.Self: {

@@ -1,0 +1,56 @@
+{
+  "SimpleAttributeBuff": {
+    "name": "Simple Attribute Buff",
+    "targetType": "SELF",
+    "duration": {
+      "duration": 2500,
+      "type": "Temporary"
+    },
+    "effect": "EnhanceStrength"
+  },
+  "SimpleAttackBuff": {
+    "name": "Simple Attack Buff",
+    "targetType": "SELF",
+    "duration": {
+      "duration": 1000,
+      "type": "Temporary"
+    },
+    "effect": "EnhanceStrength"
+  },
+  "SimpleHealthBuff": {
+    "name": "Simple Health Buff",
+    "targetType": "SELF",
+    "duration": {
+      "duration": 5000,
+      "type": "Temporary"
+    },
+    "effect": "EnhanceHealth"
+  },
+  "SimpleFurryBuff": {
+    "name": "Simple Furry Buff",
+    "targetType": "SELF",
+    "duration": {
+      "duration": 3000,
+      "type": "Temporary"
+    },
+    "effect": "Furry"
+  },
+  "SimpleFurryMagic": {
+    "name": "Simple Furry Magic",
+    "targetType": "ENEMY",
+    "duration": {
+      "duration": 2500,
+      "type": "Temporary"
+    },
+    "effect": "Furry"
+  },
+  "SimpleAttackDebuff": {
+    "name": "Simple Attack Debuff",
+    "targetType": "ENEMY",
+    "duration": {
+      "duration": 2500,
+      "type": "Temporary"
+    },
+    "effect": "DehanceAttack"
+  }
+}

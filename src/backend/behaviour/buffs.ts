@@ -23,7 +23,7 @@ export type Duration = {
   type: 'Temporary' | 'Permanent';
 };
 
-interface Bonus {
+export interface Bonus {
   name: string;
   statType: StatType;
   attributeType?: keyof Characteristics;
@@ -31,7 +31,7 @@ interface Bonus {
   value: number;
 }
 
-interface Effect {
+export interface Effect {
   name: string;
   applyEffect: string;
 }
@@ -50,73 +50,3 @@ export interface Buff {
   duration: Duration;
   effect: Effect | Bonus;
 }
-
-export let HealthBonus: Bonus = {
-  name: 'Health Up stats',
-  statType: StatType.Health,
-  modifierType: ModifierType.Mult,
-  value: 10,
-};
-
-export let AttributeBonus: Bonus = {
-  name: 'Attribute Up stats',
-  statType: StatType.Attribute,
-  attributeType: 's',
-  modifierType: ModifierType.Flat,
-  value: 4,
-};
-
-export let SimpleAttributeBuff: Buff = {
-  name: 'SimpleAttributeBuff',
-  targetType: TargetType.Self,
-  duration: {
-    duration: 2500,
-    type: 'Temporary',
-  },
-  effect: AttributeBonus,
-};
-
-export let SimpleHealthBuff: Buff = {
-  name: 'SimpleHealthBuff',
-  targetType: TargetType.Self,
-  duration: {
-    duration: 3000,
-    type: 'Temporary',
-  },
-  effect: HealthBonus,
-};
-
-export let Duplication: Effect = {
-  name: 'Duplication',
-  applyEffect: 'duplicationEffect',
-};
-
-export let Fury: Effect = {
-  name: 'Fury',
-  applyEffect: 'furyEffect',
-};
-
-export let Furry: Effect = {
-  name: 'Become a Furry',
-  applyEffect: 'furryEffect',
-};
-
-export let Pacify: Effect = {
-  name: 'Pacify',
-  applyEffect: 'pacifyEffect',
-};
-
-export let Stun: Effect = {
-  name: 'Stun',
-  applyEffect: 'stunEffect',
-};
-
-export let SimpleFurryBuff: Buff = {
-  name: 'SimpleFurryBuff',
-  targetType: TargetType.Self,
-  duration: {
-    duration: 3000,
-    type: 'Temporary',
-  },
-  effect: Furry,
-};

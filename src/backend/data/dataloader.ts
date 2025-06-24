@@ -1,13 +1,19 @@
 import charClassesJson from './classes.json';
 import attacksJson from './attacks.json';
+import bonusesJson from './bonuses.json';
+import effectsJson from './effects.json';
+import buffsJson from './buffs.json';
 import { CharClass } from '../behaviour/classes';
 import { Attack } from '../behaviour/attacks';
 import { Strategy, strategyMap } from '../behaviour/strategy';
 import { states } from '../behaviour/state';
 import { generateGrid, Speed } from '../../common/interfaces';
+import { Bonus, Buff, Effect } from '../behaviour/buffs';
 
 let _attackMap: Record<string, Attack> | null = null;
 let _charClassMap: Record<string, CharClass> | null = null;
+let _effectsMap: Record<string, Effect | Bonus> | null = null;
+let _buffsMap: Record<string, Buff> | null = null;
 
 function convertJsonToCharClass(
   json: any,
@@ -38,6 +44,38 @@ function convertJsonToCharClass(
       })
     ) as Record<states, Strategy>,
     transitions: json.transitions,
+  };
+}
+
+function convertJsonToEffectsClass(json: any): Effect {
+  return {
+    name: json.name,
+    applyEffect: json.applyEffect,
+  };
+}
+
+function convertJsonToBonusesClass(json: any): Bonus {
+  return {
+    name: json.id,
+    statType: json.statType,
+    attributeType: json.attributeType,
+    modifierType: json.modifierType,
+    value: json.value,
+  };
+}
+
+function convertJsonToBuffClass(
+  json: any,
+  effects: Record<string, Effect | Bonus>
+): Buff {
+  return {
+    name: json.id,
+    targetType: json.targetType,
+    duration: {
+      duration: json.duration.duration,
+      type: json.duration.type,
+    },
+    effect: effects[json.effect],
   };
 }
 
@@ -80,4 +118,33 @@ export function getCharClassMap(): Record<string, CharClass> {
     );
   }
   return _charClassMap;
+}
+
+export function getEffectsClassMap() {
+  if (!_effectsMap) {
+    _effectsMap = Object.fromEntries([
+      ...Object.entries(effectsJson).map(([id, data]) => [
+        id,
+        convertJsonToEffectsClass(data),
+      ]),
+      ...Object.entries(bonusesJson).map(([id, data]) => [
+        id,
+        convertJsonToBonusesClass(data),
+      ]),
+    ]);
+  }
+  return _effectsMap!;
+}
+
+export function getBuffsClassMap() {
+  if (!_buffsMap) {
+    const effects = getEffectsClassMap();
+    _buffsMap = Object.fromEntries(
+      Object.entries(buffsJson).map(([id, data]) => [
+        id,
+        convertJsonToBuffClass(data, effects),
+      ])
+    );
+  }
+  return _buffsMap;
 }
