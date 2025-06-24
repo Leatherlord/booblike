@@ -10,10 +10,7 @@ import {
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
-import * as Buffs from './behaviour/buffs';
-import { getBuffsClassMap } from './data/dataloader';
 import { generateCharacter, generateCharacterWithSeed } from './mob-generator';
-import { sign } from 'crypto';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -21,9 +18,8 @@ const SMOOTHING_STEPS = 7;
 const WALL_INNITIAL_PROBABILITY = 0.48;
 const LEAST_WALL_ISLAND_SIZE = 16;
 const STARTING_ROOM_SIZE = 21;
-const ENTITY_BIRTH_RATE = 0.7;
-const ENTITY_MAP_SIZE_COEF = 0.1;
-const ENTITY_LEVEL_COEF = 0.6;
+const ENTITY_BIRTH_RATE = 1;
+const ENTITY_MAP_SIZE_COEF = 0.25;
 const ENTITY_DIST_THRESHOLD = 5;
 
 const OFFSETS_2D = [
