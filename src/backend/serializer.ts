@@ -57,7 +57,7 @@ export function serializeGameMap(gameMap: GameMap): any {
 }
 
 export function deserializeGameMap(data: any): GameMap {
-  return {
+  const res: GameMap = {
     rooms: data.rooms.map((roomData: any) => ({
       map: roomData.map,
       exits: createDictionary(roomData.exits),
@@ -67,6 +67,7 @@ export function deserializeGameMap(data: any): GameMap {
     currentRoom: data.currentRoom,
     exitMapping: createDictionary(data.exitMapping),
   };
+  return res;
 }
 
 export function reconstructCharacter(characterData: any): BaseCharacter {
@@ -112,11 +113,11 @@ export function deserializeWorld(json: string): World {
   const parsed = JSON.parse(json);
   const random = (prngAlea().state = parsed.random);
 
-  const world = {
+  let world = {
     ...parsed,
     map: deserializeGameMap(parsed.map),
     onEntityDeath: undefined,
-    random,
+    random: prngAlea(),
   };
 
   if (world.player && world.player.character) {
@@ -165,7 +166,12 @@ function deserializeEntitiesMap(data: any): EntitiesMap {
 function createDictionary<TKey, TValue>(
   items: { key: TKey; value: TValue }[]
 ): Dictionary<TKey, TValue> {
-  const dict = new Dictionary<TKey, TValue>();
-  items.forEach(({ key, value }) => dict.setValue(key, value));
+  const dict = new Dictionary<TKey, TValue>(JSON.stringify);
+  items.forEach(({ key, value }) => {
+    dict.setValue(key, value);
+    console.log(key, value);
+    console.log(dict);
+  });
+
   return dict;
 }
