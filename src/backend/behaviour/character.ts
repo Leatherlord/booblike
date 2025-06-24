@@ -247,7 +247,6 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
     }
   }
   handleStateChange(enemy, EventType.Anger);
-  handleStateChange(finalTarget, EventType.Damage);
   //console.log("Enemy's state " + enemy.character.state, "Enemy's strategy " + enemy.character.strategy.constructor.name)
   //console.log("Character's state " + char.character.state, "Character's strategy " + char.character.strategy.constructor.name)
   damage = applyTableOnAttack(damage, finalAttacker.character);
@@ -731,13 +730,29 @@ export class BaseCharacter implements Character {
   public damage(context: Entity, enemy: Entity, attack: Attack): AttackResult {
     return getDamage(context, enemy, attack);
   }
-  public update(context: Entity, world: World): void {
+  public update(context: any, world: World): void {
     const currentTime = Date.now();
+    // filter expired buffs
     const changedQueue = filterQueue(this.allBuffs, currentTime);
     if (changedQueue) {
       const changed = filterExpiredBuffs(this.buffsBonus, currentTime);
       recalculatePlayerStats(context, changed);
     }
+    // regenerate
+    if (context.upgradesBought) {
+      this.healthBar = Math.min(
+        this.maxHealthBar,
+        this.healthBar + regen(this, context.upgradesBought)
+      );
+    } else {
+      this.healthBar = Math.min(
+        this.maxHealthBar,
+        this.healthBar + regen(this)
+      );
+    }
+    // state changes for health change
+    handleStateChange(context, EventType.Damage);
+    handleStateChange(context, EventType.Heal);
   }
 
   public getSpeed(): Speed {
