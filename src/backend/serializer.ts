@@ -14,15 +14,6 @@ import {
   RandomEnemyCharacter,
   BaseCharacter,
 } from './behaviour/character';
-import { PlayerClass, getCharacteristicsFromClass } from './behaviour/classes';
-import { strategyMap } from './behaviour/strategy';
-import { states } from './behaviour/state';
-
-// Create reverse mapping from strategy instance to name
-const strategyToNameMap = new Map();
-Object.entries(strategyMap).forEach(([name, strategy]) => {
-  strategyToNameMap.set(strategy, name);
-});
 
 export function serializeGameMapToString(gameMap: GameMap): string {
   try {
@@ -78,129 +69,38 @@ export function deserializeGameMap(data: any): GameMap {
   };
 }
 
-function reconstructPriorityQueue(
-  queueData: any,
-  comparatorFn?: (a: any, b: any) => number
-): PriorityQueue<any> {
-  const queue = new PriorityQueue<any>(comparatorFn);
-
-  if (queueData) {
-    let elements: any[] = [];
-
-    if (queueData._elements && Array.isArray(queueData._elements)) {
-      elements = queueData._elements;
-    } else if (queueData.heap && Array.isArray(queueData.heap)) {
-      elements = queueData.heap;
-    } else if (queueData.data && Array.isArray(queueData.data)) {
-      elements = queueData.data;
-    } else if (Array.isArray(queueData)) {
-      elements = queueData;
-    }
-
-    elements.forEach((element: any) => {
-      if (element !== null && element !== undefined) {
-        queue.enqueue(element);
-      }
-    });
-  }
-
-  return queue;
-}
-
-function reconstructBuffAddOns(buffsData: any): any {
-  if (!buffsData) return buffsData;
-
-  const durationComparator = (a: any, b: any): number => {
-    const durationA = a.duration + a.startTime;
-    const durationB = b.duration + b.startTime;
-    return durationA - durationB;
-  };
-
-  const reconstructed: any = {};
-
-  Object.keys(buffsData).forEach((statType) => {
-    reconstructed[statType] = {};
-
-    Object.keys(buffsData[statType]).forEach((modifierType) => {
-      if (statType === 'ATTRIBUTE') {
-        reconstructed[statType][modifierType] = {};
-        Object.keys(buffsData[statType][modifierType]).forEach((attrType) => {
-          reconstructed[statType][modifierType][attrType] =
-            reconstructPriorityQueue(
-              buffsData[statType][modifierType][attrType],
-              durationComparator
-            );
-        });
-      } else {
-        reconstructed[statType][modifierType] = reconstructPriorityQueue(
-          buffsData[statType][modifierType],
-          durationComparator
-        );
-      }
-    });
-  });
-
-  return reconstructed;
-}
-
 export function reconstructCharacter(characterData: any): BaseCharacter {
-  let char: BaseCharacter;
-
-  if (characterData._characterType === 'PlayerCharacter') {
-    char = new PlayerCharacter(
-      characterData.name,
-      characterData.baseCharacteristics,
-      characterData.texture
-    );
-  } else if (characterData._characterType === 'RandomEnemyCharacter') {
-    char = new RandomEnemyCharacter(characterData.charClass);
-  } else {
-    char = new BaseCharacter();
+  if (characterData._isDecorator) {
+    const { Decorator } = require('./behaviour/actions');
+    return Decorator.deserialize(characterData);
   }
 
-  const { strategy, _characterType, _strategyName, ...dataWithoutStrategy } =
-    characterData;
-  Object.assign(char, dataWithoutStrategy);
-
-  if (characterData._characterType === 'PlayerCharacter') {
-    const currentState = (characterData.state as states) || states.Normal;
-    char.strategy = PlayerClass.strategy[currentState];
-  } else if (characterData._characterType === 'RandomEnemyCharacter') {
-    const strategyName = characterData._strategyName || 'Aggresive';
-    char.strategy = strategyMap[strategyName] || strategyMap['Aggresive'];
+  switch (characterData._characterType) {
+    case 'PlayerCharacter':
+      return PlayerCharacter.deserialize(characterData);
+    case 'RandomEnemyCharacter':
+      return RandomEnemyCharacter.deserialize(characterData);
+    default:
+      return BaseCharacter.deserialize(characterData);
   }
-
-  const durationComparator = (a: any, b: any): number => {
-    const durationA = a.duration + a.startTime;
-    const durationB = b.duration + b.startTime;
-    return durationA - durationB;
-  };
-
-  if (characterData.allBuffs) {
-    char.allBuffs = reconstructPriorityQueue(
-      characterData.allBuffs,
-      durationComparator
-    );
-  }
-
-  if (characterData.buffsBonus) {
-    char.buffsBonus = reconstructBuffAddOns(characterData.buffsBonus);
-  }
-
-  return char;
 }
 
 export function serializeWorld(world: World): string {
-  if (world.player && world.player.character) {
-    (world.player.character as any)._characterType = 'PlayerCharacter';
-  }
-
   try {
+    const worldCopy = { ...world };
+
+    if (worldCopy.player && worldCopy.player.character) {
+      worldCopy.player = {
+        ...worldCopy.player,
+        character: worldCopy.player.character.serialize(),
+      };
+    }
+
     return JSON.stringify({
-      ...world,
-      map: serializeGameMap(world.map),
+      ...worldCopy,
+      map: serializeGameMap(worldCopy.map),
       onEntityDeath: undefined,
-      random: world.random.state(),
+      random: worldCopy.random.state(),
     });
   } catch (error) {
     console.error('Serialization error:', error);
@@ -244,12 +144,7 @@ function serializeEntitiesMap(entitiesMap: EntitiesMap): any {
       acc[posStr] = Array.from(entities).map((entity) => {
         const entityCopy = { ...entity };
         if (entityCopy.character) {
-          entityCopy.character = { ...entityCopy.character };
-          (entityCopy.character as any)._characterType = 'RandomEnemyCharacter';
-
-          const strategyName =
-            strategyToNameMap.get(entityCopy.character.strategy) || 'Aggresive';
-          (entityCopy.character as any)._strategyName = strategyName;
+          entityCopy.character = entityCopy.character.serialize();
         }
         return entityCopy;
       });

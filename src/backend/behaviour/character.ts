@@ -14,6 +14,8 @@ import { EventType, handleStateChange, states } from './state';
 import { Aggresive, MovementResult, Strategy } from './strategy';
 import { PriorityQueue } from 'typescript-collections';
 import { chooseDecorator, FurryCharacter } from './actions';
+import { strategyMap } from './strategy';
+import { getCharClassMap } from '../data/dataloader';
 
 // Characteristics and Calculations based on them
 
@@ -694,6 +696,8 @@ export interface Character {
 
   getTexture: () => string;
   getBuffs: () => PriorityQueue<BuffDuration>;
+
+  serialize: () => any;
 }
 
 export class BaseCharacter implements Character {
@@ -781,6 +785,134 @@ export class BaseCharacter implements Character {
   public getBuffs(): PriorityQueue<BuffDuration> {
     return this.allBuffs;
   }
+
+  public serialize(): any {
+    const strategyName =
+      Object.keys(strategyMap).find(
+        (key) => strategyMap[key].constructor === this.strategy.constructor
+      ) || 'Aggresive';
+
+    return {
+      ...this,
+      _characterType: 'BaseCharacter',
+      _strategyName: strategyName,
+      _charClassName: this.charClass.className,
+      strategy: undefined,
+      charClass: undefined,
+      move: undefined,
+      damage: undefined,
+      update: undefined,
+      getSpeed: undefined,
+      getAttackSpeed: undefined,
+      setState: undefined,
+      applyBuff: undefined,
+      onDeath: undefined,
+      getTexture: undefined,
+      getBuffs: undefined,
+      serialize: undefined,
+    };
+  }
+
+  static deserialize(data: any): BaseCharacter {
+    const char = new BaseCharacter();
+
+    const {
+      strategy,
+      _characterType,
+      _strategyName,
+      _charClassName,
+      charClass,
+      ...cleanData
+    } = data;
+    Object.assign(char, cleanData);
+
+    if (data._charClassName) {
+      const charClassMap = getCharClassMap();
+      char.charClass = charClassMap[data._charClassName] || PlayerClass;
+    } else {
+      char.charClass = PlayerClass; // fallback
+    }
+
+    char.strategy = strategyMap[data._strategyName] || strategyMap['Aggresive'];
+
+    if (data.allBuffs) {
+      char.allBuffs = BaseCharacter.reconstructPriorityQueue(data.allBuffs);
+    }
+    if (data.buffsBonus) {
+      char.buffsBonus = BaseCharacter.reconstructBuffAddOns(data.buffsBonus);
+    }
+
+    return char;
+  }
+
+  protected static reconstructPriorityQueue(
+    queueData: any
+  ): PriorityQueue<BuffDuration> {
+    const durationComparator = (a: BuffDuration, b: BuffDuration): number => {
+      const durationA = a.duration + a.startTime;
+      const durationB = b.duration + b.startTime;
+      return durationA - durationB;
+    };
+
+    const queue = new PriorityQueue<BuffDuration>(durationComparator);
+
+    if (queueData) {
+      let elements: any[] = [];
+
+      if (queueData._elements && Array.isArray(queueData._elements)) {
+        elements = queueData._elements;
+      } else if (queueData.heap && Array.isArray(queueData.heap)) {
+        elements = queueData.heap;
+      } else if (queueData.data && Array.isArray(queueData.data)) {
+        elements = queueData.data;
+      } else if (Array.isArray(queueData)) {
+        elements = queueData;
+      }
+
+      elements.forEach((element: any) => {
+        if (element !== null && element !== undefined) {
+          queue.enqueue(element);
+        }
+      });
+    }
+
+    return queue;
+  }
+
+  protected static reconstructBuffAddOns(buffsData: any): BuffAddOns {
+    if (!buffsData) return buffsData;
+
+    const durationComparator = (a: BuffDuration, b: BuffDuration): number => {
+      const durationA = a.duration + a.startTime;
+      const durationB = b.duration + b.startTime;
+      return durationA - durationB;
+    };
+
+    const reconstructed: any = {};
+
+    Object.keys(buffsData).forEach((statType) => {
+      reconstructed[statType] = {};
+
+      Object.keys(buffsData[statType]).forEach((modifierType) => {
+        if (statType === 'ATTRIBUTE') {
+          reconstructed[statType][modifierType] = {};
+          Object.keys(buffsData[statType][modifierType]).forEach((attrType) => {
+            reconstructed[statType][modifierType][attrType] =
+              BaseCharacter.reconstructPriorityQueue(
+                buffsData[statType][modifierType][attrType]
+              );
+          });
+        } else {
+          reconstructed[statType][modifierType] =
+            BaseCharacter.reconstructPriorityQueue(
+              buffsData[statType][modifierType]
+            );
+        }
+      });
+    });
+
+    return reconstructed;
+  }
 }
 
 export class PlayerCharacter extends BaseCharacter {
@@ -817,6 +949,67 @@ export class PlayerCharacter extends BaseCharacter {
       this.texture = 'player';
     }
   }
+
+  public serialize(): any {
+    const baseData = super.serialize();
+    return {
+      ...baseData,
+      _characterType: 'PlayerCharacter',
+    };
+  }
+
+  static deserialize(data: any): PlayerCharacter {
+    const char = new PlayerCharacter(
+      data.name,
+      data.baseCharacteristics,
+      data.texture
+    );
+
+    const constructorFields = [
+      'name',
+      'baseCharacteristics',
+      'texture',
+      'charClass',
+      'strategy',
+      'attacks',
+      'characterSize',
+      'level',
+      'score',
+      'state',
+      'characteristics',
+      'baseMaxHealthBar',
+      'maxHealthBar',
+      'healthBar',
+      'areaSize',
+      'speed',
+      'buffsBonus',
+      'allBuffs',
+    ];
+
+    Object.keys(data).forEach((key) => {
+      if (
+        !constructorFields.includes(key) &&
+        !key.startsWith('_') &&
+        typeof (data as any)[key] !== 'function'
+      ) {
+        (char as any)[key] = (data as any)[key];
+      }
+    });
+
+    char.charClass = PlayerClass;
+
+    const currentState = (data.state as states) || states.Normal;
+    char.strategy = PlayerClass.strategy[currentState];
+
+    if (data.allBuffs) {
+      char.allBuffs = BaseCharacter.reconstructPriorityQueue(data.allBuffs);
+    }
+    if (data.buffsBonus) {
+      char.buffsBonus = BaseCharacter.reconstructBuffAddOns(data.buffsBonus);
+    }
+
+    return char;
+  }
 }
 
 export class RandomEnemyCharacter extends BaseCharacter {
@@ -849,6 +1042,78 @@ export class RandomEnemyCharacter extends BaseCharacter {
     this.buffsBonus = createBuffAddOnsTable();
     this.allBuffs = new PriorityQueue<BuffDuration>(durationComparator);
     if (texture) this.texture = texture;
+  }
+
+  public serialize(): any {
+    const baseData = super.serialize();
+    return {
+      ...baseData,
+      _characterType: 'RandomEnemyCharacter',
+    };
+  }
+
+  static deserialize(data: any): RandomEnemyCharacter {
+    let restoredCharClass: CharClass;
+    if (data._charClassName) {
+      const charClassMap = getCharClassMap();
+      restoredCharClass = charClassMap[data._charClassName];
+      if (!restoredCharClass) {
+        console.warn(
+          `CharClass not found: ${data._charClassName}, using fallback`
+        );
+        restoredCharClass = Object.values(charClassMap)[0] || PlayerClass;
+      }
+    } else {
+      const charClassMap = getCharClassMap();
+      restoredCharClass = Object.values(charClassMap)[0] || PlayerClass;
+    }
+
+    const char = new RandomEnemyCharacter(restoredCharClass);
+
+    const constructorFields = [
+      'charClass',
+      'name',
+      'surname',
+      'attacks',
+      'strategy',
+      'state',
+      'characterSize',
+      'level',
+      'baseCharacteristics',
+      'characteristics',
+      'baseMaxHealthBar',
+      'maxHealthBar',
+      'healthBar',
+      'areaSize',
+      'speed',
+      'buffsBonus',
+      'allBuffs',
+      'texture',
+    ];
+
+    Object.keys(data).forEach((key) => {
+      if (
+        !constructorFields.includes(key) &&
+        !key.startsWith('_') &&
+        typeof (data as any)[key] !== 'function'
+      ) {
+        (char as any)[key] = (data as any)[key];
+      }
+    });
+
+    char.charClass = restoredCharClass;
+
+    const strategyName = data._strategyName || 'Aggresive';
+    char.strategy = strategyMap[strategyName] || strategyMap['Aggresive'];
+
+    if (data.allBuffs) {
+      char.allBuffs = BaseCharacter.reconstructPriorityQueue(data.allBuffs);
+    }
+    if (data.buffsBonus) {
+      char.buffsBonus = BaseCharacter.reconstructBuffAddOns(data.buffsBonus);
+    }
+
+    return char;
   }
 }
 

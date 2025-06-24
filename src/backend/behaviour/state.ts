@@ -45,17 +45,5 @@ export function handleStateChange(context: Entity, event: EventType): void {
       break;
   }
   char.setState(stateChange);
-
-  if (char.charClass.className === 'player class') {
-    char.strategy = PlayerClass.strategy[stateChange];
-  } else {
-    if (stateChange === states.Angry || stateChange === states.Panic) {
-      char.strategy =
-        stateChange === states.Angry
-          ? strategyMap['Aggresive']
-          : strategyMap['Coward'];
-    } else {
-      char.strategy = strategyMap['Neutral'];
-    }
-  }
+  char.strategy = char.charClass.strategy[stateChange];
 }
