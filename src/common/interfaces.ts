@@ -42,6 +42,11 @@ function pointToKey(p: Point2d): string {
   return `${p.x},${p.y}`;
 }
 
+export function keyToPoint(key: string): Point2d {
+  const [x, y] = key.split(',').map(Number);
+  return { x, y };
+}
+
 export class EntitiesMap {
   constructor() {
     this.entities = {};

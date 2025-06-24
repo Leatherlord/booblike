@@ -1,6 +1,7 @@
 import {
   EntitiesMap,
   Entity,
+  keyToPoint,
   LookDirection,
   Point2d,
   Room,
@@ -9,9 +10,10 @@ import {
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
-import { generateCharacter } from './mob-generator';
 import * as Buffs from './behaviour/buffs';
 import { getBuffsClassMap } from './data/dataloader';
+import { generateCharacter, generateCharacterWithSeed } from './mob-generator';
+import { sign } from 'crypto';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -19,6 +21,10 @@ const SMOOTHING_STEPS = 7;
 const WALL_INNITIAL_PROBABILITY = 0.48;
 const LEAST_WALL_ISLAND_SIZE = 16;
 const STARTING_ROOM_SIZE = 21;
+const ENTITY_BIRTH_RATE = 0.7;
+const ENTITY_MAP_SIZE_COEF = 0.1;
+const ENTITY_LEVEL_COEF = 0.6;
+const ENTITY_DIST_THRESHOLD = 5;
 
 const OFFSETS_2D = [
   { x: 0, y: 1 },
@@ -276,6 +282,35 @@ function generateDungeonMap(seed: number): Tile[][] {
   return basicBox;
 }
 
+function generateEntityPosition(
+  seed: number,
+  map: Tile[][],
+  entities: EntitiesMap
+): Point2d {
+  let res: Point2d | undefined = undefined;
+  const rng = prngAlea(seed);
+  while (!res) {
+    let guess: Point2d = {
+      x: Math.floor(rng() * map.length),
+      y: Math.floor(rng() * map[0].length),
+    };
+    if (map[guess.y][guess.x] != 'floor') {
+      continue;
+    }
+    let minDist = 4 * map.length;
+    entities.forEach((e, ePosStr) => {
+      const ePos = keyToPoint(ePosStr);
+      const dist = Math.abs(guess.x - ePos.x) + Math.abs(guess.y - ePos.y);
+      minDist = Math.min(minDist, dist);
+    });
+    if (minDist < ENTITY_DIST_THRESHOLD) {
+      continue;
+    }
+    res = { ...guess };
+  }
+  return res;
+}
+
 export function generateRoom(
   seed: number,
   level: number = 0,
@@ -318,11 +353,24 @@ export function generateRoom(
     exitMap.setValue(border[exitId], i);
     reverseExitMap.setValue(i, border[exitId]);
   }
+
+  let entities = new EntitiesMap();
+  let entitiesNum = Math.round(
+    rng() *
+      ENTITY_BIRTH_RATE *
+      (mapSize * ENTITY_MAP_SIZE_COEF) *
+      (level * ENTITY_LEVEL_COEF)
+  );
+  for (let i = 0; i < entitiesNum; ++i) {
+    let character = generateCharacterWithSeed(rng());
+    let pos = generateEntityPosition(rng(), map, entities);
+  }
+
   const generated = {
     map: map,
     exits: exitMap,
     reverseExits: reverseExitMap,
-    entities: new EntitiesMap(),
+    entities: entities,
   };
   console.log('Generated map: ', generated);
   return generated;
