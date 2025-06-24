@@ -24,6 +24,26 @@ Object.entries(strategyMap).forEach(([name, strategy]) => {
   strategyToNameMap.set(strategy, name);
 });
 
+export function serializeGameMapToString(gameMap: GameMap): string {
+  try {
+    const serialized = serializeGameMap(gameMap);
+    return JSON.stringify(serialized);
+  } catch (error) {
+    console.error('Map serialization error:', error);
+    throw new Error('Failed to serialize map data');
+  }
+}
+
+export function deserializeGameMapFromString(json: string): GameMap {
+  try {
+    const parsed = JSON.parse(json);
+    return deserializeGameMap(parsed);
+  } catch (error) {
+    console.error('Map deserialization error:', error);
+    throw new Error('Invalid map data');
+  }
+}
+
 export function serializeGameMap(gameMap: GameMap): any {
   return {
     rooms: gameMap.rooms.map((room) => ({
@@ -123,7 +143,7 @@ function reconstructBuffAddOns(buffsData: any): any {
   return reconstructed;
 }
 
-function reconstructCharacter(characterData: any): BaseCharacter {
+export function reconstructCharacter(characterData: any): BaseCharacter {
   let char: BaseCharacter;
 
   if (characterData._characterType === 'PlayerCharacter') {

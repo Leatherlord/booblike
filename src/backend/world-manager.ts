@@ -30,7 +30,13 @@ import {
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
 import { getBuffsClassMap } from './data/dataloader';
-import { serializeWorld, deserializeWorld } from './serializer';
+import {
+  serializeWorld,
+  deserializeWorld,
+  serializeGameMapToString,
+  deserializeGameMapFromString,
+  reconstructCharacter,
+} from './serializer';
 
 export class WorldManager {
   private world: World | null = null;
@@ -507,6 +513,45 @@ export class WorldManager {
     } catch (error) {
       console.error('Failed to load game:', error);
       throw new Error('Invalid save data');
+    }
+  }
+
+  public saveMap(): string {
+    if (!this.world) {
+      throw new Error('No world to save map from');
+    }
+    return serializeGameMapToString(this.world.map);
+  }
+
+  public loadMap(mapData: string): void {
+    if (!this.world) {
+      throw new Error('No world to load map into');
+    }
+
+    try {
+      const map = deserializeGameMapFromString(mapData);
+
+      if (map && map.rooms) {
+        map.rooms.forEach((room: any) => {
+          if (room.entities) {
+            room.entities.forEach((entity: any) => {
+              if (entity.character) {
+                entity.character = reconstructCharacter(entity.character);
+              }
+            });
+          }
+        });
+      }
+
+      const newWorld = {
+        ...this.world,
+        map: map,
+      };
+
+      this.updateWorld(newWorld);
+    } catch (error) {
+      console.error('Failed to load map:', error);
+      throw new Error('Invalid map data');
     }
   }
 }

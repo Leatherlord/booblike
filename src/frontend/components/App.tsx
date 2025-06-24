@@ -11,7 +11,7 @@ import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
 
 const App: React.FC = () => {
-  const { world, handleEvent, saveGame, restartGame } = useWorld();
+  const { world, handleEvent, saveGame, restartGame, saveMap } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
   const [selectedTexturePack, setSelectedTexturePack] =
     useState<TexturePack | null>(null);
@@ -84,6 +84,31 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Failed to save game:', error);
       alert('Failed to save game. Please try again.');
+    }
+  };
+
+  const handleSaveMap = () => {
+    try {
+      const mapData = saveMap();
+      const blob = new Blob([mapData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19);
+      const filename = `booblike-map-${timestamp}.json`;
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to save map:', error);
+      alert('Failed to save map. Please try again.');
     }
   };
 
@@ -238,6 +263,7 @@ const App: React.FC = () => {
       <SaveGameLoader
         onStartNewGame={handleStartNewGame}
         onGameLoaded={handleGameLoaded}
+        onMapLoaded={handleGameLoaded}
       />
     );
   }
@@ -295,13 +321,22 @@ const App: React.FC = () => {
           {selectedTexturePack && (
             <span className="hud-item">Pack: {selectedTexturePack.name}</span>
           )}
-          <button
-            onClick={handleSaveGame}
-            className="save-button"
-            title="Save Game"
-          >
-            💾 Save
-          </button>
+          <div className="save-buttons">
+            <button
+              onClick={handleSaveGame}
+              className="save-button"
+              title="Save Game"
+            >
+              💾 Save Game
+            </button>
+            <button
+              onClick={handleSaveMap}
+              className="save-button"
+              title="Save Map"
+            >
+              🗺️ Save Map
+            </button>
+          </div>
         </div>
       </div>
 
@@ -346,7 +381,7 @@ const App: React.FC = () => {
           <div className="hud-item">Press 0-9 to select inventory slots</div>
           <div className="hud-item">Press SPACE to attack</div>
           <div className="hud-item">Press U to open upgrades menu</div>
-          <div className="hud-item">Click 💾 Save to save your game</div>
+          <div className="hud-item">💾 Save Game | 🗺️ Save Map</div>
         </div>
       </div>
 
