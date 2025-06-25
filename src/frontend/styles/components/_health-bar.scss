@@ -1,0 +1,58 @@
+@use '../base/variables' as *;
+
+// Health bar component styles
+.health-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 15px;
+}
+
+.health-label {
+  font-size: 12px;
+  color: $hud-text;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.health-bar {
+  width: 100%;
+  height: 15px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid $hud-border;
+  position: relative;
+}
+
+.health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0000, #ff3333);
+  background-size: 200% 100%;
+  animation: healthGradient 2s ease infinite;
+  transition: width 0.3s ease;
+  border-radius: 7px;
+}
+
+.health-text {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes healthGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}

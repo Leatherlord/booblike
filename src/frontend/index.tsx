@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/main.scss';
+import './styles/index.scss';
 import App from './components/App';
 import { WorldProvider } from '../common/context/WorldContext';
 

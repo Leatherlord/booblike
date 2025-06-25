@@ -1,0 +1,98 @@
+@use '../base/variables' as *;
+
+// Base HUD styles
+.hud {
+  background-color: $hud-background;
+  border: 1px solid $hud-border;
+  color: $hud-text;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .hud-content {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+  }
+
+  .hud-item {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+}
+
+// Top HUD
+.top-hud {
+  height: 5vh;
+  width: 100%;
+
+  .hud-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.hud-left-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  flex: 1;
+
+  .hud-item {
+    margin: 0;
+    font-weight: bold;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .health-bar-container {
+    margin: 0;
+  }
+}
+
+// Left HUD
+.left-hud {
+  width: 10vw;
+  height: 100%;
+
+  .hud-content {
+    padding: 5px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+// Right HUD
+.right-hud {
+  width: 5vw;
+  height: 100%;
+}
+
+// Bottom HUD
+.bottom-hud {
+  height: 20vh;
+  width: 100%;
+
+  .hud-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .console-messages {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.3);
+    margin: 5px 0;
+    padding: 10px;
+    overflow-y: auto;
+    font-family: monospace;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+  }
+}

@@ -280,47 +280,50 @@ const App: React.FC = () => {
     <div className="game-container">
       <div className="hud top-hud">
         <div className="hud-content">
-          <span className="hud-item">Score: 0</span>
-          <span className="hud-item">Level: {world?.player.level}</span>
-          {world && (
-            <>
-              <div className="health-bar-container">
-                <div className="health-label">Health</div>
-                <div className="health-bar">
-                  <div
-                    className="health-fill"
-                    style={{ width: `${getHealthPercentage()}%` }}
-                  />
-                  <div className="health-text">
-                    {Math.ceil(world.player.character.healthBar)}/
-                    {Math.ceil(world.player.character.maxHealthBar)}
+          <div className="hud-left-group">
+            <span className="hud-item">Score: 0</span>
+            <span className="hud-item">Level: {world?.player.level}</span>
+            {world && (
+              <>
+                <div className="health-bar-container">
+                  <div className="health-label">Health</div>
+                  <div className="health-bar">
+                    <div
+                      className="health-fill"
+                      style={{ width: `${getHealthPercentage()}%` }}
+                    />
+                    <div className="health-text">
+                      {Math.ceil(world.player.character.healthBar)}/
+                      {Math.ceil(world.player.character.maxHealthBar)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <span className="hud-item">
-                EXP: {world.player.experience}/{world.player.experienceToNext}
-              </span>
-              <span className="hud-item">
-                Available EXP: {world.player.availableExperience}
-              </span>
-              <span className="hud-item">
-                FOV:{' '}
-                {world.player.character.areaSize.areaUp +
-                  world.player.character.areaSize.areaDown +
-                  1}
-                ×
-                {world.player.character.areaSize.areaLeft +
-                  world.player.character.areaSize.areaRight +
-                  1}
-              </span>
-              <span className="hud-item">
-                Player: ({world.player.x}, {world.player.y})
-              </span>
-            </>
-          )}
-          {selectedTexturePack && (
-            <span className="hud-item">Pack: {selectedTexturePack.name}</span>
-          )}
+                <span className="hud-item">
+                  EXP: {world.player.experience}/{world.player.experienceToNext}
+                </span>
+                <span className="hud-item">
+                  Available EXP: {world.player.availableExperience}
+                </span>
+                <span className="hud-item">
+                  FOV:{' '}
+                  {world.player.character.areaSize.areaUp +
+                    world.player.character.areaSize.areaDown +
+                    1}
+                  ×
+                  {world.player.character.areaSize.areaLeft +
+                    world.player.character.areaSize.areaRight +
+                    1}
+                </span>
+                <span className="hud-item">
+                  Player: ({world.player.x}, {world.player.y})
+                </span>
+              </>
+            )}
+            {selectedTexturePack && (
+              <span className="hud-item">Pack: {selectedTexturePack.name}</span>
+            )}
+          </div>
+
           <div className="save-buttons">
             <button
               onClick={handleSaveGame}

@@ -1,0 +1,177 @@
+@use '../base/variables' as *;
+@use 'sass:color';
+
+.upgrade-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.upgrade-menu {
+  background: $hud-background;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90vw;
+  color: $hud-text;
+  border: 1px solid $hud-border;
+}
+
+.upgrade-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    color: $hud-text;
+    font-size: 24px;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    color: $hud-text;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+
+    &:hover {
+      color: $secondary-color;
+    }
+  }
+}
+
+.upgrade-menu-content {
+  .experience-info {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    text-align: center;
+
+    .experience-amount {
+      font-size: 18px;
+      color: $secondary-color;
+      font-weight: bold;
+    }
+  }
+}
+
+.upgrades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $secondary-color;
+    border-radius: 4px;
+  }
+}
+
+.upgrade-item {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid $hud-border;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+
+  &.affordable {
+    border-color: $secondary-color;
+    box-shadow: 0 0 10px rgba($secondary-color, 0.1);
+
+    &:hover {
+      background: rgba($secondary-color, 0.1);
+    }
+  }
+
+  &.expensive {
+    opacity: 0.7;
+  }
+
+  .upgrade-info {
+    flex: 1;
+
+    .upgrade-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: $hud-text;
+    }
+
+    .upgrade-description {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    .upgrade-stats {
+      font-size: 12px;
+      color: $secondary-color;
+    }
+  }
+
+  .upgrade-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+
+    .upgrade-cost {
+      font-size: 14px;
+      color: $secondary-color;
+    }
+
+    .upgrade-button {
+      background: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: color.adjust($primary-color, $lightness: -10%);
+      }
+
+      &:disabled {
+        background: #444;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+.no-upgrades {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-style: italic;
+}

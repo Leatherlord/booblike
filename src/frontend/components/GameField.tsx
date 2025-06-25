@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { Point2d, World } from '../../common/interfaces';
 import { TextureManager } from '../utils/TextureManager';
 import { TexturePack } from '../types/texturePack';
+import FloatingText from './FloatingText';
 
 interface GameFieldProps {
   world: World | null;
@@ -30,7 +31,6 @@ const GameField: React.FC<GameFieldProps> = ({
   const fadingTilesRef = useRef<{ x: number; y: number; alpha: number }[]>([]);
   const [attackTrigger, setAttackTrigger] = useState(0);
 
-  // Calculate which tiles are visible based on player's FOV (relative to facing direction)
   const isVisibleTile = (
     tileX: number,
     tileY: number,
@@ -42,7 +42,6 @@ const GameField: React.FC<GameFieldProps> = ({
     const deltaX = tileX - playerX;
     const deltaY = tileY - playerY;
 
-    // Transform FOV areas based on player's facing direction
     let forward, backward, left, right;
 
     switch (lookDir) {
@@ -51,7 +50,6 @@ const GameField: React.FC<GameFieldProps> = ({
         backward = fov.areaDown;
         left = fov.areaLeft;
         right = fov.areaRight;
-        // Check bounds: forward = up (negative Y), backward = down (positive Y)
         return (
           deltaY >= -forward &&
           deltaY <= backward &&
@@ -60,11 +58,11 @@ const GameField: React.FC<GameFieldProps> = ({
         );
 
       case 'DOWN':
-        forward = fov.areaUp; // "up" in FOV = forward when facing down
-        backward = fov.areaDown; // "down" in FOV = backward when facing down
-        left = fov.areaRight; // "right" in FOV = left when facing down
-        right = fov.areaLeft; // "left" in FOV = right when facing down
-        // Check bounds: forward = down (positive Y), backward = up (negative Y)
+        forward = fov.areaUp;
+        backward = fov.areaDown;
+        left = fov.areaRight;
+        right = fov.areaLeft;
+
         return (
           deltaY <= forward &&
           deltaY >= -backward &&
@@ -73,11 +71,11 @@ const GameField: React.FC<GameFieldProps> = ({
         );
 
       case 'LEFT':
-        forward = fov.areaUp; // "up" in FOV = forward when facing left
-        backward = fov.areaDown; // "down" in FOV = backward when facing left
-        left = fov.areaLeft; // "left" in FOV = left when facing left (down)
-        right = fov.areaRight; // "right" in FOV = right when facing left (up)
-        // Check bounds: forward = left (negative X), backward = right (positive X)
+        forward = fov.areaUp;
+        backward = fov.areaDown;
+        left = fov.areaLeft;
+        right = fov.areaRight;
+
         return (
           deltaX >= -forward &&
           deltaX <= backward &&
@@ -86,11 +84,11 @@ const GameField: React.FC<GameFieldProps> = ({
         );
 
       case 'RIGHT':
-        forward = fov.areaUp; // "up" in FOV = forward when facing right
-        backward = fov.areaDown; // "down" in FOV = backward when facing right
-        left = fov.areaRight; // "right" in FOV = left when facing right (up)
-        right = fov.areaLeft; // "left" in FOV = right when facing right (down)
-        // Check bounds: forward = right (positive X), backward = left (negative X)
+        forward = fov.areaUp;
+        backward = fov.areaDown;
+        left = fov.areaRight;
+        right = fov.areaLeft;
+
         return (
           deltaX <= forward &&
           deltaX >= -backward &&
@@ -99,7 +97,6 @@ const GameField: React.FC<GameFieldProps> = ({
         );
 
       default:
-        // Fallback to UP direction
         return (
           deltaY >= -fov.areaUp &&
           deltaY <= fov.areaDown &&
@@ -109,7 +106,6 @@ const GameField: React.FC<GameFieldProps> = ({
     }
   };
 
-  // Calculate fog intensity based on distance from FOV edge (relative to facing direction)
   const getFogIntensity = (
     tileX: number,
     tileY: number,
@@ -128,42 +124,40 @@ const GameField: React.FC<GameFieldProps> = ({
 
     switch (lookDir) {
       case 'UP':
-        distFromForwardEdge = Math.abs(deltaY + fov.areaUp); // Distance from forward (up) edge
-        distFromBackwardEdge = Math.abs(deltaY - fov.areaDown); // Distance from backward (down) edge
-        distFromLeftEdge = Math.abs(deltaX + fov.areaLeft); // Distance from left edge
-        distFromRightEdge = Math.abs(deltaX - fov.areaRight); // Distance from right edge
+        distFromForwardEdge = Math.abs(deltaY + fov.areaUp);
+        distFromBackwardEdge = Math.abs(deltaY - fov.areaDown);
+        distFromLeftEdge = Math.abs(deltaX + fov.areaLeft);
+        distFromRightEdge = Math.abs(deltaX - fov.areaRight);
         break;
 
       case 'DOWN':
-        distFromForwardEdge = Math.abs(deltaY - fov.areaUp); // Forward is down (positive Y)
-        distFromBackwardEdge = Math.abs(deltaY + fov.areaDown); // Backward is up (negative Y)
-        distFromLeftEdge = Math.abs(deltaX - fov.areaRight); // Left is right (positive X)
-        distFromRightEdge = Math.abs(deltaX + fov.areaLeft); // Right is left (negative X)
+        distFromForwardEdge = Math.abs(deltaY - fov.areaUp);
+        distFromBackwardEdge = Math.abs(deltaY + fov.areaDown);
+        distFromLeftEdge = Math.abs(deltaX - fov.areaRight);
+        distFromRightEdge = Math.abs(deltaX + fov.areaLeft);
         break;
 
       case 'LEFT':
-        distFromForwardEdge = Math.abs(deltaX + fov.areaUp); // Forward is left (negative X)
-        distFromBackwardEdge = Math.abs(deltaX - fov.areaDown); // Backward is right (positive X)
-        distFromLeftEdge = Math.abs(deltaY - fov.areaLeft); // Left is down (positive Y)
-        distFromRightEdge = Math.abs(deltaY + fov.areaRight); // Right is up (negative Y)
+        distFromForwardEdge = Math.abs(deltaX + fov.areaUp);
+        distFromBackwardEdge = Math.abs(deltaX - fov.areaDown);
+        distFromLeftEdge = Math.abs(deltaY - fov.areaLeft);
+        distFromRightEdge = Math.abs(deltaY + fov.areaRight);
         break;
 
       case 'RIGHT':
-        distFromForwardEdge = Math.abs(deltaX - fov.areaUp); // Forward is right (positive X)
-        distFromBackwardEdge = Math.abs(deltaX + fov.areaDown); // Backward is left (negative X)
-        distFromLeftEdge = Math.abs(deltaY + fov.areaRight); // Left is up (negative Y)
-        distFromRightEdge = Math.abs(deltaY - fov.areaLeft); // Right is down (positive Y)
+        distFromForwardEdge = Math.abs(deltaX - fov.areaUp);
+        distFromBackwardEdge = Math.abs(deltaX + fov.areaDown);
+        distFromLeftEdge = Math.abs(deltaY + fov.areaRight);
+        distFromRightEdge = Math.abs(deltaY - fov.areaLeft);
         break;
 
       default:
-        // Fallback to UP direction
         distFromForwardEdge = Math.abs(deltaY + fov.areaUp);
         distFromBackwardEdge = Math.abs(deltaY - fov.areaDown);
         distFromLeftEdge = Math.abs(deltaX + fov.areaLeft);
         distFromRightEdge = Math.abs(deltaX - fov.areaRight);
     }
 
-    // Find the minimum distance to any edge
     const minDistToEdge = Math.min(
       distFromForwardEdge,
       distFromBackwardEdge,
@@ -171,15 +165,13 @@ const GameField: React.FC<GameFieldProps> = ({
       distFromRightEdge
     );
 
-    // Create gradient effect: closer to edge = less visibility
     if (minDistToEdge <= 1) {
-      return 0.3; // Slightly visible at the very edge
+      return 0.3;
     }
 
-    return 1.0; // Fully visible in center
+    return 1.0;
   };
 
-  // Initialize and load textures
   useEffect(() => {
     if (!selectedTexturePack) return;
 
@@ -719,6 +711,45 @@ const GameField: React.FC<GameFieldProps> = ({
           />
           <canvas ref={enemyCanvasRef} className="overlay-canvas" />
           <canvas ref={overlayCanvasRef} className="overlay-canvas" />
+
+          <div
+            className="floating-text-container"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+            }}
+          >
+            {world.floatingTexts?.map((text) => {
+              const now = Date.now();
+              if (now - text.startTime > text.duration) return null;
+
+              const viewportWidth = Math.floor(
+                (canvasRef.current?.width || 800) / tileSize
+              );
+              const viewportHeight = Math.floor(
+                (canvasRef.current?.height || 600) / tileSize
+              );
+              const cameraX = world.player.x;
+              const cameraY = world.player.y;
+              const offsetX = cameraX - Math.floor(viewportWidth / 2);
+              const offsetY = cameraY - Math.floor(viewportHeight / 2);
+
+              return (
+                <FloatingText
+                  key={text.id}
+                  text={text}
+                  tileSize={tileSize}
+                  offsetX={offsetX}
+                  offsetY={offsetY}
+                />
+              );
+            })}
+          </div>
+
           <div
             style={{
               position: 'absolute',

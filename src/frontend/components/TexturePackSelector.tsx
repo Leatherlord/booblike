@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
-import '../styles/texturePackSelector.scss';
 
 interface TexturePackSelectorProps {
   onPackSelected: (pack: TexturePack) => void;
