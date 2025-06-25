@@ -7,7 +7,7 @@ export function generateCharacterWithSeed(seed: number): Character {
   const charClassMap = getCharClassMap();
   let classNames = Object.keys(charClassMap);
   const classNum = Math.floor(rng() * classNames.length);
-  return new RandomEnemyCharacter(charClassMap[classNum]);
+  return new RandomEnemyCharacter(charClassMap[classNames[classNum]]);
 }
 
 export function generateCharacter(): Character {

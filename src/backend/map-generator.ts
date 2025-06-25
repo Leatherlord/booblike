@@ -1,6 +1,7 @@
 import {
   EntitiesMap,
   Entity,
+  keyToPoint,
   LookDirection,
   Point2d,
   Room,
@@ -9,9 +10,7 @@ import {
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
-import { generateCharacter } from './mob-generator';
-import * as Buffs from './behaviour/buffs';
-import { getBuffsClassMap } from './data/dataloader';
+import { generateCharacter, generateCharacterWithSeed } from './mob-generator';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -19,6 +18,9 @@ const SMOOTHING_STEPS = 7;
 const WALL_INNITIAL_PROBABILITY = 0.48;
 const LEAST_WALL_ISLAND_SIZE = 16;
 const STARTING_ROOM_SIZE = 21;
+const ENTITY_BIRTH_RATE = 1;
+const ENTITY_MAP_SIZE_COEF = 0.25;
+const ENTITY_DIST_THRESHOLD = 5;
 
 const OFFSETS_2D = [
   { x: 0, y: 1 },
@@ -276,6 +278,35 @@ function generateDungeonMap(seed: number): Tile[][] {
   return basicBox;
 }
 
+function generateEntityPosition(
+  seed: number,
+  map: Tile[][],
+  entities: EntitiesMap
+): Point2d {
+  let res: Point2d | undefined = undefined;
+  const rng = prngAlea(seed);
+  while (!res) {
+    let guess: Point2d = {
+      x: Math.floor(rng() * map.length),
+      y: Math.floor(rng() * map[0].length),
+    };
+    if (map[guess.y][guess.x] != 'floor') {
+      continue;
+    }
+    let minDist = 4 * map.length;
+    entities.forEach((e, ePosStr) => {
+      const ePos = keyToPoint(ePosStr);
+      const dist = Math.abs(guess.x - ePos.x) + Math.abs(guess.y - ePos.y);
+      minDist = Math.min(minDist, dist);
+    });
+    if (minDist < ENTITY_DIST_THRESHOLD) {
+      continue;
+    }
+    res = { ...guess };
+  }
+  return res;
+}
+
 export function generateRoom(
   seed: number,
   level: number = 0,
@@ -318,11 +349,36 @@ export function generateRoom(
     exitMap.setValue(border[exitId], i);
     reverseExitMap.setValue(i, border[exitId]);
   }
+
+  let entities = new EntitiesMap();
+  let entitiesNum = Math.round(
+    rng() * ENTITY_BIRTH_RATE * (mapSize * ENTITY_MAP_SIZE_COEF)
+  );
+  for (let i = 0; i < entitiesNum; ++i) {
+    let character = generateCharacterWithSeed(rng());
+    let pos = generateEntityPosition(rng(), map, entities);
+    let entity: Entity = {
+      id: '' + i,
+      x: pos.x,
+      y: pos.y,
+      lookDir: LookDirection.Up,
+      character: character,
+      level: level,
+      experience: 0,
+      experienceToNext: calculateExperienceForNextLevel(level),
+      animation: {
+        lastAttacked: 0,
+        lastMoved: 0,
+      },
+    };
+    entities.add(pos, entity);
+  }
+
   const generated = {
     map: map,
     exits: exitMap,
     reverseExits: reverseExitMap,
-    entities: new EntitiesMap(),
+    entities: entities,
   };
   console.log('Generated map: ', generated);
   return generated;
@@ -362,16 +418,9 @@ export function getStartingRoom(): Room {
 
   for (let i = 1; i <= 1; i++) {
     const chararcter = generateCharacter();
-    let texture;
-    if (chararcter.charClass.className == 'strongClass') {
-      texture = 'player';
-    } else if (chararcter.charClass.className == 'middleClass') {
-      texture = 'enemy';
-    } else {
-      texture = 'coward';
-    }
+    let texture = chararcter.texture!;
     const entity = {
-      id: '' + 1,
+      id: '' + i,
       x: 3,
       y: i,
       lookDir: LookDirection.Left,
