@@ -11,7 +11,7 @@ import {
 } from './character';
 import { CharClass } from './classes';
 import { states } from './state';
-import { Fury, MovementResult, Strategy, strategyMap } from './strategy';
+import { MovementResult, Strategy, strategyMap } from './strategy';
 import { reconstructCharacter } from '../serializer';
 
 export function chooseDecorator(character: Character, buff: Buff) {
@@ -209,7 +209,6 @@ export class PacifiedCharacter extends Decorator {
     super(character, buff);
     this.state = states.Pacifist;
     this.strategy = this.charClass.strategy[this.state as states];
-    console.log('applied Pacified on', character.name);
   }
 
   public move(context: Entity, world: World): MovementResult {
@@ -258,7 +257,6 @@ export class FuryCharacter extends Decorator {
   constructor(character: Character, buff: Buff) {
     super(character, buff);
     this.strategy = strategyMap['Fury'];
-    console.log('applied Fury on', character.name);
   }
 
   public move(context: Entity, world: World): MovementResult {
@@ -282,7 +280,6 @@ export class StunnedCharacter extends Decorator {
   constructor(character: Character, buff: Buff) {
     super(character, buff);
     this.strategy = this.charClass.strategy[this.state as states];
-    console.log('applied Stun on', character.name);
   }
 
   public move(context: Entity, world: World): MovementResult {

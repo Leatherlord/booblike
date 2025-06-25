@@ -436,11 +436,6 @@ export function getStartingRoom(): Room {
       },
     };
     entities.add({ x: 3, y: i }, entity);
-    // entity.character.applyBuff(entity, [
-    //   getBuffsClassMap()['SimpleAttributeBuff'],
-    //   getBuffsClassMap()['SimpleHealthBuff'],
-    // ]);
-    // entity.character.applyBuff(entity, [getBuffsClassMap()['SimpleFurryBuff']]);
   }
 
   return {

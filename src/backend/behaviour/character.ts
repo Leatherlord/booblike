@@ -249,9 +249,8 @@ function getDamage(char: Entity, enemy: Entity, attack: Attack): AttackResult {
     }
   }
   handleStateChange(enemy, EventType.Anger);
-  //console.log("Enemy's state " + enemy.character.state, "Enemy's strategy " + enemy.character.strategy.constructor.name)
-  //console.log("Character's state " + char.character.state, "Character's strategy " + char.character.strategy.constructor.name)
   damage = applyTableOnAttack(damage, finalAttacker.character);
+  applyBuffOnCharacter(attack.attackBuffs, finalAttacker, finalTarget);
   return {
     finalTarget: finalTarget,
     finalAttack: attack,
@@ -367,7 +366,6 @@ const filterQueue = (
       q.enqueue(buff);
     } else {
       changed = true;
-      console.log(`Buff expired: ${buff.value}`);
     }
   }
   return changed;
@@ -489,7 +487,6 @@ function recalculateBaseValues(entity: any) {
   // recalculates stuff affected by attributes
   const char = entity.character;
   if (entity.upgradesBought) {
-    console.log(entity.upgradesBought);
     char.baseMaxHealthBar = health(char, entity.upgradesBought); // maxHealthBar is updated later
     char.areaSize = FOV(char, entity.upgradesBought);
     char.speed = speed(char, entity.upgradesBought);
@@ -534,7 +531,6 @@ export function recalculatePlayerStats(entity: Entity, changed?: buffsChanged) {
     char,
     ifChanged.attributeChanged
   );
-  //console.log('attributeChanged', attributeChanged);
 
   recalculateBaseValues(entity);
   if (attributeChanged || ifChanged.healthChanged) recalculateHealth(char);
@@ -595,7 +591,6 @@ function applyBuffOnCharacter(
         break;
       }
     }
-    console.log('finalTo ' + finalTo.name);
     const duration = buff.duration.duration;
     const startTime = Date.now();
 
@@ -625,12 +620,6 @@ function applyBuffOnCharacter(
           table[buff.effect.statType][buff.effect.modifierType][
             buff.effect.attributeType
           ].enqueue(result);
-          console.log(
-            'table[buff.effect.statType][buff.effect.modifierType][buff.effect.attributeType].peek() ' +
-              table[buff.effect.statType][buff.effect.modifierType][
-                buff.effect.attributeType
-              ].peek()?.value
-          );
         }
       } else {
         table[buff.effect.statType][buff.effect.modifierType].enqueue(result);

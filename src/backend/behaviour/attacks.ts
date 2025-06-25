@@ -4,6 +4,7 @@ import {
   generateGrid,
   Speed,
 } from '../../common/interfaces';
+import { getBuffsClassMap } from '../data/dataloader';
 import { Buff } from './buffs';
 
 export interface Attack {
@@ -40,7 +41,7 @@ export let StraightAttack: Attack = {
   speed: Speed.FAST,
   minDamage: 1,
   maxDamage: 3,
-  attackBuffs: [],
+  attackBuffs: [getBuffsClassMap()['SimpleStunBuff']],
   areaSize: {
     areaUp: 1,
     areaDown: 1,

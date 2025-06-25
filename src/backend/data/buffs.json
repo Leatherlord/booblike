@@ -35,6 +35,15 @@
     },
     "effect": "Furry"
   },
+  "SimpleStunBuff": {
+    "name": "Simple Stun Buff",
+    "targetType": "SELF",
+    "duration": {
+      "duration": 1000,
+      "type": "Temporary"
+    },
+    "effect": "Stun"
+  },
   "SimpleFurryMagic": {
     "name": "Simple Furry Magic",
     "targetType": "ENEMY",

@@ -22,7 +22,7 @@
     "speed": "NORMAL",
     "minDamage": 10,
     "maxDamage": 15,
-    "attackBuffs": [],
+    "attackBuffs": ["SimpleFurryMagic"],
     "areaSize": {
       "areaUp": 1,
       "areaDown": 1,
