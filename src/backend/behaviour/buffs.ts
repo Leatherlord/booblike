@@ -1,6 +1,8 @@
 import { World, Entity } from '../../common/interfaces';
 import { Character, Characteristics } from './character';
 
+function chanceToApplyBuff() {}
+
 export enum TargetType {
   Self = 'SELF',
   Enemy = 'ENEMY',
@@ -49,4 +51,5 @@ export interface Buff {
   targetType: TargetType;
   duration: Duration;
   effect: Effect | Bonus;
+  chanceToApply: number;
 }

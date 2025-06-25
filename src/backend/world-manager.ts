@@ -105,11 +105,11 @@ export class WorldManager {
         x: 8,
         y: 8,
         character: new PlayerCharacter('Sanya', {
-          s: 10,
-          p: 10,
-          e: 10,
-          i: 10,
-          a: 10,
+          s: 5,
+          p: 5,
+          e: 5,
+          i: 5,
+          a: 5,
         }),
         lookDir: LookDirection.Right,
         level: 1,
@@ -307,16 +307,6 @@ export class WorldManager {
     room.entities.forEach((entity) => {
       if (entity.character.healthBar > 0 && this.world) {
         entity.character.update(entity, this.world);
-        //console.log('---', entity.id);
-        //console.log(
-        //  entity.character.baseCharacteristics,
-        //   entity.character.characteristics
-        // );
-        // console.log(
-        //   entity.character.baseMaxHealthBar,
-        //   entity.character.maxHealthBar
-        // );
-        // console.log(entity.character.buffsBonus);
       }
     });
 
@@ -470,11 +460,6 @@ export class WorldManager {
       [event.upgradeId]:
         (this.world.player.upgradesBought[event.upgradeId] || 0) + 1,
     };
-
-    newWorld.player.character.applyBuff(newWorld.player, [
-      getBuffsClassMap()['SimpleAttributeBuff'],
-      getBuffsClassMap()['SimpleFurryBuff'],
-    ]);
 
     recalculatePlayerStats(newWorld.player);
     newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
