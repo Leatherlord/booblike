@@ -40,7 +40,7 @@
     "speed": "SLOW",
     "minDamage": 10,
     "maxDamage": 15,
-    "attackBuffs": [],
+    "attackBuffs": ["SimpleAttackDebuff"],
     "areaSize": {
       "areaUp": 0,
       "areaDown": 3,

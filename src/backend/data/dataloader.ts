@@ -77,6 +77,7 @@ function convertJsonToBuffClass(
       type: json.duration.type,
     },
     effect: effects[json.effect],
+    chanceToApply: json.chanceToApply,
   };
 }
 

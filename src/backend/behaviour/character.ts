@@ -565,6 +565,11 @@ function applyBuffOnCharacter(
   let finalToEntity = toEntity ? toEntity : fromEntity;
   for (const buff of buffs) {
     if (!buff) continue;
+    // use chance to apply to see if can apply
+    const chance = Math.random();
+    if (chance > buff.chanceToApply) {
+      continue;
+    }
     // Choose Target
     switch (buff.targetType) {
       case TargetType.Self: {

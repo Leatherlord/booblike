@@ -86,7 +86,6 @@ export class Decorator implements Character {
   }
   public update(context: Entity, world: World): void {
     if (this.startTime + this.timer <= Date.now()) {
-      console.log('removing effect');
       this.inheritedCharacter.childCharacter = this.childCharacter;
       if (this.childCharacter) {
         this.childCharacter.inheritedCharacter = this.inheritedCharacter;

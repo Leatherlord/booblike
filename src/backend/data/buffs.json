@@ -6,7 +6,8 @@
       "duration": 2500,
       "type": "Temporary"
     },
-    "effect": "EnhanceStrength"
+    "effect": "EnhanceStrength",
+    "chanceToApply": 1
   },
   "SimpleAttackBuff": {
     "name": "Simple Attack Buff",
@@ -15,7 +16,8 @@
       "duration": 1000,
       "type": "Temporary"
     },
-    "effect": "EnhanceStrength"
+    "effect": "EnhanceStrength",
+    "chanceToApply": 1
   },
   "SimpleHealthBuff": {
     "name": "Simple Health Buff",
@@ -24,7 +26,8 @@
       "duration": 5000,
       "type": "Temporary"
     },
-    "effect": "EnhanceHealth"
+    "effect": "EnhanceHealth",
+    "chanceToApply": 1
   },
   "SimpleFurryBuff": {
     "name": "Simple Furry Buff",
@@ -33,7 +36,8 @@
       "duration": 3000,
       "type": "Temporary"
     },
-    "effect": "Furry"
+    "effect": "Furry",
+    "chanceToApply": 1
   },
   "SimpleStunBuff": {
     "name": "Simple Stun Buff",
@@ -42,7 +46,8 @@
       "duration": 1000,
       "type": "Temporary"
     },
-    "effect": "Stun"
+    "effect": "Stun",
+    "chanceToApply": 0.8
   },
   "SimpleFurryMagic": {
     "name": "Simple Furry Magic",
@@ -51,7 +56,8 @@
       "duration": 2500,
       "type": "Temporary"
     },
-    "effect": "Furry"
+    "effect": "Furry",
+    "chanceToApply": 0.6
   },
   "SimpleAttackDebuff": {
     "name": "Simple Attack Debuff",
@@ -60,6 +66,7 @@
       "duration": 2500,
       "type": "Temporary"
     },
-    "effect": "DehanceAttack"
+    "effect": "DehanceAttack",
+    "chanceToApply": 1
   }
 }
