@@ -9,6 +9,7 @@ import {
   World,
 } from '../../common/interfaces';
 import { Attack } from './attacks';
+import { Buff } from './buffs';
 import {
   aggressiveMovement,
   cowardMovement,
@@ -43,6 +44,56 @@ function processAttack(
   const entities = room.entities;
   entities.get(pos).forEach(function (entity) {
     let attackResult = from.character.damage(from, entity, attack);
+
+    if (world.onCreateFloatingText) {
+      const targetX = attackResult.finalTarget.x;
+      const targetY = attackResult.finalTarget.y;
+
+      switch (attackResult.status) {
+        case 'miss':
+          world.onCreateFloatingText(targetX, targetY, 'MISS', 'miss');
+          break;
+        case 'normal':
+          const damage = Math.round(attackResult.finalDamage);
+          world.onCreateFloatingText(targetX, targetY, `-${damage}`, 'damage');
+          break;
+        case 'redirected':
+          const redirectDamage = Math.round(attackResult.finalDamage);
+          world.onCreateFloatingText(
+            targetX,
+            targetY,
+            `REDIRECT -${redirectDamage}`,
+            'critical'
+          );
+          break;
+        case 'self-hit':
+          const selfDamage = Math.round(attackResult.finalDamage);
+          world.onCreateFloatingText(
+            targetX,
+            targetY,
+            `SELF -${selfDamage}`,
+            'debuff'
+          );
+          break;
+      }
+
+      if (
+        attackResult.finalAttack &&
+        attackResult.finalAttack.attackBuffs &&
+        attackResult.finalAttack.attackBuffs.length > 0
+      ) {
+        attackResult.finalAttack.attackBuffs.forEach((buff: Buff) => {
+          if (buff && buff.name) {
+            world.onCreateFloatingText!(
+              targetX,
+              targetY - 0.3,
+              buff.name,
+              'buff'
+            );
+          }
+        });
+      }
+    }
 
     if (attackResult.finalTarget.character.healthBar <= 0) {
       if (attackResult.finalTarget === world.player) {
@@ -88,6 +139,57 @@ function attackOneEntity(
   }
 
   const attackResult = attacker.character.damage(attacker, enemy, attack);
+
+  if (world.onCreateFloatingText) {
+    const targetX = attackResult.finalTarget.x;
+    const targetY = attackResult.finalTarget.y;
+
+    switch (attackResult.status) {
+      case 'miss':
+        world.onCreateFloatingText(targetX, targetY, 'MISS', 'miss');
+        break;
+      case 'normal':
+        const damage = Math.round(attackResult.finalDamage);
+        world.onCreateFloatingText(targetX, targetY, `-${damage}`, 'damage');
+        break;
+      case 'redirected':
+        const redirectDamage = Math.round(attackResult.finalDamage);
+        world.onCreateFloatingText(
+          targetX,
+          targetY,
+          `REDIRECT -${redirectDamage}`,
+          'critical'
+        );
+        break;
+      case 'self-hit':
+        const selfDamage = Math.round(attackResult.finalDamage);
+        world.onCreateFloatingText(
+          targetX,
+          targetY,
+          `SELF -${selfDamage}`,
+          'debuff'
+        );
+        break;
+    }
+
+    if (
+      attackResult.finalAttack &&
+      attackResult.finalAttack.attackBuffs &&
+      attackResult.finalAttack.attackBuffs.length > 0
+    ) {
+      attackResult.finalAttack.attackBuffs.forEach((buff: any) => {
+        if (buff && buff.name) {
+          world.onCreateFloatingText!(
+            targetX,
+            targetY - 0.3,
+            buff.name,
+            'buff'
+          );
+        }
+      });
+    }
+  }
+
   const room = world.map.rooms[world.map.currentRoom];
 
   if (attackResult.finalTarget.character.healthBar <= 0) {

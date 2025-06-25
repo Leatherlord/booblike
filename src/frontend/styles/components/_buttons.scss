@@ -1,0 +1,91 @@
+@use '../base/variables' as *;
+@use 'sass:color';
+
+// Base button styles
+.btn {
+  padding: 8px 15px;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: color.adjust($primary-color, $lightness: -10%);
+  }
+
+  &.secondary {
+    background-color: $secondary-color;
+
+    &:hover {
+      background-color: color.adjust($secondary-color, $lightness: -10%);
+    }
+  }
+}
+
+// Save buttons
+.save-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.save-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color $transition-speed;
+
+  &:hover {
+    background: #45a049;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Load map button
+.load-map-button {
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color $transition-speed;
+  display: inline-block;
+
+  &:hover {
+    background: #1976d2;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Upgrade menu button
+.upgrade-menu-button {
+  padding: 8px 12px;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color $transition-speed;
+  font-size: 12px;
+  font-weight: bold;
+  width: 100%;
+
+  &:hover {
+    background-color: color.adjust($primary-color, $lightness: -10%);
+  }
+}

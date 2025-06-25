@@ -1,6 +1,17 @@
 import { Dictionary } from 'typescript-collections';
 import { Character, Characteristics } from '../backend/behaviour/character';
 
+export type FloatingText = {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff';
+  color: string;
+  startTime: number;
+  duration: number;
+};
+
 export type World = {
   map: GameMap;
   player: Entity & Inventory & LevelingData;
@@ -8,6 +19,14 @@ export type World = {
   onEntityDeath?: (deadEntity: Entity, attacker: Entity) => void;
   availableUpgrades: UpgradeOption[];
   isPlayerDead?: boolean;
+  floatingTexts?: FloatingText[];
+  onCreateFloatingText?: (
+    x: number,
+    y: number,
+    text: string,
+    type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff',
+    color?: string
+  ) => void;
 };
 
 export type ExitMappingEntry = {

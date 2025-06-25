@@ -1,6 +1,5 @@
 import React from 'react';
 import { UpgradeOption } from '../../common/interfaces';
-import '../styles/UpgradeMenu.scss';
 
 interface UpgradeMenuProps {
   isOpen: boolean;

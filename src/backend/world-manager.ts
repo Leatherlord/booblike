@@ -61,6 +61,7 @@ export class WorldManager {
       if (!this.world || this.world.player.character.healthBar <= 0) return;
 
       this.handleNPCMovement();
+      this.cleanupFloatingTexts();
     }, 1000);
   }
 
@@ -131,8 +132,18 @@ export class WorldManager {
           this.handleEnemyKilled(this.world, { enemyLevel: deadEntity.level });
         }
       },
+      onCreateFloatingText: (
+        x: number,
+        y: number,
+        text: string,
+        type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff',
+        color?: string
+      ) => {
+        this.addFloatingText(x, y, text, type, color);
+      },
       availableUpgrades: [],
       isPlayerDead: false,
+      floatingTexts: [],
     };
 
     stubWorld.availableUpgrades = this.calculateAvailableUpgrades(stubWorld);
@@ -251,6 +262,15 @@ export class WorldManager {
       ...this.world,
       onEntityDeath: (deadEntity: Entity, attacker: Entity) =>
         this.handleEnemyKilled(newWorld, { enemyLevel: deadEntity.level }),
+      onCreateFloatingText: (
+        x: number,
+        y: number,
+        text: string,
+        type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff',
+        color?: string
+      ) => {
+        this.addFloatingText(x, y, text, type, color);
+      },
     };
 
     attackFromPlayer(newWorld, event.weaponChosen);
@@ -360,6 +380,9 @@ export class WorldManager {
       ...this.world,
       player: { ...this.world.player },
       isPlayerDead: this.world.player.character.healthBar <= 0,
+      onEntityDeath: this.world.onEntityDeath,
+      onCreateFloatingText: this.world.onCreateFloatingText,
+      floatingTexts: this.world.floatingTexts,
     };
 
     this.updateWorld(newWorld);
@@ -488,10 +511,35 @@ export class WorldManager {
     return serializeWorld(this.world);
   }
 
+  private reinitializeWorldCallbacks(world: World): void {
+    world.onEntityDeath = (deadEntity: Entity, attacker: Entity) => {
+      if (this.world) {
+        this.handleEnemyKilled(this.world, { enemyLevel: deadEntity.level });
+      }
+    };
+
+    world.onCreateFloatingText = (
+      x: number,
+      y: number,
+      text: string,
+      type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff',
+      color?: string
+    ) => {
+      this.addFloatingText(x, y, text, type, color);
+    };
+
+    if (!world.floatingTexts) {
+      world.floatingTexts = [];
+    }
+  }
+
   public loadGame(saveData: string): void {
     try {
       const world = deserializeWorld(saveData);
       this.stopNPCMovementTimer();
+
+      this.reinitializeWorldCallbacks(world);
+
       this.world = world;
       this.updateWorld(world);
       this.startNPCMovementTimer();
@@ -533,10 +581,110 @@ export class WorldManager {
         map: map,
       };
 
+      this.reinitializeWorldCallbacks(newWorld);
+
       this.updateWorld(newWorld);
     } catch (error) {
       console.error('Failed to load map:', error);
       throw new Error('Invalid map data');
+    }
+  }
+
+  private addFloatingText(
+    x: number,
+    y: number,
+    text: string,
+    type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff',
+    color?: string
+  ) {
+    if (!this.world) return;
+
+    if (!this.world.floatingTexts) {
+      this.world.floatingTexts = [];
+    }
+
+    const floatingText = {
+      id: `${Date.now()}-${Math.random()}`,
+      x,
+      y,
+      text,
+      type,
+      color: color || this.getDefaultColor(type),
+      startTime: Date.now(),
+      duration: 2000,
+    };
+
+    this.world.floatingTexts.push(floatingText);
+
+    this.cleanupFloatingTexts();
+  }
+
+  private getDefaultColor(
+    type: 'damage' | 'miss' | 'critical' | 'buff' | 'debuff'
+  ): string {
+    switch (type) {
+      case 'damage':
+        return '#ff4444';
+      case 'miss':
+        return '#888888';
+      case 'critical':
+        return '#ffaa00';
+      case 'buff':
+        return '#44ff44';
+      case 'debuff':
+        return '#ff8844';
+      default:
+        return '#ffffff';
+    }
+  }
+
+  private cleanupFloatingTexts() {
+    if (!this.world?.floatingTexts) return;
+
+    const now = Date.now();
+    this.world.floatingTexts = this.world.floatingTexts.filter(
+      (text) => now - text.startTime < text.duration
+    );
+  }
+
+  public createAttackFloatingText(
+    attackResult: any,
+    targetX: number,
+    targetY: number
+  ) {
+    if (!attackResult) return;
+
+    const { finalDamage, status } = attackResult;
+
+    switch (status) {
+      case 'miss':
+        this.addFloatingText(targetX, targetY, 'MISS', 'miss');
+        break;
+      case 'normal':
+        const damage = Math.round(finalDamage);
+        this.addFloatingText(targetX, targetY, `-${damage}`, 'damage');
+        break;
+      case 'redirected':
+        const redirectDamage = Math.round(finalDamage);
+        this.addFloatingText(
+          targetX,
+          targetY,
+          `REDIRECT -${redirectDamage}`,
+          'critical'
+        );
+        break;
+      case 'self-hit':
+        const selfDamage = Math.round(finalDamage);
+        this.addFloatingText(targetX, targetY, `SELF -${selfDamage}`, 'debuff');
+        break;
+    }
+
+    if (attackResult.finalAttack?.attackBuffs?.length > 0) {
+      attackResult.finalAttack.attackBuffs.forEach((buff: any) => {
+        if (buff.name) {
+          this.addFloatingText(targetX, targetY - 0.3, buff.name, 'buff');
+        }
+      });
     }
   }
 }

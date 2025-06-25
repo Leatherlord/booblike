@@ -1,0 +1,48 @@
+@use 'variables' as *;
+
+// Global resets and base styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: $font-stack;
+  background-color: $background-color;
+  color: $hud-text;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+button {
+  font-family: inherit;
+}
+
+// Loading screen
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: $background-color;
+  color: $hud-text;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  p {
+    opacity: 0.8;
+  }
+}
