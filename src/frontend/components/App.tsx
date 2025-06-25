@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef, ReactNode } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import GameField from './GameField';
 import Inventory from './Inventory';
 import TexturePackSelector from './TexturePackSelector';
+import SaveGameLoader from './SaveGameLoader';
 import UpgradeMenu from './UpgradeMenu';
 import DeathModal from './DeathModal';
 import { useWorld } from '../../common/context/WorldContext';
@@ -10,12 +11,14 @@ import { TexturePack } from '../types/texturePack';
 import { TexturePackScanner } from '../utils/texturePackScanner';
 
 const App: React.FC = () => {
-  const { world, handleEvent, restartGame } = useWorld();
+  const { world, handleEvent, saveGame, restartGame, saveMap } = useWorld();
   const lastEventTimeRef = useRef<number>(0);
   const [selectedTexturePack, setSelectedTexturePack] =
     useState<TexturePack | null>(null);
   const [showTexturePackSelector, setShowTexturePackSelector] = useState(true);
+  const [showSaveGameLoader, setShowSaveGameLoader] = useState(false);
   const [isLoadingTexturePacks, setIsLoadingTexturePacks] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
   const [isUpgradeMenuOpen, setIsUpgradeMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -46,6 +49,67 @@ const App: React.FC = () => {
   const handleTexturePackSelected = (pack: TexturePack) => {
     setSelectedTexturePack(pack);
     setShowTexturePackSelector(false);
+    setShowSaveGameLoader(true);
+  };
+
+  const handleStartNewGame = () => {
+    setShowSaveGameLoader(false);
+    setGameStarted(true);
+  };
+
+  const handleGameLoaded = () => {
+    setShowSaveGameLoader(false);
+    setGameStarted(true);
+  };
+
+  const handleSaveGame = () => {
+    try {
+      const saveData = saveGame();
+      const blob = new Blob([saveData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19);
+      const filename = `booblike-save-${timestamp}.json`;
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to save game:', error);
+      alert('Failed to save game. Please try again.');
+    }
+  };
+
+  const handleSaveMap = () => {
+    try {
+      const mapData = saveMap();
+      const blob = new Blob([mapData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19);
+      const filename = `booblike-map-${timestamp}.json`;
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to save map:', error);
+      alert('Failed to save map. Please try again.');
+    }
   };
 
   const handleSelectSlot = (slotId: number) => {
@@ -68,8 +132,22 @@ const App: React.FC = () => {
     setIsUpgradeMenuOpen(!isUpgradeMenuOpen);
   };
 
+  const getExperienceProgressPercentage = () => {
+    if (!world || world.player.experienceToNext === 0) return 0;
+    return (world.player.experience / world.player.experienceToNext) * 100;
+  };
+
+  const getHealthPercentage = () => {
+    if (!world || world.player.character.maxHealthBar === 0) return 0;
+    return (
+      (world.player.character.healthBar / world.player.character.maxHealthBar) *
+      100
+    );
+  };
+
   useEffect(() => {
-    if (!world) return;
+    if (!world || !gameStarted) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!world) return;
 
@@ -137,20 +215,18 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [world, handleEvent, isUpgradeMenuOpen]);
+  }, [world, handleEvent, gameStarted, isUpgradeMenuOpen]);
 
-  const getExperienceProgressPercentage = () => {
-    if (!world || world.player.experienceToNext === 0) return 0;
-    return (world.player.experience / world.player.experienceToNext) * 100;
-  };
-
-  const getHealthPercentage = () => {
-    if (!world || world.player.character.maxHealthBar === 0) return 0;
-    return (
-      (world.player.character.healthBar / world.player.character.maxHealthBar) *
-      100
-    );
-  };
+  useEffect(() => {
+    if (
+      world &&
+      !gameStarted &&
+      !showTexturePackSelector &&
+      !showSaveGameLoader
+    ) {
+      setGameStarted(true);
+    }
+  }, [world, gameStarted, showTexturePackSelector, showSaveGameLoader]);
 
   if (isLoadingTexturePacks) {
     return (
@@ -179,6 +255,24 @@ const App: React.FC = () => {
           handleTexturePackSelected(defaultPack);
         }}
       />
+    );
+  }
+
+  if (showSaveGameLoader) {
+    return (
+      <SaveGameLoader
+        onStartNewGame={handleStartNewGame}
+        onGameLoaded={handleGameLoaded}
+        onMapLoaded={handleGameLoaded}
+      />
+    );
+  }
+
+  if (!gameStarted || !world) {
+    return (
+      <div className="loading-screen">
+        <h2>Starting Game...</h2>
+      </div>
     );
   }
 
@@ -227,6 +321,22 @@ const App: React.FC = () => {
           {selectedTexturePack && (
             <span className="hud-item">Pack: {selectedTexturePack.name}</span>
           )}
+          <div className="save-buttons">
+            <button
+              onClick={handleSaveGame}
+              className="save-button"
+              title="Save Game"
+            >
+              💾 Save Game
+            </button>
+            <button
+              onClick={handleSaveMap}
+              className="save-button"
+              title="Save Map"
+            >
+              🗺️ Save Map
+            </button>
+          </div>
         </div>
       </div>
 
@@ -271,6 +381,7 @@ const App: React.FC = () => {
           <div className="hud-item">Press 0-9 to select inventory slots</div>
           <div className="hud-item">Press SPACE to attack</div>
           <div className="hud-item">Press U to open upgrades menu</div>
+          <div className="hud-item">💾 Save Game | 🗺️ Save Map</div>
         </div>
       </div>
 

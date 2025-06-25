@@ -52,6 +52,144 @@ body {
   }
 }
 
+.save-game-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .save-game-loader-content {
+    background: $hud-background;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90vw;
+    color: $hud-text;
+    border: 1px solid $hud-border;
+    text-align: center;
+
+    h2 {
+      margin: 0 0 16px 0;
+      color: $hud-text;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0 0 24px 0;
+      color: #cccccc;
+    }
+
+    .game-options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+
+      .load-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .load-game-section,
+      .load-map-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .map-button {
+        background: #2196f3 !important;
+
+        &:hover {
+          background: #1976d2 !important;
+        }
+      }
+
+      .map-note {
+        color: #888;
+        font-style: italic;
+        text-align: center;
+        margin-top: 4px;
+      }
+    }
+
+    .error-message {
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid #f44336;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 16px 0;
+      color: #ff5555;
+
+      strong {
+        color: #ff3333;
+      }
+    }
+
+    .load-instructions {
+      margin-top: 16px;
+
+      small {
+        color: #888;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+.save-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.save-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background: #45a049;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.load-map-button {
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: inline-block;
+
+  &:hover {
+    background: #1976d2;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
 .game-container {
   width: 100%;
   height: 100vh;

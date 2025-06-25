@@ -357,6 +357,7 @@ export class Fury implements Strategy {
 }
 
 export const strategyMap: Record<string, Strategy> = {
+  PlayerStrategy: new PlayerStrategy(),
   Neutral: new Neutral(),
   Coward: new Coward(),
   Aggresive: new Aggresive(),

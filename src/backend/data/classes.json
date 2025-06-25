@@ -1,6 +1,6 @@
 {
   "WeaklingClass": {
-    "className": "weaklingClass",
+    "className": "WeaklingClass",
     "possibleNames": ["Daniil", "Vladimir", "Pavel"],
     "possibleSurnames": ["Very Scared", "Fearful", "Hates you"],
     "possibleTextures": ["coward", "coward2"],
@@ -36,7 +36,7 @@
     }
   },
   "MiddleClass": {
-    "className": "middleClass",
+    "className": "MiddleClass",
     "possibleNames": ["Some Dude", "Villagerina", "Valentina"],
     "possibleSurnames": ["Smith", "Mikhailovna", "IDK Kevin's mom or SMTH"],
     "possibleTextures": ["enemy"],
@@ -72,7 +72,7 @@
     }
   },
   "StrongClass": {
-    "className": "strongClass",
+    "className": "StrongClass",
     "possibleNames": ["Beaver", "Daniil", "Caveman", "Kevin"],
     "possibleSurnames": [
       "The Fearsome",

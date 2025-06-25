@@ -1,4 +1,6 @@
 import { Entity } from '../../common/interfaces';
+import { strategyMap } from './strategy';
+import { PlayerClass } from './classes';
 
 export enum EventType {
   Pacify = 'Pacify',
