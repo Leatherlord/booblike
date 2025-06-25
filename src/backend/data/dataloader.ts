@@ -9,6 +9,7 @@ import { Strategy, strategyMap } from '../behaviour/strategy';
 import { states } from '../behaviour/state';
 import { generateGrid, Speed } from '../../common/interfaces';
 import { Bonus, Buff, Effect } from '../behaviour/buffs';
+import { buffer } from 'node:stream/consumers';
 
 let _attackMap: Record<string, Attack> | null = null;
 let _charClassMap: Record<string, CharClass> | null = null;
@@ -79,17 +80,28 @@ function convertJsonToBuffClass(
   };
 }
 
-function convertJsonToAttackClass(json: any): Attack {
+function convertJsonToAttackClass(
+  json: any,
+  buffsMap: Record<string, Buff>
+): Attack {
   const speed: Speed = Speed[json.speed as keyof typeof Speed];
   if (!speed) throw new Error(`Unknown speed: ${json.speed}`);
   const area = generateGrid(json.area);
+
+  let buffs = [];
+  for (let buff of json.attackBuffs) {
+    if (buffsMap[buff]) {
+      buffs.push(buffsMap[buff]);
+      console.log(buffsMap[buff].name);
+    }
+  }
 
   return {
     name: json.id,
     speed,
     minDamage: json.minDamage,
     maxDamage: json.maxDamage,
-    attackBuffs: json.attackBuffs || [],
+    attackBuffs: buffs || [],
     areaSize: json.areaSize,
     area,
   };
@@ -97,10 +109,11 @@ function convertJsonToAttackClass(json: any): Attack {
 
 export function getAttackMap(): Record<string, Attack> {
   if (!_attackMap) {
+    const effects = getBuffsClassMap();
     _attackMap = Object.fromEntries(
       Object.entries(attacksJson).map(([id, data]) => [
         id,
-        convertJsonToAttackClass(data),
+        convertJsonToAttackClass(data, effects),
       ])
     );
   }

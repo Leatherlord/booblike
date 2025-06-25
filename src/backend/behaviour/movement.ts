@@ -67,43 +67,6 @@ function calculateLookDirectionAggression(
   return dy > 0 ? LookDirection.Down : LookDirection.Up;
 }
 
-function hasLineOfSight(room: Room, start: Point2d, end: Point2d): boolean {
-  if (start.x === end.x && start.y === end.y) return true;
-
-  let x0 = start.x;
-  let y0 = start.y;
-  const x1 = end.x;
-  const y1 = end.y;
-
-  const dx = Math.abs(x1 - x0);
-  const dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1;
-  const sy = y0 < y1 ? 1 : -1;
-  let err = dx - dy;
-
-  while (true) {
-    if (x0 === x1 && y0 === y1) break;
-
-    const e2 = 2 * err;
-    if (e2 > -dy) {
-      err -= dy;
-      x0 += sx;
-    }
-    if (e2 < dx) {
-      err += dx;
-      y0 += sy;
-    }
-
-    if (x0 === x1 && y0 === y1) break;
-
-    if (room.map[y0]?.[x0] !== 'floor') {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 function calculateLookDirectionCoward(
   creaturePos: Point2d,
   playerPos: Point2d
@@ -178,7 +141,7 @@ export function aggressiveMovement(
     [-1, 0],
     [1, 1],
   ];
-  let bestDist = manhattanDistance(from, enemyPos);
+  let bestDist = 10000000;
   let bestShift: [number, number] = [0, 0];
   for (const [dx, dy] of availableShift) {
     const target = { x: from.x + dx, y: from.y + dy };
