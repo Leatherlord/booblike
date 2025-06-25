@@ -315,6 +315,20 @@ const App: React.FC = () => {
                     1}
                 </span>
                 <span className="hud-item">
+                  Stats: S:{world.player.character.characteristics.s}(
+                  {world.player.character.baseCharacteristics.s}) P:
+                  {world.player.character.characteristics.p} E:
+                  {world.player.character.characteristics.e} A:
+                  {world.player.character.characteristics.a} I:
+                  {world.player.character.characteristics.i}
+                </span>
+                <span className="hud-item">
+                  Weapon:{' '}
+                  {world.player.slots.find(
+                    (slot) => slot.id === world.player.activeSlot
+                  )?.item?.name || 'None'}
+                </span>
+                <span className="hud-item">
                   Player: ({world.player.x}, {world.player.y})
                 </span>
               </>

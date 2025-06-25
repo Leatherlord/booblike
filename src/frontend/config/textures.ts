@@ -10,4 +10,5 @@ export const TEXTURE_CONFIG: TextureConfig = {
   coward2: '/resources/COWARD2.png',
   furry: '/resources/furry.png',
   attack: '/resources/attack.png',
+  sword: '/resources/sword.png',
 };

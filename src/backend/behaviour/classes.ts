@@ -1,3 +1,4 @@
+import { ATTACKS } from '../data/attacks';
 import * as Attacks from './attacks';
 import { Characteristics } from './character';
 import { states, EventType } from './state';
@@ -89,8 +90,8 @@ export let PlayerClass: CharClass = {
     { s: 1, p: 1, e: 1, i: 1, a: 1 },
     { s: 10, p: 10, e: 10, i: 10, a: 10 },
   ],
-  availableAttacks: [],
-  numberOfAttacks: 9,
+  availableAttacks: [ATTACKS.StraightAttack],
+  numberOfAttacks: 1,
   strategy: {
     [states.Pacifist]: new Neutral(),
     [states.Normal]: new PlayerStrategy(),

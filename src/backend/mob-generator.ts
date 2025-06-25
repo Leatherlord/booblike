@@ -1,18 +1,16 @@
 import { prngAlea } from 'ts-seedrandom';
 import { Character, RandomEnemyCharacter } from './behaviour/character';
-import { getCharClassMap } from './data/dataloader';
+import { CLASSES } from './data/classes';
 
 export function generateCharacterWithSeed(seed: number): Character {
   const rng = prngAlea(seed);
-  const charClassMap = getCharClassMap();
-  let classNames = Object.keys(charClassMap);
+  let classNames = Object.keys(CLASSES);
   const classNum = Math.floor(rng() * classNames.length);
-  return new RandomEnemyCharacter(charClassMap[classNames[classNum]]);
+  return new RandomEnemyCharacter(CLASSES[classNames[classNum]]);
 }
 
 export function generateCharacter(): Character {
-  const charClassMap = getCharClassMap();
-  let classNames = Object.keys(charClassMap);
+  let classNames = Object.keys(CLASSES);
   const classNum = Math.floor(Math.random() * classNames.length);
-  return new RandomEnemyCharacter(charClassMap[classNames[classNum]]);
+  return new RandomEnemyCharacter(CLASSES[classNames[classNum]]);
 }

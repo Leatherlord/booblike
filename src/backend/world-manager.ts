@@ -1,6 +1,7 @@
 import {
   World,
   InventorySlot,
+  InventoryItem,
   GameMap,
   Room,
   Point2d,
@@ -29,7 +30,7 @@ import {
   recalculatePlayerStats,
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
-import { getBuffsClassMap } from './data/dataloader';
+import { WEAPONS } from './data/weapons';
 import {
   serializeWorld,
   deserializeWorld,
@@ -92,7 +93,7 @@ export class WorldManager {
       { id: 7 },
       { id: 8 },
       { id: 9 },
-      { id: 0, item: { id: 'test-item', name: 'Test Item' } },
+      { id: 0 },
     ];
   }
 
@@ -243,6 +244,17 @@ export class WorldManager {
 
   private handleInventorySelect(event: InventorySelectEvent) {
     if (!this.world) return;
+
+    const selectedSlot = this.world.player.slots.find(
+      (slot) => slot.id === event.slotId
+    );
+    const selectedItem = selectedSlot?.item;
+
+    if (selectedItem?.type === 'weapon') {
+      this.world.player.character.equipWeapon(selectedItem, this.world.player);
+    } else {
+      this.world.player.character.equipWeapon(undefined, this.world.player);
+    }
 
     const newWorld = {
       ...this.world,

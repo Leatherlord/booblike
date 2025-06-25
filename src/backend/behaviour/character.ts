@@ -1,6 +1,14 @@
 import { StringDecoder } from 'string_decoder';
-import { Entity, Grid, Size, Speed, World } from '../../common/interfaces';
-import { Attack, StraightAttack } from './attacks';
+import {
+  Entity,
+  Grid,
+  Size,
+  Speed,
+  World,
+  InventoryItem,
+  LookDirection,
+} from '../../common/interfaces';
+import { Attack } from './attacks';
 import {
   Buff,
   ModifierType,
@@ -15,7 +23,9 @@ import { Aggresive, MovementResult, Strategy } from './strategy';
 import { PriorityQueue } from 'typescript-collections';
 import { chooseDecorator, FurryCharacter } from './actions';
 import { strategyMap } from './strategy';
-import { getCharClassMap } from '../data/dataloader';
+import { CLASSES } from '../data/classes';
+import { BUFFS } from '../data/buffs';
+import { ATTACKS } from '../data/attacks';
 
 // Characteristics and Calculations based on them
 
@@ -542,13 +552,19 @@ function applyAction(
   currentChild?: Character
 ) {
   const finalTo = currentChild ? currentChild : finalToEntity.character;
-  if (finalTo.childCharacter) {
-    applyAction(finalToEntity, buff, finalTo.childCharacter);
-  } else {
-    finalTo.childCharacter = chooseDecorator(finalTo, buff);
+
+  let deepest = finalTo;
+  const visited = new Set<Character>();
+
+  while (deepest.childCharacter && !visited.has(deepest)) {
+    visited.add(deepest);
+    deepest = deepest.childCharacter;
   }
-  if (finalTo.childCharacter) {
-    finalToEntity.character = finalTo.childCharacter;
+
+  const newDecorator = chooseDecorator(deepest, buff);
+  if (newDecorator) {
+    deepest.childCharacter = newDecorator;
+    finalToEntity.character = finalTo.childCharacter || finalTo;
   }
 }
 /*
@@ -687,6 +703,7 @@ export interface Character {
   setState: (state: states) => void;
   applyBuff: (context: Entity, buffs: Buff[]) => void;
   onDeath: (context: Entity, world: World) => void;
+  equipWeapon: (weapon: InventoryItem | undefined, context?: Entity) => void;
 
   getTexture: () => string;
   getBuffs: () => PriorityQueue<BuffDuration>;
@@ -821,8 +838,7 @@ export class BaseCharacter implements Character {
     Object.assign(char, cleanData);
 
     if (data._charClassName) {
-      const charClassMap = getCharClassMap();
-      char.charClass = charClassMap[data._charClassName] || PlayerClass;
+      char.charClass = CLASSES[data._charClassName] || PlayerClass;
     } else {
       char.charClass = PlayerClass; // fallback
     }
@@ -907,9 +923,17 @@ export class BaseCharacter implements Character {
 
     return reconstructed;
   }
+
+  public equipWeapon(
+    weapon: InventoryItem | undefined,
+    context?: Entity
+  ): void {}
 }
 
 export class PlayerCharacter extends BaseCharacter {
+  private equippedWeapon?: InventoryItem;
+  private baseAttacks: Attack[];
+
   constructor(
     name: string,
     characteristics: Characteristics,
@@ -918,14 +942,17 @@ export class PlayerCharacter extends BaseCharacter {
     super();
     this.charClass = PlayerClass;
     this.strategy = this.charClass.strategy[states.Normal as states];
-    this.attacks = [StraightAttack];
+    this.attacks = [ATTACKS.StraightAttack];
+
+    this.baseAttacks = [ATTACKS.StraightAttack];
+
     this.characterSize = { width: 1, height: 1 };
     this.level = 1;
     this.score = 0;
     this.state = states.Normal;
 
-    this.baseCharacteristics = { ...characteristics }; //
-    this.characteristics = { ...characteristics }; //
+    this.baseCharacteristics = { ...characteristics };
+    this.characteristics = { ...characteristics };
     this.name = name;
 
     this.baseMaxHealthBar = health(this);
@@ -944,11 +971,125 @@ export class PlayerCharacter extends BaseCharacter {
     }
   }
 
+  public equipWeapon(weapon: InventoryItem | undefined, context?: Entity) {
+    // Remove old weapon effects if any
+    if (this.equippedWeapon?.characteristicsBonuses) {
+      const characteristicKeys: (keyof Characteristics)[] = [
+        's',
+        'p',
+        'e',
+        'a',
+        'i',
+      ];
+
+      for (const charKey of characteristicKeys) {
+        const bonus = this.equippedWeapon.characteristicsBonuses[charKey];
+        if (bonus && bonus !== 0) {
+          const removeBuff: BuffDuration = {
+            value: -bonus,
+            startTime: Date.now(),
+            duration: 0,
+          };
+
+          if (!this.buffsBonus[StatType.Attribute]) {
+            this.buffsBonus[StatType.Attribute] = {} as any;
+          }
+          if (!this.buffsBonus[StatType.Attribute][ModifierType.Flat]) {
+            this.buffsBonus[StatType.Attribute][ModifierType.Flat] = {} as any;
+          }
+          if (
+            !this.buffsBonus[StatType.Attribute][ModifierType.Flat][charKey]
+          ) {
+            this.buffsBonus[StatType.Attribute][ModifierType.Flat][charKey] =
+              new PriorityQueue<BuffDuration>(durationComparator);
+          }
+
+          this.buffsBonus[StatType.Attribute][ModifierType.Flat][
+            charKey
+          ].enqueue(removeBuff);
+        }
+      }
+    }
+
+    // Always reset to fresh base attacks
+    this.attacks = [...this.baseAttacks];
+
+    this.equippedWeapon = weapon;
+
+    // Apply new weapon effects if any
+    if (weapon?.characteristicsBonuses) {
+      const characteristicKeys: (keyof Characteristics)[] = [
+        's',
+        'p',
+        'e',
+        'a',
+        'i',
+      ];
+
+      for (const charKey of characteristicKeys) {
+        const bonus = weapon.characteristicsBonuses[charKey];
+        if (bonus && bonus !== 0) {
+          const addBuff: BuffDuration = {
+            value: bonus,
+            startTime: Date.now(),
+            duration: 0,
+          };
+
+          if (!this.buffsBonus[StatType.Attribute]) {
+            this.buffsBonus[StatType.Attribute] = {} as any;
+          }
+          if (!this.buffsBonus[StatType.Attribute][ModifierType.Flat]) {
+            this.buffsBonus[StatType.Attribute][ModifierType.Flat] = {} as any;
+          }
+          if (
+            !this.buffsBonus[StatType.Attribute][ModifierType.Flat][charKey]
+          ) {
+            this.buffsBonus[StatType.Attribute][ModifierType.Flat][charKey] =
+              new PriorityQueue<BuffDuration>(durationComparator);
+          }
+
+          this.buffsBonus[StatType.Attribute][ModifierType.Flat][
+            charKey
+          ].enqueue(addBuff);
+        }
+      }
+    }
+
+    if (weapon?.attack) {
+      this.attacks = [weapon.attack];
+    }
+
+    if (context) {
+      const changed = {
+        healthChanged: true,
+        attackChanged: true,
+        attributeChanged: {
+          s: true,
+          p: true,
+          e: true,
+          a: true,
+          i: true,
+        },
+      };
+      recalculatePlayerStats(context, changed);
+    } else {
+      const changed = {
+        s: true,
+        p: true,
+        e: true,
+        a: true,
+        i: true,
+      };
+      recalculateAttributes(this, changed);
+    }
+  }
+
   public serialize(): any {
     const baseData = super.serialize();
     return {
       ...baseData,
       _characterType: 'PlayerCharacter',
+      _equippedWeapon: this.equippedWeapon,
     };
   }
 
@@ -978,6 +1119,8 @@ export class PlayerCharacter extends BaseCharacter {
       'speed',
       'buffsBonus',
       'allBuffs',
+      'baseAttacks',
+      'equippedWeapon',
     ];
 
     Object.keys(data).forEach((key) => {
@@ -1000,6 +1143,10 @@ export class PlayerCharacter extends BaseCharacter {
     }
     if (data.buffsBonus) {
       char.buffsBonus = BaseCharacter.reconstructBuffAddOns(data.buffsBonus);
+    }
+
+    if (data._equippedWeapon) {
+      char.equipWeapon(data._equippedWeapon);
     }
 
     return char;
@@ -1049,17 +1196,15 @@ export class RandomEnemyCharacter extends BaseCharacter {
   static deserialize(data: any): RandomEnemyCharacter {
     let restoredCharClass: CharClass;
     if (data._charClassName) {
-      const charClassMap = getCharClassMap();
-      restoredCharClass = charClassMap[data._charClassName];
+      restoredCharClass = CLASSES[data._charClassName];
       if (!restoredCharClass) {
         console.warn(
           `CharClass not found: ${data._charClassName}, using fallback`
         );
-        restoredCharClass = Object.values(charClassMap)[0] || PlayerClass;
+        restoredCharClass = Object.values(CLASSES)[0] || PlayerClass;
       }
     } else {
-      const charClassMap = getCharClassMap();
-      restoredCharClass = Object.values(charClassMap)[0] || PlayerClass;
+      restoredCharClass = Object.values(CLASSES)[0] || PlayerClass;
     }
 
     const char = new RandomEnemyCharacter(restoredCharClass);

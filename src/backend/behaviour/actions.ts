@@ -1,6 +1,13 @@
 import { PriorityQueue } from 'typescript-collections';
-import { Entity, Grid, Size, Speed, World } from '../../common/interfaces';
-import { Attack, StraightAttack } from './attacks';
+import {
+  Entity,
+  Grid,
+  Size,
+  Speed,
+  World,
+  InventoryItem,
+} from '../../common/interfaces';
+import { Attack } from './attacks';
 import { Buff, isEffect } from './buffs';
 import {
   AttackResult,
@@ -43,119 +50,220 @@ function shallow_clone_all<T extends Character>(char1: T, char2: T): void {
 }
 
 export class Decorator implements Character {
+  protected character: Character;
+  public inheritedCharacter: Character;
+  public startTime: number;
+  public timer: number;
+  public causedBy: Buff;
+
   constructor(character: Character, buff: Buff) {
-    shallow_clone_all(this, character);
+    this.character = character;
     this.inheritedCharacter = character;
-    this.timer = buff.duration.duration;
     this.startTime = Date.now();
     this.timer = buff.duration.duration;
     this.causedBy = buff;
   }
-  allBuffs!: PriorityQueue<BuffDuration>;
-  inheritedCharacter: Character;
-  childCharacter?: Character;
-  name!: string;
-  surname?: string | undefined;
-  strategy!: Strategy;
-  healthBar!: number;
-  baseMaxHealthBar!: number;
-  maxHealthBar!: number;
-  charClass!: CharClass;
-  attacks!: Attack[];
-  characterSize!: Size;
-  areaSize!: Grid;
-  level!: number;
-  baseCharacteristics!: Characteristics;
-  characteristics!: Characteristics;
-  score?: number | undefined;
-  speed!: Speed;
-  state!: states;
-  buffsBonus!: BuffAddOns;
-  texture?: string;
 
-  startTime: number;
-  timer: number;
+  public get allBuffs(): PriorityQueue<BuffDuration> {
+    return this.character.allBuffs;
+  }
+  public set allBuffs(value: PriorityQueue<BuffDuration>) {
+    this.character.allBuffs = value;
+  }
 
-  causedBy: Buff;
+  public get childCharacter(): Character | undefined {
+    return this.character.childCharacter;
+  }
+  public set childCharacter(value: Character | undefined) {
+    this.character.childCharacter = value;
+  }
+
+  public get name(): string {
+    return this.character.name;
+  }
+  public set name(value: string) {
+    this.character.name = value;
+  }
+
+  public get surname(): string | undefined {
+    return this.character.surname;
+  }
+  public set surname(value: string | undefined) {
+    this.character.surname = value;
+  }
+
+  public get texture(): string | undefined {
+    return this.character.texture;
+  }
+  public set texture(value: string | undefined) {
+    this.character.texture = value;
+  }
+
+  public get strategy(): Strategy {
+    return this.character.strategy;
+  }
+  public set strategy(value: Strategy) {
+    this.character.strategy = value;
+  }
+
+  public get healthBar(): number {
+    return this.character.healthBar;
+  }
+  public set healthBar(value: number) {
+    this.character.healthBar = value;
+  }
+
+  public get baseMaxHealthBar(): number {
+    return this.character.baseMaxHealthBar;
+  }
+  public set baseMaxHealthBar(value: number) {
+    this.character.baseMaxHealthBar = value;
+  }
+
+  public get maxHealthBar(): number {
+    return this.character.maxHealthBar;
+  }
+  public set maxHealthBar(value: number) {
+    this.character.maxHealthBar = value;
+  }
+
+  public get charClass(): CharClass {
+    return this.character.charClass;
+  }
+  public set charClass(value: CharClass) {
+    this.character.charClass = value;
+  }
+
+  public get attacks(): Attack[] {
+    return this.character.attacks;
+  }
+  public set attacks(value: Attack[]) {
+    this.character.attacks = value;
+  }
+
+  public get characterSize(): Size {
+    return this.character.characterSize;
+  }
+  public set characterSize(value: Size) {
+    this.character.characterSize = value;
+  }
+
+  public get areaSize(): Grid {
+    return this.character.areaSize;
+  }
+  public set areaSize(value: Grid) {
+    this.character.areaSize = value;
+  }
+
+  public get level(): number {
+    return this.character.level;
+  }
+  public set level(value: number) {
+    this.character.level = value;
+  }
+
+  public get baseCharacteristics(): Characteristics {
+    return this.character.baseCharacteristics;
+  }
+  public set baseCharacteristics(value: Characteristics) {
+    this.character.baseCharacteristics = value;
+  }
+
+  public get characteristics(): Characteristics {
+    return this.character.characteristics;
+  }
+  public set characteristics(value: Characteristics) {
+    this.character.characteristics = value;
+  }
+
+  public get score(): number | undefined {
+    return this.character.score;
+  }
+  public set score(value: number | undefined) {
+    this.character.score = value;
+  }
+
+  public get speed(): Speed {
+    return this.character.speed;
+  }
+  public set speed(value: Speed) {
+    this.character.speed = value;
+  }
+
+  public get state(): states {
+    return this.character.state;
+  }
+  public set state(value: states) {
+    this.character.state = value;
+  }
+
+  public get buffsBonus(): BuffAddOns {
+    return this.character.buffsBonus;
+  }
+  public set buffsBonus(value: BuffAddOns) {
+    this.character.buffsBonus = value;
+  }
 
   public move(context: Entity, world: World): MovementResult {
-    return this.inheritedCharacter.move(context, world);
+    return this.character.move(context, world);
   }
+
   public damage(context: Entity, enemy: Entity, attack: Attack): AttackResult {
-    return this.inheritedCharacter.damage(context, enemy, attack);
+    return this.character.damage(context, enemy, attack);
   }
+
   public update(context: Entity, world: World): void {
     if (this.startTime + this.timer <= Date.now()) {
-      this.inheritedCharacter.childCharacter = this.childCharacter;
-      if (this.childCharacter) {
-        this.childCharacter.inheritedCharacter = this.inheritedCharacter;
+      if (this.character.childCharacter) {
+        context.character = this.character.childCharacter;
+        this.character.childCharacter.inheritedCharacter = this.character;
       } else {
-        context.character = this.inheritedCharacter;
+        context.character = this.character;
       }
     }
-    this.inheritedCharacter.update(context, world);
+    this.character.update(context, world);
   }
+
   public getSpeed(): Speed {
-    return this.inheritedCharacter.getSpeed();
+    return this.character.getSpeed();
   }
+
   public getAttackSpeed(attack: Attack): Speed {
-    return this.inheritedCharacter.getAttackSpeed(attack);
+    return this.character.getAttackSpeed(attack);
   }
+
   public setState(state: states): void {
-    this.inheritedCharacter.setState(state);
+    this.character.setState(state);
   }
+
   public applyBuff(context: Entity, buffs: Buff[]): void {
-    this.inheritedCharacter.applyBuff(context, buffs);
+    this.character.applyBuff(context, buffs);
   }
+
   public onDeath(context: Entity, world: World): void {
-    this.inheritedCharacter.onDeath(context, world);
+    this.character.onDeath(context, world);
   }
+
   public getTexture(): string {
-    return this.inheritedCharacter.getTexture();
+    return this.character.getTexture();
   }
+
   public getBuffs(): PriorityQueue<BuffDuration> {
-    return this.inheritedCharacter.getBuffs();
+    return this.character.getBuffs();
+  }
+
+  public equipWeapon(weapon: InventoryItem | undefined): void {
+    this.character.equipWeapon(weapon);
   }
 
   public serialize(): any {
     return {
-      _isDecorator: true,
+      ...this.character.serialize(),
       _decoratorType: this.constructor.name,
       _decoratorStartTime: this.startTime,
       _decoratorTimer: this.timer,
       _decoratorCausedBy: this.causedBy,
-      _inheritedCharacter: this.inheritedCharacter.serialize(),
-      name: this.name,
-      surname: this.surname,
-      texture: this.texture,
-      healthBar: this.healthBar,
-      baseMaxHealthBar: this.baseMaxHealthBar,
-      maxHealthBar: this.maxHealthBar,
-      characterSize: this.characterSize,
-      areaSize: this.areaSize,
-      level: this.level,
-      baseCharacteristics: this.baseCharacteristics,
-      characteristics: this.characteristics,
-      score: this.score,
-      speed: this.speed,
-      state: this.state,
-      strategy: undefined,
-      attacks: undefined,
-      buffsBonus: undefined,
-      allBuffs: undefined,
-      inheritedCharacter: undefined,
-      childCharacter: undefined,
-      move: undefined,
-      damage: undefined,
-      update: undefined,
-      getSpeed: undefined,
-      getAttackSpeed: undefined,
-      setState: undefined,
-      applyBuff: undefined,
-      onDeath: undefined,
-      getTexture: undefined,
-      getBuffs: undefined,
-      serialize: undefined,
+      _inheritedCharacter: this.character.serialize(),
     };
   }
 
@@ -190,6 +298,7 @@ export class Decorator implements Character {
 
     decorator.startTime = data._decoratorStartTime;
     decorator.timer = data._decoratorTimer;
+    decorator.causedBy = data._decoratorCausedBy;
 
     if (data.texture !== undefined) decorator.texture = data.texture;
     if (data.state !== undefined) decorator.state = data.state;
@@ -204,21 +313,40 @@ export class Decorator implements Character {
 }
 
 export class PacifiedCharacter extends Decorator {
+  private overrideState: states = states.Pacifist;
+  private overrideStrategy: Strategy;
+
   constructor(character: Character, buff: Buff) {
     super(character, buff);
-    this.state = states.Pacifist;
-    this.strategy = this.charClass.strategy[this.state as states];
+    this.overrideStrategy = this.charClass.strategy[this.overrideState];
+  }
+
+  public get state(): states {
+    return this.overrideState;
+  }
+
+  public set state(value: states) {
+    this.overrideState = value;
+  }
+
+  public get strategy(): Strategy {
+    return this.overrideStrategy;
+  }
+
+  public set strategy(value: Strategy) {
+    this.overrideStrategy = value;
   }
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
     const from = { x: x, y: y };
-    const result: MovementResult = this.strategy.move(context, world);
+    const result: MovementResult = this.overrideStrategy.move(context, world);
     return result;
   }
 
   public setState(state: states): void {
-    this.state = state;
+    this.overrideState = state;
+    this.overrideStrategy = this.charClass.strategy[state];
   }
 
   public serialize(): any {
@@ -232,14 +360,22 @@ export class PacifiedCharacter extends Decorator {
 }
 
 export class FurryCharacter extends Decorator {
+  private overrideTexture = 'furry';
+
   constructor(character: Character, buff: Buff) {
     super(character, buff);
-    this.texture = 'furry';
+  }
+
+  public get texture(): string | undefined {
+    return this.overrideTexture;
+  }
+
+  public set texture(value: string | undefined) {
+    this.overrideTexture = value || 'furry';
   }
 
   public getTexture(): string {
-    if (this.texture) return this.texture;
-    return '';
+    return this.overrideTexture;
   }
 
   public serialize(): any {
@@ -253,15 +389,24 @@ export class FurryCharacter extends Decorator {
 }
 
 export class FuryCharacter extends Decorator {
+  private overrideStrategy: Strategy = strategyMap['Fury'];
+
   constructor(character: Character, buff: Buff) {
     super(character, buff);
-    this.strategy = strategyMap['Fury'];
+  }
+
+  public get strategy(): Strategy {
+    return this.overrideStrategy;
+  }
+
+  public set strategy(value: Strategy) {
+    this.overrideStrategy = value;
   }
 
   public move(context: Entity, world: World): MovementResult {
     const { animation, lookDir, x, y } = context;
     const from = { x: x, y: y };
-    const result: MovementResult = this.strategy.move(context, world);
+    const result: MovementResult = this.overrideStrategy.move(context, world);
     return result;
   }
 
@@ -278,7 +423,6 @@ export class FuryCharacter extends Decorator {
 export class StunnedCharacter extends Decorator {
   constructor(character: Character, buff: Buff) {
     super(character, buff);
-    this.strategy = this.charClass.strategy[this.state as states];
   }
 
   public move(context: Entity, world: World): MovementResult {
@@ -300,4 +444,34 @@ export class StunnedCharacter extends Decorator {
       _decoratorType: 'StunnedCharacter',
     };
   }
+}
+
+export function reconstructDecorator(data: any): Character {
+  const inheritedChar = reconstructCharacter(data._inheritedCharacter);
+  let decorator: Decorator;
+
+  switch (data._decoratorType) {
+    case 'PacifiedCharacter':
+      decorator = new PacifiedCharacter(inheritedChar, data._decoratorCausedBy);
+      break;
+    case 'FurryCharacter':
+      decorator = new FurryCharacter(inheritedChar, data._decoratorCausedBy);
+      break;
+    case 'FuryCharacter':
+      decorator = new FuryCharacter(inheritedChar, data._decoratorCausedBy);
+      break;
+    case 'StunnedCharacter':
+      decorator = new StunnedCharacter(inheritedChar, data._decoratorCausedBy);
+      break;
+    default:
+      console.warn(`Unknown decorator type: ${data._decoratorType}`);
+      decorator = new Decorator(inheritedChar, data._decoratorCausedBy);
+      break;
+  }
+
+  decorator.startTime = data._decoratorStartTime;
+  decorator.timer = data._decoratorTimer;
+  decorator.causedBy = data._decoratorCausedBy;
+
+  return decorator;
 }
