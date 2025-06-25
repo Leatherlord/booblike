@@ -143,8 +143,9 @@ export function neutralMovement(
   const newY = from.y + movementShift[1];
 
   if (
-    (checkIfValidMove(room, newX, newY) ||
-      (newX === world.player.x && newY === world.player.y)) &&
+    checkIfValidMove(room, newX, newY) &&
+    newX != world.player.x &&
+    newY != world.player.y &&
     !room.entities.get({ x: newX, y: newY })
   ) {
     return { to: { x: newX, y: newY }, lookDir: lookDirect };

@@ -1,4 +1,5 @@
-import { Character } from './character';
+import { World, Entity } from '../../common/interfaces';
+import { Character, Characteristics } from './character';
 
 export enum TargetType {
   Self = 'SELF',
@@ -9,29 +10,43 @@ export enum TargetType {
 export enum StatType {
   Health = 'HEALTH',
   Attack = 'ATTACK',
-  Speed = 'SPEED',
+  Attribute = 'ATTRIBUTE',
 }
 
 export enum ModifierType {
   Flat = 'FLAT',
-  Add = 'ADD',
   Mult = 'MULT',
 }
 
-interface Effect {
+export type Duration = {
+  duration: number;
+  type: 'Temporary' | 'Permanent';
+};
+
+export interface Bonus {
   name: string;
-  targetType: TargetType;
-  // those three are only applicable to certain types of effects
-  statType?: StatType;
-  modifierType?: ModifierType;
-  value?: number;
-  applyEffect: () => void;
+  statType: StatType;
+  attributeType?: keyof Characteristics;
+  modifierType: ModifierType;
+  value: number;
+}
+
+export interface Effect {
+  name: string;
+  applyEffect: string;
+}
+
+export function isBonus(effect: Effect | Bonus): effect is Bonus {
+  return (effect as Bonus).modifierType !== undefined;
+}
+
+export function isEffect(effect: Effect | Bonus): effect is Effect {
+  return (effect as Effect).applyEffect !== undefined;
 }
 
 export interface Buff {
   name: string;
-  duration: number;
-  maxStacks: number;
-  effect: Effect;
-  apply: (to: Character) => void;
+  targetType: TargetType;
+  duration: Duration;
+  effect: Effect | Bonus;
 }

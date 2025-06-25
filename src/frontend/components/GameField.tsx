@@ -386,8 +386,9 @@ const GameField: React.FC<GameFieldProps> = ({
 
           // Render player (always visible)
           if (x === cameraX && y === cameraY) {
-            const playerTexture =
-              textureManagerRef.current?.getTexture('player');
+            const playerTexture = textureManagerRef.current?.getTexture(
+              world.player.character.getTexture()
+            );
             if (playerTexture) {
               ctx.drawImage(
                 playerTexture,
@@ -474,8 +475,10 @@ const GameField: React.FC<GameFieldProps> = ({
 
       if (isOnScreen && isVisible) {
         let texture;
-        if (entity.texture) {
-          texture = textureManagerRef.current?.getTexture(entity.texture);
+        if (entity.character.getTexture()) {
+          texture = textureManagerRef.current?.getTexture(
+            entity.character.getTexture()
+          );
         }
         if (texture) {
           ctx.drawImage(texture, screenX, screenY, tileSize, tileSize);

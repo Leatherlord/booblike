@@ -1,0 +1,27 @@
+{
+  "EnhanceStrength": {
+    "name": "Enhance Strength",
+    "statType": "ATTRIBUTE",
+    "attributeType": "s",
+    "modifierType": "FLAT",
+    "value": 4
+  },
+  "EnhanceHealth": {
+    "name": "Enhance Health",
+    "statType": "HEALTH",
+    "modifierType": "MULT",
+    "value": 10
+  },
+  "EnhanceAttack": {
+    "name": "Enhance Attack",
+    "statType": "ATTACK",
+    "modifierType": "MULT",
+    "value": 2
+  },
+  "DehanceAttack": {
+    "name": "Enhance Attack",
+    "statType": "ATTACK",
+    "modifierType": "MULT",
+    "value": 0.1
+  }
+}

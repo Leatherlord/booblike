@@ -1,0 +1,18 @@
+{
+  "Fury": {
+    "name": "Fury",
+    "applyEffect": "furyEffect"
+  },
+  "Pacify": {
+    "name": "Pacify",
+    "applyEffect": "pacifyEffect"
+  },
+  "Stun": {
+    "name": "Stun",
+    "applyEffect": "stunEffect"
+  },
+  "Furry": {
+    "name": "Become a Furry",
+    "applyEffect": "furryEffect"
+  }
+}

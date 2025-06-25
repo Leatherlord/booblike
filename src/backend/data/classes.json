@@ -3,6 +3,7 @@
     "className": "weaklingClass",
     "possibleNames": ["Daniil", "Vladimir", "Pavel"],
     "possibleSurnames": ["Very Scared", "Fearful", "Hates you"],
+    "possibleTextures": ["coward", "coward2"],
     "characteristicsBounds": [
       {
         "s": 1,
@@ -38,6 +39,7 @@
     "className": "middleClass",
     "possibleNames": ["Some Dude", "Villagerina", "Valentina"],
     "possibleSurnames": ["Smith", "Mikhailovna", "IDK Kevin's mom or SMTH"],
+    "possibleTextures": ["enemy"],
     "characteristicsBounds": [
       {
         "s": 6,
@@ -78,6 +80,7 @@
       "The Homosexual",
       "The Defiler"
     ],
+    "possibleTextures": ["player"],
     "characteristicsBounds": [
       {
         "s": 6,

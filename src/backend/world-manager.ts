@@ -26,8 +26,10 @@ import {
   calculateExperienceFromKill,
   canLevelUp,
   levelUp,
+  recalculatePlayerStats,
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
+import { getBuffsClassMap } from './data/dataloader';
 
 export class WorldManager {
   private world: World | null = null;
@@ -318,8 +320,30 @@ export class WorldManager {
   public handleNPCMovement() {
     if (!this.world) return;
 
+    //update player
+    if (this.world.player && !this.world.isPlayerDead) {
+      this.world.player.character.update(this.world.player, this.world);
+    }
+
     const room = this.world.map?.rooms[this.world.map.currentRoom];
     if (!room) return;
+
+    //update entities
+    room.entities.forEach((entity) => {
+      if (entity.character.healthBar > 0 && this.world) {
+        entity.character.update(entity, this.world);
+        //console.log('---', entity.id);
+        //console.log(
+        //  entity.character.baseCharacteristics,
+        //   entity.character.characteristics
+        // );
+        // console.log(
+        //   entity.character.baseMaxHealthBar,
+        //   entity.character.maxHealthBar
+        // );
+        // console.log(entity.character.buffsBonus);
+      }
+    });
 
     const entitiesArray: Entity[] = [];
     room.entities.forEach((entity) => {
@@ -472,23 +496,12 @@ export class WorldManager {
         (this.world.player.upgradesBought[event.upgradeId] || 0) + 1,
     };
 
-    newWorld.player.character.maxHealthBar = health(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
-    newWorld.player.character.healthBar = Math.min(
-      newWorld.player.character.healthBar,
-      newWorld.player.character.maxHealthBar
-    );
-    newWorld.player.character.areaSize = FOV(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
-    newWorld.player.character.speed = speed(
-      newWorld.player.character,
-      newWorld.player.upgradesBought
-    );
+    newWorld.player.character.applyBuff(newWorld.player, [
+      getBuffsClassMap()['SimpleAttributeBuff'],
+      getBuffsClassMap()['SimpleFurryBuff'],
+    ]);
 
+    recalculatePlayerStats(newWorld.player);
     newWorld.availableUpgrades = this.calculateAvailableUpgrades(newWorld);
 
     const newWorldObject = {

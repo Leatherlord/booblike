@@ -10,6 +10,8 @@ import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
 import { generateCharacter } from './mob-generator';
+import * as Buffs from './behaviour/buffs';
+import { getBuffsClassMap } from './data/dataloader';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -358,7 +360,7 @@ export function getStartingRoom(): Room {
 
   let entities = new EntitiesMap();
 
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 1; i++) {
     const chararcter = generateCharacter();
     let texture;
     if (chararcter.charClass.className == 'strongClass') {
@@ -368,25 +370,28 @@ export function getStartingRoom(): Room {
     } else {
       texture = 'coward';
     }
-    entities.add(
-      { x: 3, y: i },
-      {
-        id: '' + 1,
-        x: 3,
-        y: i,
-        lookDir: LookDirection.Left,
-        character: chararcter,
-        level: 1,
-        experience: 0,
-        experienceToNext: calculateExperienceForNextLevel(1),
-        texture: texture,
+    const entity = {
+      id: '' + 1,
+      x: 3,
+      y: i,
+      lookDir: LookDirection.Left,
+      character: chararcter,
+      level: 1,
+      experience: 0,
+      experienceToNext: calculateExperienceForNextLevel(1),
+      texture: texture,
 
-        animation: {
-          lastAttacked: 0,
-          lastMoved: 0,
-        },
-      }
-    );
+      animation: {
+        lastAttacked: 0,
+        lastMoved: 0,
+      },
+    };
+    entities.add({ x: 3, y: i }, entity);
+    // entity.character.applyBuff(entity, [
+    //   getBuffsClassMap()['SimpleAttributeBuff'],
+    //   getBuffsClassMap()['SimpleHealthBuff'],
+    // ]);
+    // entity.character.applyBuff(entity, [getBuffsClassMap()['SimpleFurryBuff']]);
   }
 
   return {
