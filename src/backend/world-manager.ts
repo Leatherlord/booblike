@@ -331,7 +331,7 @@ export class WorldManager {
       //     this.world.onCreateFloatingText(target.x, target.y, 'POOF!', 'buff');
       //   }
       // }
-      return; 
+      return;
     }
 
     if (item.effect) {
