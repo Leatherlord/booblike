@@ -301,13 +301,6 @@ export class WorldManager {
   }
 
   private applyPotion(item: InventoryItem, entity: Entity) {
-    // if (item.healthRestore) {
-    //   entity.character.healthBar = Math.min(
-    //     entity.character.maxHealthBar,
-    //     entity.character.healthBar + item.healthRestore
-    //   );
-    // }
-
     if (item.effect && item.effect.length > 0) {
       entity.character.applyBuff(entity, item.effect);
     }
@@ -323,22 +316,22 @@ export class WorldManager {
     // }
 
     if (item.id === 'scroll_teleport') {
-      if (
-        map[target.y][target.x] === 'floor' &&
-        (!room.entities.get(target) || room.entities.get(target)?.size === 0)
-      ) {
-        room.entities.delete({ x: caster.x, y: caster.y }, caster);
+      // if (
+      //   map[target.y][target.x] === 'floor' &&
+      //   (!room.entities.get(target) || room.entities.get(target)?.size === 0)
+      // ) {
+      //   room.entities.delete({ x: caster.x, y: caster.y }, caster);
 
-        caster.x = target.x;
-        caster.y = target.y;
+      //   caster.x = target.x;
+      //   caster.y = target.y;
 
-        room.entities.add(target, caster);
+      //   room.entities.add(target, caster);
 
-        if (this.world?.onCreateFloatingText) {
-          this.world.onCreateFloatingText(target.x, target.y, 'POOF!', 'buff');
-        }
-      }
-      return;
+      //   if (this.world?.onCreateFloatingText) {
+      //     this.world.onCreateFloatingText(target.x, target.y, 'POOF!', 'buff');
+      //   }
+      // }
+      return; 
     }
 
     if (item.effect) {
