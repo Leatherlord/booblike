@@ -11,6 +11,9 @@ export const movePlayer = (
   const height = roomMap[0].length;
 
   const entities = newWorld.map.rooms[newWorld.map.currentRoom].entities;
+  const room = newWorld.map.rooms[newWorld.map.currentRoom];
+
+  let moved = false;
 
   switch (direction) {
     case 'up':
@@ -23,6 +26,7 @@ export const movePlayer = (
           roomMap[newWorld.player.y - 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y - 1;
+        moved = true;
       }
       break;
     case 'down':
@@ -35,6 +39,7 @@ export const movePlayer = (
           roomMap[newWorld.player.y + 1][newWorld.player.x] === 'door')
       ) {
         newWorld.player.y = newWorld.player.y + 1;
+        moved = true;
       }
       break;
     case 'left':
@@ -47,6 +52,7 @@ export const movePlayer = (
           roomMap[newWorld.player.y][newWorld.player.x - 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x - 1;
+        moved = true;
       }
       break;
     case 'right':
@@ -59,8 +65,35 @@ export const movePlayer = (
           roomMap[newWorld.player.y][newWorld.player.x + 1] === 'door')
       ) {
         newWorld.player.x = newWorld.player.x + 1;
+        moved = true;
       }
       break;
+  }
+
+  if (moved) {
+    const itemKey = `${newWorld.player.x},${newWorld.player.y}`;
+    const item = room.items.get(itemKey);
+
+    if (item) {
+      const activeSlot = newWorld.player.slots.find(
+        (slot) => slot.id === newWorld.player.activeSlot
+      );
+
+      if (activeSlot && !activeSlot.item) {
+        room.items.delete(itemKey);
+        activeSlot.item = item;
+
+        if (item.type === 'weapon') {
+          newWorld.player.character.equipWeapon(item, newWorld.player);
+        }
+      } else {
+        const emptySlot = newWorld.player.slots.find((slot) => !slot.item);
+        if (emptySlot) {
+          room.items.delete(itemKey);
+          emptySlot.item = item;
+        }
+      }
+    }
   }
 
   return newWorld;
@@ -74,8 +107,9 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
   const character = world.player.character;
   if (!(character.strategy instanceof PlayerStrategy)) return;
 
-  if (!character.attacks[attackNumber]) attackNumber = 0;
-  if (!character.attacks[0]) {
+  const attackIndex = 0;
+
+  if (!character.attacks[attackIndex]) {
     return {
       mask: createEmptyMask(
         character.characterSize.width,
@@ -87,7 +121,7 @@ export const attackFromPlayer = (world: World, attackNumber: number) => {
   const playerAttack = world.player.character.strategy.attack(
     world.player,
     world,
-    character.attacks[attackNumber]
+    character.attacks[attackIndex]
   );
   world.player.animation.lastAttacked = playerAttack.lastAttacked;
   world.player.lastAttackArray = playerAttack.attackedTiles;

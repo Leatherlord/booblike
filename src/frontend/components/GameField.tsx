@@ -419,6 +419,41 @@ const GameField: React.FC<GameFieldProps> = ({
               ctx.fillRect(screenX, screenY, tileSize, tileSize);
             }
 
+            // Render items on the floor
+            const itemKey = `${x},${y}`;
+            const item =
+              world.map.rooms[world.map.currentRoom].items.get(itemKey);
+            if (item && tile === 'floor') {
+              let itemTexture;
+              itemTexture = textureManagerRef.current?.getTexture(item.id);
+
+              if (itemTexture) {
+                ctx.drawImage(
+                  itemTexture,
+                  screenX,
+                  screenY,
+                  tileSize,
+                  tileSize
+                );
+              } else {
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(
+                  screenX + 4,
+                  screenY + 4,
+                  tileSize - 8,
+                  tileSize - 8
+                );
+                ctx.fillStyle = '#000';
+                ctx.font = `${Math.floor(tileSize * 0.5)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(
+                  item.name.charAt(0).toUpperCase(),
+                  screenX + tileSize / 2,
+                  screenY + tileSize / 2 + tileSize * 0.1
+                );
+              }
+            }
+
             if (fogIntensity < 1.0) {
               ctx.fillStyle = `rgba(20, 20, 40, ${0.7 * (1 - fogIntensity)})`;
               ctx.fillRect(screenX, screenY, tileSize, tileSize);

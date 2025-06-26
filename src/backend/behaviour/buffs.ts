@@ -22,7 +22,7 @@ export enum ModifierType {
 
 export type Duration = {
   duration: number;
-  type: 'Temporary' | 'Permanent';
+  type: 'Temporary' | 'Permanent' | 'Instant';
 };
 
 export interface Bonus {
@@ -38,18 +38,33 @@ export interface Effect {
   applyEffect: string;
 }
 
-export function isBonus(effect: Effect | Bonus): effect is Bonus {
+export interface Instant {
+  name: string;
+  heal?: number;
+  damage?: number;
+}
+
+export type AnyEffect = Effect | Bonus | Instant;
+
+export function isBonus(effect: AnyEffect): effect is Bonus {
   return (effect as Bonus).modifierType !== undefined;
 }
 
-export function isEffect(effect: Effect | Bonus): effect is Effect {
+export function isEffect(effect: AnyEffect): effect is Effect {
   return (effect as Effect).applyEffect !== undefined;
+}
+
+export function isInstant(effect: AnyEffect): effect is Effect {
+  return (
+    (effect as Instant).heal !== undefined ||
+    (effect as Instant).damage !== undefined
+  );
 }
 
 export interface Buff {
   name: string;
   targetType: TargetType;
   duration: Duration;
-  effect: Effect | Bonus;
+  effect: AnyEffect;
   chanceToApply: number;
 }

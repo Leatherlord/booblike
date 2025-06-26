@@ -239,6 +239,10 @@ function attackAll(
   const { x: xOffset, y: yOffset } = getOffsetsByPos(lookDir, attack);
   const mask = attack.area[lookDir];
 
+  if (!mask) {
+    return { success: false, attackedTiles: [] };
+  }
+
   const room = world.map.rooms[world.map.currentRoom];
   const map = room.map;
   const attackedTiles: Point2d[] = [];

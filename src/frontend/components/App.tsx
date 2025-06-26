@@ -162,6 +162,14 @@ const App: React.FC = () => {
         return;
       }
 
+      if (e.key.toLowerCase() === 'z') {
+        handleEvent({
+          type: 'inventory_use',
+          slotId: world.player.activeSlot,
+        });
+        return;
+      }
+
       if (e.key.toLowerCase() === 'u') {
         toggleUpgradeMenu();
         return;
@@ -313,6 +321,20 @@ const App: React.FC = () => {
                   {world.player.character.areaSize.areaLeft +
                     world.player.character.areaSize.areaRight +
                     1}
+                </span>
+                <span className="hud-item">
+                  Stats: S:{world.player.character.characteristics.s}(
+                  {world.player.character.baseCharacteristics.s}) P:
+                  {world.player.character.characteristics.p} E:
+                  {world.player.character.characteristics.e} A:
+                  {world.player.character.characteristics.a} I:
+                  {world.player.character.characteristics.i}
+                </span>
+                <span className="hud-item">
+                  Weapon:{' '}
+                  {world.player.slots.find(
+                    (slot) => slot.id === world.player.activeSlot
+                  )?.item?.name || 'None'}
                 </span>
                 <span className="hud-item">
                   Player: ({world.player.x}, {world.player.y})

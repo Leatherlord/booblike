@@ -6,11 +6,17 @@ import {
   Point2d,
   Room,
   Tile,
+  InventoryItem,
 } from '../common/interfaces';
 import { prngAlea } from 'ts-seedrandom';
 import * as Collections from 'typescript-collections';
 import { calculateExperienceForNextLevel } from './behaviour/character';
 import { generateCharacter, generateCharacterWithSeed } from './mob-generator';
+import {
+  generateStartingRoomItems,
+  generateDungeonRoomItems,
+  createItemsMap,
+} from './item-generator';
 
 const MAX_ROOM_SIZE = 50;
 const MIN_ROOM_SIZE = 20;
@@ -374,11 +380,15 @@ export function generateRoom(
     entities.add(pos, entity);
   }
 
+  const itemPlacements = generateDungeonRoomItems(mapSize, level);
+  const items = createItemsMap(itemPlacements);
+
   const generated = {
     map: map,
     exits: exitMap,
     reverseExits: reverseExitMap,
     entities: entities,
+    items: items,
   };
   console.log('Generated map: ', generated);
   return generated;
@@ -438,10 +448,14 @@ export function getStartingRoom(): Room {
     entities.add({ x: 3, y: i }, entity);
   }
 
+  const itemPlacements = generateStartingRoomItems(STARTING_ROOM_SIZE);
+  const items = createItemsMap(itemPlacements);
+
   return {
     map: map,
     exits: exits,
     reverseExits: reverseExits,
     entities: entities,
+    items: items,
   };
 }

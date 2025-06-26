@@ -1,5 +1,7 @@
 import { Dictionary } from 'typescript-collections';
 import { Character, Characteristics } from '../backend/behaviour/character';
+import { Attack } from '../backend/behaviour/attacks';
+import { Buff, TargetType } from '../backend/behaviour/buffs';
 
 export type FloatingText = {
   id: string;
@@ -55,6 +57,7 @@ export type Room = {
   exits: Dictionary<Point2d, number | undefined>;
   reverseExits: Dictionary<number, Point2d>;
   entities: EntitiesMap;
+  items: Map<string, InventoryItem>;
 };
 
 function pointToKey(p: Point2d): string {
@@ -223,7 +226,26 @@ export type InventoryItem = {
   name: string;
   icon?: string;
   description?: string;
+  type?: ItemType;
+  characteristicsBonuses?: {
+    s?: number;
+    p?: number;
+    e?: number;
+    a?: number;
+    i?: number;
+  };
+  attack?: Attack;
+  effect?: Buff[];
+  targetType?: TargetType;
+  area?: Grid;
 };
+
+export enum ItemType {
+  Weapon = 'weapon',
+  Consumable = 'consumable',
+  Quest = 'quest',
+  Scroll = 'scroll',
+}
 
 export type InventorySlot = {
   id: number;

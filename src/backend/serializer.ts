@@ -48,6 +48,7 @@ export function serializeGameMap(gameMap: GameMap): any {
         value: room.reverseExits.getValue(key),
       })),
       entities: serializeEntitiesMap(room.entities),
+      items: Array.from(room.items.entries()),
     })),
     currentRoom: gameMap.currentRoom,
     exitMapping: gameMap.exitMapping
@@ -63,6 +64,7 @@ export function deserializeGameMap(data: any): GameMap {
       exits: createDictionary(roomData.exits),
       reverseExits: createDictionary(roomData.reverseExits),
       entities: deserializeEntitiesMap(roomData.entities),
+      items: new Map(roomData.items || []),
     })),
     currentRoom: data.currentRoom,
     exitMapping: createDictionary(data.exitMapping),
