@@ -1,6 +1,7 @@
 import { Dictionary } from 'typescript-collections';
 import { Character, Characteristics } from '../backend/behaviour/character';
 import { Attack } from '../backend/behaviour/attacks';
+import { Buff, TargetType } from '../backend/behaviour/buffs';
 
 export type FloatingText = {
   id: string;
@@ -234,12 +235,16 @@ export type InventoryItem = {
     i?: number;
   };
   attack?: Attack;
+  effect?: Buff[];
+  targetType?: TargetType;
+  area?: Grid;
 };
 
 export enum ItemType {
   Weapon = 'weapon',
   Consumable = 'consumable',
   Quest = 'quest',
+  Scroll = 'scroll',
 }
 
 export type InventorySlot = {

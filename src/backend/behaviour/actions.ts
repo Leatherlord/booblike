@@ -36,6 +36,9 @@ export function chooseDecorator(character: Character, buff: Buff) {
     case 'stunEffect': {
       return new StunnedCharacter(character, buff);
     }
+    case 'burnEffect': {
+      return new BurningCharacter(character, buff);
+    }
   }
   console.error(
     "chooseDecorator cound't choose decorator for",
@@ -443,6 +446,47 @@ export class StunnedCharacter extends Decorator {
       ...baseData,
       _decoratorType: 'StunnedCharacter',
     };
+  }
+}
+
+export class BurningCharacter extends Decorator {
+  private overrideStrategy: Strategy = strategyMap['Coward'];
+
+  constructor(character: Character, buff: Buff) {
+    super(character, buff);
+  }
+
+  public get strategy(): Strategy {
+    return this.overrideStrategy;
+  }
+
+  public set strategy(value: Strategy) {
+    this.overrideStrategy = value;
+  }
+
+  public move(context: Entity, world: World): MovementResult {
+    const { animation, lookDir, x, y } = context;
+    const from = { x: x, y: y };
+    const result: MovementResult = this.overrideStrategy.move(context, world);
+    return result;
+  }
+
+  public update(context: Entity, world: World): void {
+    if (Date.now() % 1000 < 100) {
+      context.character.healthBar -= 10;
+
+      if (world.onCreateFloatingText) {
+        world.onCreateFloatingText(
+          context.x,
+          context.y,
+          'BURN!',
+          'debuff',
+          '#ff6600'
+        );
+      }
+    }
+
+    super.update(context, world);
   }
 }
 

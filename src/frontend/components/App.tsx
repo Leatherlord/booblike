@@ -162,6 +162,14 @@ const App: React.FC = () => {
         return;
       }
 
+      if (e.key.toLowerCase() === 'z') {
+        handleEvent({
+          type: 'inventory_use',
+          slotId: world.player.activeSlot,
+        });
+        return;
+      }
+
       if (e.key.toLowerCase() === 'u') {
         toggleUpgradeMenu();
         return;

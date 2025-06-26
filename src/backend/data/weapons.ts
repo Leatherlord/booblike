@@ -1,4 +1,4 @@
-import { Speed, InventoryItem } from '../../common/interfaces';
+import { Speed, InventoryItem, ItemType } from '../../common/interfaces';
 import { Attack } from '../behaviour/attacks';
 
 export const SWORD_ATTACK: Attack = {
@@ -45,12 +45,12 @@ export type WeaponData = Omit<InventoryItem, 'type'> & {
   type: 'weapon';
 };
 
-export const WEAPONS: Record<string, WeaponData> = {
+export const WEAPONS: Record<string, InventoryItem> = {
   sword: {
     id: 'sword',
     name: 'Sword',
     description: 'A basic sword with cone attack pattern',
-    type: 'weapon',
+    type: ItemType.Weapon,
     icon: '⚔️',
     characteristicsBonuses: {
       s: 5,
@@ -60,11 +60,11 @@ export const WEAPONS: Record<string, WeaponData> = {
   },
 };
 
-export function getWeapon(id: string): WeaponData | undefined {
+export function getWeapon(id: string): InventoryItem | undefined {
   return WEAPONS[id];
 }
 
-export function createWeaponCopy(id: string): WeaponData | undefined {
+export function createWeaponCopy(id: string): InventoryItem | undefined {
   const weapon = WEAPONS[id];
   if (!weapon) return undefined;
 

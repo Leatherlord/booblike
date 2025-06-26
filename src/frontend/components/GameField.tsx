@@ -425,9 +425,7 @@ const GameField: React.FC<GameFieldProps> = ({
               world.map.rooms[world.map.currentRoom].items.get(itemKey);
             if (item && tile === 'floor') {
               let itemTexture;
-              if (item.id === 'sword') {
-                itemTexture = textureManagerRef.current?.getTexture('sword');
-              }
+              itemTexture = textureManagerRef.current?.getTexture(item.id);
 
               if (itemTexture) {
                 ctx.drawImage(

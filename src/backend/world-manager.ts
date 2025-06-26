@@ -2,6 +2,7 @@ import {
   World,
   InventorySlot,
   InventoryItem,
+  ItemType,
   GameMap,
   Room,
   Point2d,
@@ -10,10 +11,12 @@ import {
   EntitiesMap,
   UpgradeOption,
   Entity,
+  Grid,
 } from '../common/interfaces';
 import {
   Event,
   InventorySelectEvent,
+  InventoryUseEvent,
   PlayerAttackEvent,
   PurchaseUpgradeEvent,
 } from '../common/events';
@@ -31,6 +34,7 @@ import {
 } from './behaviour/character';
 import { health, FOV, speed } from './behaviour/character';
 import { WEAPONS } from './data/weapons';
+import { TargetType } from './behaviour/buffs';
 import {
   serializeWorld,
   deserializeWorld,
@@ -236,6 +240,9 @@ export class WorldManager {
       case 'inventory_select':
         this.handleInventorySelect(event);
         break;
+      case 'inventory_use':
+        this.handleInventoryUse(event);
+        break;
       case 'purchase_upgrade':
         this.handlePurchaseUpgrade(event);
         break;
@@ -265,6 +272,116 @@ export class WorldManager {
     };
 
     this.updateWorld(newWorld);
+  }
+
+  private handleInventoryUse(event: InventoryUseEvent) {
+    if (!this.world) return;
+
+    const slot = this.world.player.slots.find((s) => s.id === event.slotId);
+    if (!slot || !slot.item) return;
+
+    const item = slot.item;
+    const player = this.world.player;
+
+    // if (item.type === ItemType.Scroll && !event.target) {
+    //   return;
+    // }
+
+    switch (item.type) {
+      case ItemType.Consumable:
+        this.applyPotion(item, player);
+        break;
+      case ItemType.Scroll:
+        this.applyScroll(item, player, event.target!);
+        break;
+    }
+
+    if (item.type != ItemType.Weapon) slot.item = undefined;
+    this.updateWorld({ ...this.world });
+  }
+
+  private applyPotion(item: InventoryItem, entity: Entity) {
+    // if (item.healthRestore) {
+    //   entity.character.healthBar = Math.min(
+    //     entity.character.maxHealthBar,
+    //     entity.character.healthBar + item.healthRestore
+    //   );
+    // }
+
+    if (item.effect && item.effect.length > 0) {
+      entity.character.applyBuff(entity, item.effect);
+    }
+  }
+
+  private applyScroll(item: InventoryItem, caster: Entity, target: Point2d) {
+    const room = this.world!.map.rooms[this.world!.map.currentRoom];
+    const map = room.map;
+
+    // if (target.y < 0 || target.y >= map.length ||
+    //     target.x < 0 || target.x >= map[0].length) {
+    //   return;
+    // }
+
+    if (item.id === 'scroll_teleport') {
+      if (
+        map[target.y][target.x] === 'floor' &&
+        (!room.entities.get(target) || room.entities.get(target)?.size === 0)
+      ) {
+        room.entities.delete({ x: caster.x, y: caster.y }, caster);
+
+        caster.x = target.x;
+        caster.y = target.y;
+
+        room.entities.add(target, caster);
+
+        if (this.world?.onCreateFloatingText) {
+          this.world.onCreateFloatingText(target.x, target.y, 'POOF!', 'buff');
+        }
+      }
+      return;
+    }
+
+    if (item.effect) {
+      const targets = this.getEntitiesInArea(
+        target,
+        item.area || { areaUp: 0, areaDown: 0, areaLeft: 0, areaRight: 0 }
+      );
+
+      targets.forEach((entity) => {
+        if (item.targetType === TargetType.Enemy && entity.id !== caster.id) {
+          entity.character.applyBuff(entity, item.effect!);
+        } else if (item.targetType === TargetType.Self) {
+          caster.character.applyBuff(caster, item.effect!);
+        }
+      });
+    }
+  }
+
+  private getEntitiesInArea(center: Point2d, area: Grid): Entity[] {
+    const entities: Entity[] = [];
+    const room = this.world!.map.rooms[this.world!.map.currentRoom];
+    const { areaUp, areaDown, areaLeft, areaRight } = area;
+
+    for (let dy = -areaUp; dy <= areaDown; dy++) {
+      for (let dx = -areaLeft; dx <= areaRight; dx++) {
+        if (!center)
+          center = {
+            x: this.world ? this.world?.player.x : 0,
+            y: this.world ? this.world?.player.y : 0,
+          };
+        const pos = {
+          x: center.x + dx,
+          y: center.y + dy,
+        };
+
+        const entitiesAtPos = room.entities.get(pos);
+        if (entitiesAtPos) {
+          entitiesAtPos.forEach((entity) => entities.push(entity));
+        }
+      }
+    }
+
+    return entities;
   }
 
   private handleAttack = (event: PlayerAttackEvent) => {

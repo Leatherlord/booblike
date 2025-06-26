@@ -1,7 +1,10 @@
+import { Point2d } from './interfaces';
+
 export type Event =
   | PlayerMoveEvent
   | PlayerAttackEvent
   | InventorySelectEvent
+  | InventoryUseEvent
   | PurchaseUpgradeEvent;
 
 export type PlayerMoveEvent = {
@@ -17,6 +20,12 @@ export type PlayerAttackEvent = {
 export type InventorySelectEvent = {
   type: 'inventory_select';
   slotId: number;
+};
+
+export type InventoryUseEvent = {
+  type: 'inventory_use';
+  slotId: number;
+  target?: Point2d;
 };
 
 export type PurchaseUpgradeEvent = {

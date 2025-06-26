@@ -11,11 +11,13 @@ import {
 import { Attack } from './attacks';
 import {
   Buff,
+  Instant,
   ModifierType,
   StatType,
   TargetType,
   isBonus,
   isEffect,
+  isInstant,
 } from './buffs';
 import { CharClass, getCharacteristicsFromClass, PlayerClass } from './classes';
 import { EventType, handleStateChange, states } from './state';
@@ -567,6 +569,13 @@ function applyAction(
     finalToEntity.character = finalTo.childCharacter || finalTo;
   }
 }
+
+function applyInstant(finalToEntity: Entity, buff: Buff) {
+  let instant = buff.effect as Instant;
+  finalToEntity.character.healthBar += instant.heal ? instant.heal : 0;
+  finalToEntity.character.healthBar -= instant.damage ? instant.damage : 0;
+}
+
 /*
   Function which applies bonus and action buffs from type Buff
 */
@@ -647,6 +656,8 @@ function applyBuffOnCharacter(
       }
     } else if (isEffect(buff.effect)) {
       applyAction(finalToEntity, buff);
+    } else if (isInstant(buff.effect)) {
+      applyInstant(finalToEntity, buff);
     } else {
       console.error('Buff not supported: ', buff);
     }

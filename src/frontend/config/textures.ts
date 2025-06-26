@@ -11,4 +11,8 @@ export const TEXTURE_CONFIG: TextureConfig = {
   furry: '/resources/furry.png',
   attack: '/resources/attack.png',
   sword: '/resources/sword.png',
+  scroll_fireball: '/resources/scroll_fireball.png',
+  scroll_teleport: '/resources/scroll_teleport.png',
+  health_potion: '/resources/health_potion.png',
+  strength_potion: '/resources/strength_potion.png',
 };
