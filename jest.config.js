@@ -7,8 +7,12 @@ module.exports = {
     '**/*.(test|spec).+(ts|tsx|js)'
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.(js|jsx|ts|tsx)$': 'ts-jest',
+    'node_modules/ts-seedrandom/.+\\.(js|jsx)$': 'babel-jest'
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(ts-seedrandom)/)'
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -18,6 +22,7 @@ module.exports = {
   setupFilesAfterEnv: [],
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^ts-seedrandom$': '<rootDir>/node_modules/ts-seedrandom/dist/index.js'
   }
 }; 
