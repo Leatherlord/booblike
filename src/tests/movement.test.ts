@@ -11,7 +11,11 @@ import {
   PlayerCharacter,
   RandomEnemyCharacter,
 } from '../backend/behaviour/character';
-import { neutralMovement } from '../backend/behaviour/movement';
+import {
+  aggressiveMovement,
+  cowardMovement,
+  neutralMovement,
+} from '../backend/behaviour/movement';
 import { Dictionary } from 'typescript-collections';
 import { getStartingRoom } from '../backend/map-generator';
 
@@ -160,5 +164,65 @@ describe('Movement Test', () => {
       const result = neutralMovement(entityClosed, worldClosed);
       expect(result.to).toEqual(expectedPosition);
     });
+  });
+
+  test('aggressive moves to player', () => {
+    const worldClosed: World = {
+      ...world,
+      player: { x: 2, y: 2 } as any,
+    };
+    const entityClosed: Entity = {
+      ...entity,
+      x: 0,
+      y: 0,
+    };
+    let roomFloors: Tile[][] = [
+      ['floor', 'floor', 'floor'],
+      ['floor', 'floor', 'floor'],
+      ['floor', 'floor', 'floor'],
+    ];
+    worldClosed.map.rooms[worldClosed.map.currentRoom].map = roomFloors;
+    const testCases = [
+      { randomValue: 0.0, expectedPosition: { x: 0, y: 2 } },
+      { randomValue: 0.15, expectedPosition: { x: 2, y: 0 } },
+      { randomValue: 0.3, expectedPosition: { x: 1, y: 2 } },
+      { randomValue: 0.45, expectedPosition: { x: 1, y: 0 } },
+      { randomValue: 0.6, expectedPosition: { x: 2, y: 1 } },
+      { randomValue: 0.75, expectedPosition: { x: 0, y: 1 } },
+      { randomValue: 0.9, expectedPosition: { x: 2, y: 2 } },
+    ];
+    const before =
+      Math.abs(worldClosed.player.x - entityClosed.x) +
+      Math.abs(worldClosed.player.y - entityClosed.y);
+    const result = aggressiveMovement(entityClosed, worldClosed);
+    const after =
+      Math.abs(worldClosed.player.x - result.to.x) +
+      Math.abs(worldClosed.player.y - result.to.y);
+    expect(before > after).toEqual(true);
+  });
+  test('panic moves away from player', () => {
+    const worldClosed: World = {
+      ...world,
+      player: { x: 0, y: 0 } as any,
+    };
+    const entityClosed: Entity = {
+      ...entity,
+      x: 1,
+      y: 1,
+    };
+    let roomFloors: Tile[][] = [
+      ['floor', 'floor', 'floor'],
+      ['floor', 'floor', 'floor'],
+      ['floor', 'floor', 'floor'],
+    ];
+    worldClosed.map.rooms[worldClosed.map.currentRoom].map = roomFloors;
+    const before =
+      Math.abs(worldClosed.player.x - entityClosed.x) +
+      Math.abs(worldClosed.player.y - entityClosed.y);
+    const result = cowardMovement(entityClosed, worldClosed);
+    const after =
+      Math.abs(worldClosed.player.x - result.to.x) +
+      Math.abs(worldClosed.player.y - result.to.y);
+    expect(before < after).toEqual(true);
   });
 });
