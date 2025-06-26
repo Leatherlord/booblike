@@ -6,7 +6,7 @@ npm-debug.log
 dist/*
 !dist/index.html
 !dist/resources
-coverage
+coverage/
 
 # IDE specific files
 .vscode/
