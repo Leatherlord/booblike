@@ -155,6 +155,8 @@ export class WorldManager {
 
     this.updateWorld(stubWorld);
     this.startNPCMovementTimer();
+
+    return stubWorld;
   }
 
   private generateStubMap(seed: number): GameMap {
