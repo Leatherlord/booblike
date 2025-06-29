@@ -117,12 +117,19 @@ package "classes" {
     interface CharClass
 }
 
+package "interfaces" {
+    class World
+    class Entity
+    enum Speed
+}
+
 Character --> "1" Strategy
 Character --> "1" CharClass
 Character --> "*" Attack
 Character ..> "1" AttackResult
 Character --> "*" Buff
 Character --> "1" states
-' Character --> "1" Speed
-
+Character --> "1" Speed
+Character ..> World
+Character ..> Entity
 @enduml

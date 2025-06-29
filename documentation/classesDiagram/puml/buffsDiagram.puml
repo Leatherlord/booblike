@@ -131,18 +131,26 @@ package "actions" {
     }
 }
 
-Bonus --> "1" StatType
-Bonus --> "1" ModifierType
-Buff --> "1" TargetType
-Buff --> "1" Effect
-Buff --> "1" Bonus
+package "interfaces" {
+    class World
+    class Entity
+    enum Speed
+}
+
+Buff *-- "1" TargetType
+Buff *-- "0..1" Effect
+Buff *-- "0..1" Bonus
+Bonus *-- "1" StatType
+Bonus *-- "1" ModifierType
 Attack --> "*" Buff
 
 Character --> "1" Strategy
 Character --> "1" CharClass
 Character --> "*" Attack
-Character ..> "1" AttackResult
 Character --> "*" Buff
 Character --> "1" states
+Character --> "1" Speed
+Character ..> World
+Character ..> Entity
 
 @enduml

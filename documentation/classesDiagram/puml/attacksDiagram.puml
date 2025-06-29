@@ -14,7 +14,12 @@ package "attack" {
     }
 }
 
-' Attack --> "1" Speed
-' Attack --> "1" LookDirection
+package "interfaces" {
+    enum Speed
+    enum LookDirection
+}
+
+Attack --> "1" Speed
+Attack --> "1" LookDirection
 Attack --> "*" Buff
 @enduml

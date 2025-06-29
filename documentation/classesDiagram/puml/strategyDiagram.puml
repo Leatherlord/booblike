@@ -43,11 +43,17 @@ package "startegy" {
         +lastMoved: number;
     }
 }
-
+package "interfaces" {
+    class World
+    class Entity
+    enum LookDirection
+}
 Strategy ..> Attack
 Strategy ..> AttackResult
-' Strategy ..> Entity
-' Strategy ..> World
+Strategy ..> Entity
+Strategy ..> World
 Strategy ..> MovementResult
 MovementResult --> "*" AttackResult
+MovementResult --> "*" LookDirection
+
 @enduml
