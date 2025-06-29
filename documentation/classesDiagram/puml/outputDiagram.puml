@@ -341,6 +341,5 @@ Buff *-- "0..1" Effect
 Buff *-- "0..1" Bonus
 Bonus *-- "1" StatType
 Bonus *-- "1" ModifierType
-
-
+Entity --> "1" Character
 @enduml

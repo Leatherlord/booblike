@@ -1,4 +1,7 @@
 @startuml
+package "character" {
+    interface Character
+}
 package "interfaces" {
     class World {
         +map: GameMap;
@@ -37,5 +40,6 @@ package "interfaces" {
     }
 }
 
-
+Entity--> "1" LookDirection
+Entity--> "1" Character
 @enduml

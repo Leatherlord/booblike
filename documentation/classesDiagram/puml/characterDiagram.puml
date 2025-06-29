@@ -132,4 +132,5 @@ Character --> "1" states
 Character --> "1" Speed
 Character ..> World
 Character ..> Entity
+Entity --> "1" Character
 @enduml
