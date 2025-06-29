@@ -1,0 +1,305 @@
+@startuml
+package "character" {
+    interface Character {
+        +name: string
+        +surname?: string | undefined
+        +texture?: string | undefined
+        +strategy: Strategy
+        +healthBar: number
+        +baseMaxHealthBar: number
+        +maxHealthBar: number
+        +charClass: CharClass
+        +attacks: Attack[]
+        +characterSize: Size
+        +areaSize: Grid
+        +level: number
+        +baseCharacteristics: Characteristics
+        +characteristics: Characteristics
+        +score?: number | undefined
+        +speed: Speed
+        +state: states
+        +buffsBonus: BuffAddOns
+        +allBuffs: PriorityQueue<BuffDuration>
+        +inheritedCharacter?: Character | undefined
+        +childCharacter?: Character | undefined
+        +move: (context: Entity, world: World) => MovementResult
+        +damage: (context: Entity, enemy: Entity, attack: Attack) => AttackResult
+        +update: (context: Entity, world: World) => void
+        +getSpeed: () => Speed
+        +getAttackSpeed: (attack: Attack) => Speed
+        +setState: (state: states) => void
+        +applyBuff: (context: Entity, buffs: Buff[]) => void
+        +onDeath: (context: Entity, world: World) => void
+        +equipWeapon: (weapon: InventoryItem | undefined, context?: Entity) => void
+        +getTexture: () => string
+        +getBuffs: () => PriorityQueue<BuffDuration>
+        +serialize: () => any
+    }
+    class BaseCharacter implements Character {
+        +allBuffs: PriorityQueue<BuffDuration>
+        +areaSize: Grid
+        +attacks: Attack[]
+        +baseCharacteristics: Characteristics
+        +baseMaxHealthBar: number
+        +buffsBonus: BuffAddOns
+        +characteristics: Characteristics
+        +characterSize: Size
+        +charClass: CharClass
+        +childCharacter?: Character | undefined
+        +healthBar: number
+        +level: number
+        +maxHealthBar: number
+        +name: string
+        +score?: number | undefined
+        +speed: Speed
+        +state: states
+        +strategy: Strategy
+        +surname?: string | undefined
+        +texture?: string | undefined
+        +applyBuff(context: Entity, buffs: Buff[]): void
+        +damage(context: Entity, enemy: Entity, attack: Attack): AttackResult
+        +equipWeapon(weapon: InventoryItem | undefined, context?: Entity | undefined): void
+        +getAttackSpeed(attack: Attack): Speed
+        +getBuffs(): PriorityQueue<BuffDuration>
+        +getSpeed(): Speed
+        +getTexture(): string
+        +move(context: Entity, world: World): MovementResult
+        +onDeath(context: Entity, world: World): void
+        +serialize(): any
+        +setState(state: states): void
+        +update(context: any, world: World): void
+        #{static} reconstructBuffAddOns(buffsData: any): BuffAddOns
+        #{static} reconstructPriorityQueue(queueData: any): PriorityQueue<BuffDuration>
+        +{static} deserialize(data: any): BaseCharacter
+    }
+    class PlayerCharacter extends BaseCharacter {
+        -baseAttacks: Attack[]
+        -equippedWeapon?: InventoryItem | undefined
+        +equipWeapon(weapon: InventoryItem | undefined, context?: Entity | undefined): void
+        +serialize(): any
+        +{static} deserialize(data: any): PlayerCharacter
+    }
+    class RandomEnemyCharacter extends BaseCharacter {
+        +serialize(): any
+        +{static} deserialize(data: any): RandomEnemyCharacter
+    }
+}
+package "buffs" {
+    enum TargetType {
+        Self
+        Enemy
+        Random
+    }
+    enum StatType {
+        Health
+        Attack
+        Attribute
+    }
+    enum ModifierType {
+        Flat
+        Mult
+    }
+    interface Bonus {
+        +name: string
+        +statType: StatType
+        +attributeType?: keyof Characteristics | undefined
+        +modifierType: ModifierType
+        +value: number
+    }
+    interface Effect {
+        +name: string
+        +applyEffect: string
+    }
+    interface Buff {
+        +name: string
+        +targetType: TargetType
+        +duration: Duration
+        +effect: Effect | Bonus
+        +chanceToApply: number
+    }
+}
+package "startegy" {
+    interface Strategy {
+        +move: (context: Entity, world: World) => MovementResult
+        +attack: (context: Entity, world: World, attack: Attack, enemy?: Entity) => AttackResult
+    }
+    class PlayerStrategy implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Aggresive implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack, enemy?: Entity | undefined): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Neutral implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Coward implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Fury implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class AttackResult {
+        +success: boolean
+        +attackedTiles: Point2d[]
+        +lastAttacked: number
+    }
+    class MovementResult {
+        +to: Point2d;
+        +lookDir?: LookDirection;
+        +attackResult?: AttackResult;
+        +lastAttacked: number;
+        +lastMoved: number;
+    }
+}
+package "attack" {
+    interface Attack {
+        +name: string
+        +speed: Speed
+        +minDamage: number
+        +maxDamage: number
+        +attackBuffs: Buff[]
+        +areaSize: Grid
+        +area: Record<LookDirection, number[][]>
+    }
+}
+package "States" {
+    enum EventType {
+        Pacify
+        Anger
+        Damage
+        Heal
+    }
+    enum states {
+        Pacifist
+        Normal
+        Panic
+        Angry
+    }
+}
+package "classes" {
+    interface CharClass {
+        +className: string
+        +possibleNames: string[]
+        +possibleSurnames: string[]
+        +possibleTextures?: string[] | undefined
+        +characteristicsBounds: [Characteristics, Characteristics]
+        +availableAttacks: Attacks.Attack[]
+        +numberOfAttacks: number
+        +strategy: Record<states, Strategy>
+        +transitions: Record<states, Partial<Record<EventType, states>>>
+    }
+}
+package "actions" {
+    class Decorator implements character.Character {
+        ' #character: Character
+        +allBuffs: PriorityQueue<BuffDuration>
+        +areaSize: Grid
+        +attacks: Attack[]
+        +baseCharacteristics: Characteristics
+        +baseMaxHealthBar: number
+        +buffsBonus: BuffAddOns
+        +causedBy: Buff
+        +characteristics: Characteristics
+        +characterSize: Size
+        +charClass: CharClass
+        +childCharacter: Character | undefined
+        +healthBar: number
+        +inheritedCharacter: Character
+        +level: number
+        +maxHealthBar: number
+        +name: string
+        +score: number | undefined
+        +speed: Speed
+        +startTime: number
+        +state: states
+        +strategy: Strategy
+        +surname: string | undefined
+        +texture: string | undefined
+        +timer: number
+        +applyBuff(context: Entity, buffs: Buff[]): void
+        +damage(context: Entity, enemy: Entity, attack: Attack): AttackResult
+        +equipWeapon(weapon: InventoryItem | undefined): void
+        +getAttackSpeed(attack: Attack): Speed
+        +getBuffs(): PriorityQueue<BuffDuration>
+        +getSpeed(): Speed
+        +getTexture(): string
+        +move(context: Entity, world: World): MovementResult
+        +onDeath(context: Entity, world: World): void
+        +serialize(): any
+        +setState(state: states): void
+        +update(context: Entity, world: World): void
+        +{static} deserialize(data: any): Decorator
+    }
+    class PacifiedCharacter extends Decorator {
+        -{override} state: states
+        -{override} strategy: Strategy
+        +state: states
+        +state: states
+        +strategy: Strategy
+        +strategy: Strategy
+        +move(context: Entity, world: World): MovementResult
+        +serialize(): any
+        +setState(state: states): void
+    }
+    class FurryCharacter extends Decorator {
+        -{override} texture: string
+        +texture: string | undefined
+        +texture: string | undefined
+        +getTexture(): string
+        +serialize(): any
+    }
+    class FuryCharacter extends Decorator {
+        -{override} strategy: Strategy
+        +strategy: Strategy
+        +strategy: Strategy
+        +move(context: Entity, world: World): MovementResult
+        +serialize(): any
+    }
+    class StunnedCharacter extends Decorator {
+        +move(context: Entity, world: World): MovementResult
+        +serialize(): any
+    }
+}
+
+' strategy 
+Strategy ..> Attack
+Strategy ..> AttackResult
+Strategy ..> MovementResult
+MovementResult --> "*" AttackResult
+' Strategy ..> Entity
+' Strategy ..> World
+
+' classes
+CharClass --> "1" Strategy
+CharClass --> "1" EventType
+CharClass --> "1" states
+CharClass --> "1..." Attack
+
+' character
+Character --> "1" Strategy
+Character --> "1" CharClass
+Character --> "*" Attack
+Character ..> "1" AttackResult
+Character --> "*" Buff
+Character --> "1" states
+
+' attacks
+' Attack --> "1" Speed
+' Attack --> "1" LookDirection
+Attack --> "*" Buff
+
+' buffs
+Bonus --> "1" StatType
+Bonus --> "1" ModifierType
+Buff --> "1" TargetType
+Buff --> "1" Effect
+Buff --> "1" Bonus
+
+'
+
+@enduml

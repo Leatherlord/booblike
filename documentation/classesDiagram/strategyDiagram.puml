@@ -1,0 +1,53 @@
+@startuml 
+
+top to bottom direction
+package "attack" {
+    interface Attack
+}
+
+package "startegy" {
+    interface Strategy {
+        +move: (context: Entity, world: World) => MovementResult
+        +attack: (context: Entity, world: World, attack: Attack, enemy?: Entity) => AttackResult
+    }
+    class PlayerStrategy implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Aggresive implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack, enemy?: Entity | undefined): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Neutral implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Coward implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class Fury implements Strategy {
+        +attack(context: Entity, world: World, attack: Attack): AttackResult
+        +move(context: Entity, world: World): MovementResult
+    }
+    class AttackResult {
+        +success: boolean
+        +attackedTiles: Point2d[]
+        +lastAttacked: number
+    }
+    class MovementResult {
+        +to: Point2d;
+        +lookDir?: LookDirection;
+        +attackResult?: AttackResult;
+        +lastAttacked: number;
+        +lastMoved: number;
+    }
+}
+
+Strategy ..> Attack
+Strategy ..> AttackResult
+' Strategy ..> Entity
+' Strategy ..> World
+Strategy ..> MovementResult
+MovementResult --> "*" AttackResult
+@enduml

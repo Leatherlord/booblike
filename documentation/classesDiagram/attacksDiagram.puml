@@ -1,0 +1,20 @@
+@startuml
+package "buffs" {
+    interface Buff
+}
+package "attack" {
+    interface Attack {
+        +name: string
+        +speed: Speed
+        +minDamage: number
+        +maxDamage: number
+        +attackBuffs: Buff[]
+        +areaSize: Grid
+        +area: Record<LookDirection, number[][]>
+    }
+}
+
+' Attack --> "1" Speed
+' Attack --> "1" LookDirection
+Attack --> "*" Buff
+@enduml
