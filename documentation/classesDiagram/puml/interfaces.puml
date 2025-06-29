@@ -1,0 +1,45 @@
+@startuml
+package "character" {
+    interface Character
+}
+package "interfaces" {
+    class World {
+        +map: GameMap;
+        +player: Entity & Inventory & LevelingData;
+        +random: any;
+        +onEntityDeath?: (deadEntity: Entity, attacker: Entity) => void;
+        +availableUpgrades: UpgradeOption[];
+        +isPlayerDead?: boolean;
+        ...
+    }
+    class Entity {
+        +id?: string;
+        +x: number;
+        +y: number;
+        +lookDir: LookDirection;
+        +character: Character;
+        +lastAttackArray?: Point2d[];
+        +level: number;
+        +experience: number;
+        +experienceToNext: number;
+        +animation: {lastAttacked: number; lastMoved: number;};
+    }
+    enum Speed {
+        SUPERFAST = 100
+        FAST = 200
+        NORMAL = 300
+        SLOW = 400
+        SUPERSLOW = 500
+    }
+
+    enum LookDirection {
+        Up = "UP"
+        Down = "DOWN"
+        Left = "LEFT"
+        Right = "RIGHT"
+    }
+}
+
+Entity--> "1" LookDirection
+Entity--> "1" Character
+@enduml
