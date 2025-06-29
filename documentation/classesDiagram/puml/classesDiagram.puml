@@ -1,0 +1,42 @@
+@startuml
+
+package "startegy" {
+    interface Strategy
+}
+package "attack" {
+    interface Attack
+}
+package "States" {
+    enum EventType {
+        Pacify
+        Anger
+        Damage
+        Heal
+    }
+    enum states {
+        Pacifist
+        Normal
+        Panic
+        Angry
+    }
+}
+package "classes" {
+    interface CharClass {
+        +className: string
+        +possibleNames: string[]
+        +possibleSurnames: string[]
+        +possibleTextures?: string[] | undefined
+        +characteristicsBounds: [Characteristics, Characteristics]
+        +availableAttacks: Attacks.Attack[]
+        +numberOfAttacks: number
+        +strategy: Record<states, Strategy>
+        +transitions: Record<states, Partial<Record<EventType, states>>>
+    }
+}
+
+CharClass --> "1" Strategy
+CharClass --> "1" EventType
+CharClass --> "1" states
+CharClass --> "1..." Attack
+
+@enduml

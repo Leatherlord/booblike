@@ -1,0 +1,136 @@
+@startuml
+package "character" {
+    interface Character {
+        +name: string
+        +surname?: string | undefined
+        +texture?: string | undefined
+        +strategy: Strategy
+        +healthBar: number
+        +baseMaxHealthBar: number
+        +maxHealthBar: number
+        +charClass: CharClass
+        +attacks: Attack[]
+        +characterSize: Size
+        +areaSize: Grid
+        +level: number
+        +baseCharacteristics: Characteristics
+        +characteristics: Characteristics
+        +score?: number | undefined
+        +speed: Speed
+        +state: states
+        +buffsBonus: BuffAddOns
+        +allBuffs: PriorityQueue<BuffDuration>
+        +inheritedCharacter?: Character | undefined
+        +childCharacter?: Character | undefined
+        +move: (context: Entity, world: World) => MovementResult
+        +damage: (context: Entity, enemy: Entity, attack: Attack) => AttackResult
+        +update: (context: Entity, world: World) => void
+        +getSpeed: () => Speed
+        +getAttackSpeed: (attack: Attack) => Speed
+        +setState: (state: states) => void
+        +applyBuff: (context: Entity, buffs: Buff[]) => void
+        +onDeath: (context: Entity, world: World) => void
+        +equipWeapon: (weapon: InventoryItem | undefined, context?: Entity) => void
+        +getTexture: () => string
+        +getBuffs: () => PriorityQueue<BuffDuration>
+        +serialize: () => any
+    }
+    class BaseCharacter implements Character {
+        +allBuffs: PriorityQueue<BuffDuration>
+        +areaSize: Grid
+        +attacks: Attack[]
+        +baseCharacteristics: Characteristics
+        +baseMaxHealthBar: number
+        +buffsBonus: BuffAddOns
+        +characteristics: Characteristics
+        +characterSize: Size
+        +charClass: CharClass
+        +childCharacter?: Character | undefined
+        +healthBar: number
+        +level: number
+        +maxHealthBar: number
+        +name: string
+        +score?: number | undefined
+        +speed: Speed
+        +state: states
+        +strategy: Strategy
+        +surname?: string | undefined
+        +texture?: string | undefined
+        +applyBuff(context: Entity, buffs: Buff[]): void
+        +damage(context: Entity, enemy: Entity, attack: Attack): AttackResult
+        +equipWeapon(weapon: InventoryItem | undefined, context?: Entity | undefined): void
+        +getAttackSpeed(attack: Attack): Speed
+        +getBuffs(): PriorityQueue<BuffDuration>
+        +getSpeed(): Speed
+        +getTexture(): string
+        +move(context: Entity, world: World): MovementResult
+        +onDeath(context: Entity, world: World): void
+        +serialize(): any
+        +setState(state: states): void
+        +update(context: any, world: World): void
+        #{static} reconstructBuffAddOns(buffsData: any): BuffAddOns
+        #{static} reconstructPriorityQueue(queueData: any): PriorityQueue<BuffDuration>
+        +{static} deserialize(data: any): BaseCharacter
+    }
+    class PlayerCharacter extends BaseCharacter {
+        -baseAttacks: Attack[]
+        -equippedWeapon?: InventoryItem | undefined
+        +equipWeapon(weapon: InventoryItem | undefined, context?: Entity | undefined): void
+        +serialize(): any
+        +{static} deserialize(data: any): PlayerCharacter
+    }
+    class RandomEnemyCharacter extends BaseCharacter {
+        +serialize(): any
+        +{static} deserialize(data: any): RandomEnemyCharacter
+    }
+}
+package "buffs" {
+    ' enum TargetType
+    ' enum StatType
+    ' enum ModifierType
+    ' interface Bonus
+    ' interface Effect
+    interface Buff
+}
+package "startegy" {
+    interface Strategy
+    class AttackResult
+}
+package "attack" {
+    interface Attack
+}
+package "States" {
+    enum EventType {
+        Pacify
+        Anger
+        Damage
+        Heal
+    }
+    enum states {
+        Pacifist
+        Normal
+        Panic
+        Angry
+    }
+}
+package "classes" {
+    interface CharClass
+}
+
+package "interfaces" {
+    class World
+    class Entity
+    enum Speed
+}
+
+Character --> "1" Strategy
+Character --> "1" CharClass
+Character --> "*" Attack
+Character ..> "1" AttackResult
+Character --> "*" Buff
+Character --> "1" states
+Character --> "1" Speed
+Character ..> World
+Character ..> Entity
+Entity --> "1" Character
+@enduml
